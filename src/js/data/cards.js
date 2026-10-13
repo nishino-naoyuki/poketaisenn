@@ -245,10 +245,23 @@ function clearPokemonConditions(pokemon) {
   return had;
 }
 
+/** たねポケモンかどうかを判定する共通判定関数 */
+function isBasicPokemonCard(card) {
+  if (!card) return false;
+  const isPoke = (card.type || "").toLowerCase() === "pokemon" || card.category === "ポケモン" || !!card.hp;
+  if (!isPoke) return false;
+  const cat = (card.category || "").toLowerCase();
+  const sub = (card.sub || "").toLowerCase();
+  if (cat.includes("進化") || sub.includes("進化")) return false;
+  if (card.name && (card.name.includes("VSTAR") || card.name.includes("VMAX"))) return false;
+  return true;
+}
+
 window.ensurePokemonConditions = ensurePokemonConditions;
 window.hasAnyPokemonCondition = hasAnyPokemonCondition;
 window.getPokemonConditionNames = getPokemonConditionNames;
 window.clearPokemonConditions = clearPokemonConditions;
+window.isBasicPokemonCard = isBasicPokemonCard;
 
 
 

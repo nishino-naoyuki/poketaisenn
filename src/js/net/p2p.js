@@ -996,6 +996,14 @@ const P2P = {
       if (typeof performMulliganRedraw === "function") {
         performMulliganRedraw();
       }
+    } else if (msg.t === "mulligan_reject") {
+      // 手順4b: 相手がこちらの公開手札にたねポケモンを発見しマリガンを却下（認めない）した通知を受信
+      const pName = msg.name || state.oppName || "相手プレイヤー";
+      const reason = msg.reason || "手札にたねポケモンが存在するため、マリガンは認められませんでした。";
+      addLog(`【対戦準備】相手（${pName}）からマリガンが却下されました: ${reason}`, { isRemote: true });
+      if (typeof handleMulliganRejected === "function") {
+        handleMulliganRejected(reason, pName);
+      }
     } else if (msg.t === "mulligan") {
       // 旧互換用
       state.oppMulliganCount = msg.count || (state.oppMulliganCount + 1);

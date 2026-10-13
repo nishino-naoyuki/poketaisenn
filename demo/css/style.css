@@ -564,6 +564,7 @@ html, body {
   aspect-ratio: 63 / 88;
   border-radius: calc(var(--u) * 0.6);
   flex: none;
+  min-width: 0;
   cursor: pointer;
 }
 
@@ -634,6 +635,7 @@ html, body {
   justify-content: space-between;
   align-items: flex-start;
   width: 100%;
+  min-width: 0;
 }
 
 .card .name {
@@ -641,12 +643,14 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 75%;
+  min-width: 0;
 }
 
 .card .hp {
   font-size: calc(var(--fs) * 0.8);
   color: #dc2626;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .card .card-btm {
@@ -654,6 +658,7 @@ html, body {
   color: #64748b;
   display: flex;
   justify-content: space-between;
+  min-width: 0;
 }
 
 .card .dmg {

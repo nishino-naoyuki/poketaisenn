@@ -255,25 +255,47 @@ function showNextOpponentMulliganModal() {
   const count = item.count || 1;
   const hand = Array.isArray(item.hand) ? item.hand : [];
 
-  let bodyHtml = `
-    <div style="margin-bottom:10px; padding:8px 10px; background:rgba(250, 204, 21, 0.12); border:1px solid rgba(250, 204, 21, 0.4); border-radius:6px; font-size:12px; color:#fef08a;">
-      📢 <b>${oppName}</b> さんが「たねポケモンなし（マリガン ${count}回目）」のため手札7枚を公開しました。<br>
-      たねポケモンがないことを確認して下の<b>「確認OK（引き直しを許可）」</b>を押してください。（カードはダブルクリックで拡大できます）
-    </div>
-    <div class="card-grid">
-  `;
+  const hasBasic = (typeof isBasicPokemonCard === "function")
+    ? hand.some(c => isBasicPokemonCard(c))
+    : (typeof hasBasicPokemon === "function" ? hasBasicPokemon(hand) : false);
+
+  const basicCardNames = hand.filter(c => (typeof isBasicPokemonCard === "function" ? isBasicPokemonCard(c) : false)).map(c => c.name);
+
+  let bannerHtml = "";
+  if (hasBasic) {
+    bannerHtml = `
+      <div style="margin-bottom:10px; padding:10px 12px; background:rgba(239, 68, 68, 0.2); border:1.5px solid #ef4444; border-radius:8px; font-size:12.5px; color:#fecaca; line-height:1.6;">
+        ⚠️ <b>注意：手札にたねポケモン（${escapeHtml(basicCardNames.join("、") || "たね")}）が含まれています！</b><br>
+        相手がたねポケモンを見落としている可能性があります。<b>「❌ たねポケモンがいるため却下（マリガンを認めない）」</b>を押して相手に対戦準備へ戻るよう伝えてください。
+      </div>
+    `;
+  } else {
+    bannerHtml = `
+      <div style="margin-bottom:10px; padding:8px 10px; background:rgba(250, 204, 21, 0.12); border:1px solid rgba(250, 204, 21, 0.4); border-radius:6px; font-size:12px; color:#fef08a;">
+        📢 <b>${oppName}</b> さんが「たねポケモンなし（マリガン ${count}回目）」のため手札7枚を公開しました。<br>
+        たねポケモンがいないことを確認して下の<b>「✅ たねポケモンなしを確認（引き直しを許可）」</b>を押してください。（カードはダブルクリックで拡大できます）
+      </div>
+    `;
+  }
+
+  let bodyHtml = bannerHtml + `<div class="card-grid">`;
 
   hand.forEach((c, i) => {
+    const isBasicThis = (typeof isBasicPokemonCard === "function") && isBasicPokemonCard(c);
     const safeCard = { ...c, uid: `opp_mulligan_${count}_${i}` };
     registerCard(safeCard);
     const hasImg = !!safeCard.imageUrl;
     const imgStyle = hasImg ? `style="background-image: url('${safeCard.imageUrl}');"` : '';
+    const basicBorder = isBasicThis ? 'box-shadow: 0 0 12px #ef4444; border: 2.5px solid #ef4444 !important;' : '';
     bodyHtml += `
       <div class="card ${safeCard.color || 'pokemon'} ${hasImg ? 'has-img' : ''}"
-           ${imgStyle}
+           style="${imgStyle} ${basicBorder}"
            ondblclick="event.stopPropagation(); window.openCardZoomByUid('${safeCard.uid}')"
-           title="ダブルクリックで拡大">
-        <div class="card-top"><span class="name">${escapeHtml(safeCard.name)}</span></div>
+           title="${isBasicThis ? '⚠️ たねポケモンです！' : 'ダブルクリックで拡大'}">
+        <div class="card-top">
+          <span class="name">${escapeHtml(safeCard.name)}</span>
+          ${isBasicThis ? '<span style="font-size:9px; background:#ef4444; color:#fff; padding:1px 4px; border-radius:3px; font-weight:bold;">たね</span>' : ''}
+        </div>
         <div class="card-btm"><span>${escapeHtml(safeCard.sub || safeCard.category || '')}</span></div>
       </div>
     `;
@@ -281,7 +303,10 @@ function showNextOpponentMulliganModal() {
   bodyHtml += `</div>`;
 
   const footHtml = `
-    <button class="btn green" onclick="ackOpponentMulligan()">✅ たねポケモンがないことを確認（引き直しを許可）</button>
+    <div style="display:flex; justify-content:flex-end; gap:8px; width:100%; flex-wrap:wrap;">
+      <button class="btn red" onclick="rejectOpponentMulligan()">❌ たねポケモンがいるため却下（マリガンを認めない）</button>
+      <button class="btn green" onclick="ackOpponentMulligan()">✅ たねポケモンなしを確認（引き直しを許可）</button>
+    </div>
   `;
 
   showModal(`🔍 相手のマリガン手札確認 (${oppName} - ${count}回目)`, bodyHtml, footHtml);
@@ -305,6 +330,41 @@ function ackOpponentMulligan() {
 
   addLog(`相手（${item.name || state.oppName}）のマリガン手札（${item.count}回目）を確認し、引き直しを承認しました`, { suppressSync: true });
   showToast(`相手の手札を確認しました（相手が7枚引き直します）`);
+
+  if (state.pendingOppMulliganQueue.length > 0) {
+    setTimeout(() => showNextOpponentMulliganModal(), 150);
+  }
+  renderAll();
+}
+
+/** 相手の手札にたねポケモンがいるため、マリガンを却下（認めない）する */
+function rejectOpponentMulligan() {
+  if (!Array.isArray(state.pendingOppMulliganQueue) || state.pendingOppMulliganQueue.length === 0) {
+    closeModal();
+    return;
+  }
+  const item = state.pendingOppMulliganQueue.shift();
+  closeModal();
+
+  const oppName = item.name || state.oppName || "相手プレイヤー";
+  const hand = Array.isArray(item.hand) ? item.hand : [];
+  const basicNames = hand.filter(c => (typeof isBasicPokemonCard === "function" ? isBasicPokemonCard(c) : false)).map(c => c.name);
+  const basicInfo = basicNames.length > 0 ? `（たねポケモン: ${basicNames.join(", ")}）` : "";
+
+  if (typeof P2P !== "undefined" && P2P.connected) {
+    P2P.send({
+      t: "mulligan_reject",
+      count: item.count,
+      name: state.myName,
+      reason: `手札にたねポケモン${basicInfo}が存在するため、マリガンは認められませんでした。`
+    });
+  }
+
+  addLog(`相手（${oppName}）のマリガンを却下しました${basicInfo}。相手に対戦準備への復帰を求めました`, {
+    suppressSync: true,
+    badge: "❌ マリガン却下"
+  });
+  showToast(`相手のマリガンを却下しました（相手に通知送信）`);
 
   if (state.pendingOppMulliganQueue.length > 0) {
     setTimeout(() => showNextOpponentMulliganModal(), 150);
@@ -387,6 +447,25 @@ function finishSetupPhaseAndStartBattle() {
   }
 }
 
+/** 相手からマリガンを却下（認めない）された場合の受信処理 */
+function handleMulliganRejected(reason, rejectorName) {
+  state.myMulliganStep = null;
+  const name = rejectorName || state.oppName || "相手プレイヤー";
+  const reasonText = reason || "手札にたねポケモンが存在するため、マリガンは認められませんでした。";
+
+  addLog(`【対戦準備】相手（${name}）からマリガンが却下されました: ${reasonText}`, {
+    badge: "⚠️ マリガン却下通知"
+  });
+
+  if (typeof showActionPopup === "function") {
+    showActionPopup(name, "「手札にたねポケモンがいるためマリガンできません」", [], "❌ マリガン却下");
+  }
+
+  alert(`【マリガンが却下されました】\n相手（${name}）より:\n${reasonText}\n\n手札のたねポケモンを確認し、バトル場に配置して対戦準備を完了してください。`);
+
+  renderAll();
+}
+
 window.hasBasicPokemon = hasBasicPokemon;
 window.executeMulligan = executeMulligan;
 window.sendMulliganRevealToOpponent = sendMulliganRevealToOpponent;
@@ -394,5 +473,7 @@ window.performMulliganRedraw = performMulliganRedraw;
 window.enqueueOpponentMulliganReveal = enqueueOpponentMulliganReveal;
 window.showNextOpponentMulliganModal = showNextOpponentMulliganModal;
 window.ackOpponentMulligan = ackOpponentMulligan;
+window.rejectOpponentMulligan = rejectOpponentMulligan;
+window.handleMulliganRejected = handleMulliganRejected;
 window.confirmSetupReady = confirmSetupReady;
 window.finishSetupPhaseAndStartBattle = finishSetupPhaseAndStartBattle;
