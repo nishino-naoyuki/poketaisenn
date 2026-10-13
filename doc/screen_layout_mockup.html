@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ポケカ対戦ツール - 対戦画面モックアップ v2</title>
+<style>
+  /*
+   * レイアウト方針（PTCGL準拠）
+   * - 画面全体を 100vh に収め、スクロール・見切れを発生させない
+   * - サイズはすべて基準単位 --u（画面の高さ/幅の小さい方基準）で指定し、画面サイズに追従
+   * - 手札は画面下端から「上半分だけ覗く」表示（ホバー/選択でせり上がる）
+   * - 相手の手札は画面上端から裏面が覗く
+   */
+  :root {
+    --u: min(1vh, 0.8vw);
+    --card-r: 0.716;              /* カード縦横比 (63x88mm) */
+    --bench-h: calc(var(--u) * 14);
+    --active-h: calc(var(--u) * 17);
+    --pile-h: calc(var(--u) * 12);
+    --prize-h: calc(var(--u) * 6.3);
+    --hand-h: calc(var(--u) * 20);
+    --fs: max(10px, calc(var(--u) * 1.4));
+    --blue: #2f6fe0;
+    --red: #d8343b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Segoe UI', 'Meiryo', sans-serif;
+    font-size: var(--fs);
+    color: #fff;
+    background: #0b0f1c;
+  }
+
+  /* ===== 盤面全体：5段グリッド ===== */
+  .board {
+    height: 100vh;
+    display: grid;
+    grid-template-rows:
+      calc(var(--u) * 5)     /* 相手の手札（上端から覗く） */
+      calc(var(--u) * 17)    /* 相手バンド：サイド/ベンチ/山札 */
+      1fr                    /* 中央アリーナ：バトル場×2・スタジアム */
+      calc(var(--u) * 19)    /* 自分バンド：サイド/ベンチ/山札 */
+      calc(var(--u) * 16);   /* 自分の手札（下端から覗く） */
+    position: relative;
+  }
+
+  /* ===== 相手の手札（裏面が上端から覗く） ===== */
+  .opp-hand {
+    background: linear-gradient(180deg, #7a1218, #b3242b);
+    display: flex; justify-content: center; align-items: flex-end;
+    gap: calc(var(--u) * 0.5);
+    overflow: hidden;
+    position: relative;
+  }
+  .opp-hand .back {
+    width: calc(var(--u) * 8 * var(--card-r) * 1.4);
+    height: calc(var(--u) * 8);
+    transform: translateY(35%);
+  }
+  .opp-hand .count {
+    position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%);
+    background: #222; border-radius: 10px; padding: 0 8px; font-weight: bold;
+  }
+  .top-menu {
+    position: absolute; left: calc(var(--u)*1); top: 50%; transform: translateY(-50%);
+    display: flex; gap: 6px; align-items: center; font-size: var(--fs);
+  }
+  .top-menu .room { background: rgba(0,0,0,.45); padding: 2px 8px; border-radius: 10px; }
+
+  /* ===== バンド（相手・自分共通） ===== */
+  .band {
+    display: grid;
+    grid-template-columns: calc(var(--u) * 26) 1fr calc(var(--u) * 30);
+    align-items: center;
+    padding: 0 calc(var(--u) * 1.5);
+    gap: calc(var(--u) * 1.5);
+  }
+  .band.opp { background: linear-gradient(180deg, #b3242b, #6d1419); border-bottom: 3px solid #e0b84a; }
+  .band.me  { background: linear-gradient(0deg, #173f9a, #22489e); border-top: 3px solid #e0b84a; }
+
+  /* ベンチ：暗いトレイの中に5枠 */
+  .bench-tray {
+    justify-self: center;
+    display: flex; gap: calc(var(--u) * 0.8);
+    padding: calc(var(--u) * 0.8);
+    background: rgba(0,0,0,.35);
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  .bench-tray .slot { height: var(--bench-h); }
+
+  /* ===== カード共通 ===== */
+  .slot, .card, .back {
+    aspect-ratio: 63 / 88;
+    border-radius: calc(var(--u) * 0.6);
+    flex: none;
+  }
+  .slot {
+    border: 1px dashed rgba(255,255,255,.25);
+    background: rgba(255,255,255,.04);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,.35); font-size: calc(var(--fs) * .85);
+  }
+  .card {
+    background: linear-gradient(160deg, #f6e27a 0%, #e7c94a 18%, #f3f0e4 19%, #e9e4d2 100%);
+    border: 2px solid #d9b93c;
+    color: #222; font-weight: bold;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: calc(var(--u) * 0.5);
+    font-size: calc(var(--fs) * .85);
+    box-shadow: 0 3px 8px rgba(0,0,0,.5);
+    position: relative;
+  }
+  .card.grass { background: linear-gradient(160deg, #9be27a 0%, #6fc04a 18%, #eef3e4 19%, #dfe8d2 100%); border-color: #5aa83a; }
+  .card.fire  { background: linear-gradient(160deg, #ff9a7a 0%, #e7604a 18%, #f6ece4 19%, #eadcd2 100%); border-color: #c8482f; }
+  .card.trainer { background: linear-gradient(160deg, #c9d3e0 0%, #9eb0c8 18%, #f2f4f7 19%, #e1e6ee 100%); border-color: #7c8ea8; }
+  .card .hp { align-self: flex-end; font-size: calc(var(--fs) * .8); }
+  .card .dmg {
+    position: absolute; right: -6%; bottom: 20%;
+    background: #e0451f; color: #fff; border: 2px solid #fff;
+    border-radius: 50%; width: 32%; aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--fs) * .8);
+  }
+  .back {
+    background:
+      radial-gradient(circle at 50% 50%, #f2d34a 0 18%, #333 19% 23%, transparent 24%),
+      linear-gradient(135deg, #2b5fc9, #183a85);
+    border: 2px solid #9fb6e8;
+    box-shadow: 0 2px 5px rgba(0,0,0,.5);
+  }
+  .opp .back, .opp-hand .back {
+    background:
+      radial-gradient(circle at 50% 50%, #f2d34a 0 18%, #333 19% 23%, transparent 24%),
+      linear-gradient(135deg, #c93b2b, #851a18);
+    border-color: #e8a49f;
+  }
+
+  /* 枚数バッジ */
+  .count-badge {
+    position: absolute; bottom: calc(var(--u) * -1.2); left: 50%; transform: translateX(-50%);
+    background: #1d1f26; border: 1px solid #888; border-radius: 10px;
+    padding: 0 calc(var(--u) * 1); font-weight: bold; font-size: var(--fs);
+    white-space: nowrap; z-index: 2;
+  }
+
+  /* ===== 左カラム：ロスト（上）＋サイド（下） ===== */
+  .side-col { display: flex; flex-direction: column; gap: calc(var(--u) * 0.8); align-items: flex-start; }
+  .lost {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(110, 40, 170, .55); border: 1px solid #b07ae8;
+    padding: 1px calc(var(--u) * 1); border-radius: 12px;
+    font-size: calc(var(--fs) * .9);
+  }
+  .lost b { background: #1d1f26; border-radius: 8px; padding: 0 6px; }
+  .prizes { position: relative; display: grid; grid-template-columns: repeat(3, auto); gap: calc(var(--u) * 0.5); }
+  .prizes .back { height: var(--prize-h); }
+
+  /* ===== 右カラム：山札＋トラッシュ＋山札ボタン ===== */
+  .pile-col { display: flex; align-items: center; justify-content: flex-end; gap: calc(var(--u) * 1); }
+  .pile { position: relative; height: var(--pile-h); }
+  .pile .back, .pile .card, .pile .slot { height: 100%; }
+  .pile .back { box-shadow: 2px 2px 0 #10265a, 4px 4px 0 #0c1d45, 0 4px 8px rgba(0,0,0,.6); }
+  .opp .pile .back { box-shadow: 2px 2px 0 #5a1010, 4px 4px 0 #450c0c, 0 4px 8px rgba(0,0,0,.6); }
+  .pile-label { position: absolute; top: calc(var(--u) * -2); left: 0; right: 0; text-align: center; font-size: calc(var(--fs) * .8); opacity: .8; white-space: nowrap; }
+
+  /* ===== ボタン ===== */
+  .btn {
+    font: inherit; font-size: calc(var(--fs) * .9); font-weight: bold;
+    color: #fff; border: 1px solid rgba(255,255,255,.35);
+    background: linear-gradient(180deg, #3d4a66, #2a3348);
+    border-radius: 4px; padding: calc(var(--u) * 0.35) calc(var(--u) * 0.8);
+    cursor: pointer; white-space: nowrap;
+  }
+  .btn:hover { filter: brightness(1.25); }
+  .btn.blue  { background: linear-gradient(180deg, #3b7cf0, #2457c2); }
+  .btn.green { background: linear-gradient(180deg, #2fb36c, #1d8a4f); }
+  .btn.red   { background: linear-gradient(180deg, #e0524f, #b02f2c); }
+  .btn.gold  { background: linear-gradient(180deg, #e7b93c, #b98a1d); color: #1d1f26; }
+  .btn.purple{ background: linear-gradient(180deg, #8a5ce6, #6339bf); }
+  .deck-btns { display: grid; grid-template-columns: 1fr; gap: calc(var(--u) * 0.5); }
+
+  /* ===== 中央アリーナ ===== */
+  .arena {
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.12) 0, transparent 45%),
+      radial-gradient(ellipse at 20% 50%, rgba(47,111,224,.35), transparent 50%),
+      radial-gradient(ellipse at 80% 50%, rgba(216,52,59,.30), transparent 50%),
+      #141a33;
+    overflow: visible;
+  }
+  .arena::before {  /* 六角グリッド風の装飾 */
+    content: ""; position: absolute; inset: 0; opacity: .25; pointer-events: none;
+    background-image:
+      linear-gradient(30deg, transparent 47%, rgba(255,255,255,.25) 48% 52%, transparent 53%),
+      linear-gradient(150deg, transparent 47%, rgba(255,255,255,.25) 48% 52%, transparent 53%);
+    background-size: calc(var(--u)*6) calc(var(--u)*3.5);
+  }
+  .arena .center-line {
+    position: absolute; left: 0; right: 0; top: 50%; height: 0;
+    border-top: 1px dashed rgba(255,255,255,.2);
+  }
+  /* バトル場：中央線をはさんで上下に対面 */
+  .active {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    height: var(--active-h);
+  }
+  .active .card, .active .slot { height: 100%; }
+  .active.opp-active { bottom: calc(50% + var(--u) * 0.6); }
+  .active.my-active  { top: calc(50% + var(--u) * 0.6); }
+  .active-label {
+    position: absolute; left: 105%; top: 50%; transform: translateY(-50%);
+    font-size: calc(var(--fs) * .8); opacity: .6; white-space: nowrap;
+  }
+
+  /* スタジアム：中央右側（共有） */
+  .stadium {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    left: calc(50% + var(--u) * 16);
+    height: calc(var(--u) * 13);
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .stadium .slot { height: 100%; border-color: rgba(80, 220, 150, .6); color: rgba(120,240,180,.8); }
+
+  /* テンポラリエリア：中央アリーナ右下（自分の山札の上方） */
+  .temp {
+    position: absolute; right: calc(var(--u) * 1.5); bottom: calc(var(--u) * 1);
+    display: flex; gap: calc(var(--u) * 1); align-items: center;
+    background: rgba(10, 14, 28, .85);
+    border: 2px solid #ec4899; border-radius: 8px;
+    padding: calc(var(--u) * 0.8);
+    box-shadow: 0 0 14px rgba(236,72,153,.4);
+  }
+  .temp .card { height: calc(var(--u) * 12); }
+  .temp .temp-side { display: flex; flex-direction: column; gap: calc(var(--u) * 0.6); }
+  .temp .title { color: #f472b6; font-weight: bold; font-size: calc(var(--fs) * .85); }
+
+  /* 右端：ターン情報（PTCGLの右側パネル相当） */
+  .turn-panel {
+    position: absolute; right: calc(var(--u) * 1.5); top: calc(var(--u) * 1);
+    display: flex; flex-direction: column; align-items: flex-end; gap: calc(var(--u) * 0.6);
+  }
+  .turn-panel .name { background: rgba(0,0,0,.5); padding: 1px 8px; border-radius: 4px; }
+  .log-btn {
+    position: absolute; left: calc(var(--u) * 1.5); top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: calc(var(--u) * 0.6);
+  }
+
+  /* ===== 自分の手札：画面下端から覗く ===== */
+  .hand-area {
+    position: relative;
+    background: linear-gradient(0deg, #0f2a6b, #173f9a);
+    display: grid;
+    grid-template-columns: calc(var(--u) * 26) 1fr calc(var(--u) * 30);
+    gap: calc(var(--u) * 1.5);
+    padding: 0 calc(var(--u) * 1.5);
+    overflow: visible;
+  }
+  .hand-btns {
+    align-self: center;
+    display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 0.5);
+  }
+  .hand-btns .btn.wide { grid-column: span 2; }
+  .hand-cards {
+    display: flex; justify-content: center;
+    overflow: hidden;          /* 下にはみ出た部分は隠す＝覗かせ表示 */
+    padding-top: calc(var(--u) * 1.2);
+    height: 100%;
+  }
+  .hand-cards .card {
+    height: var(--hand-h);
+    margin-left: calc(var(--hand-h) * -0.12);   /* 少し重ねる */
+    transition: transform .15s;
+    cursor: pointer;
+  }
+  .hand-cards .card:first-child { margin-left: 0; }
+  .hand-cards .card:hover { transform: translateY(calc(var(--u) * -1)); z-index: 5; }
+  .hand-cards .card.selected { transform: translateY(calc(var(--u) * -1)); outline: 3px solid #ffd84a; z-index: 6; }
+  .hand-info { align-self: center; justify-self: end; text-align: right; opacity: .85; line-height: 1.6; }
+
+  /* 選択カードの拡大プレビュー（ホバー時に左上に表示する想定の枠） */
+  .zoom-hint {
+    position: absolute; left: calc(var(--u) * 1.5); bottom: calc(var(--u) * 1);
+    font-size: calc(var(--fs) * .8); opacity: .5;
+  }
+
+  /* ===================================================
+   * スマホ縦画面（PTCGLスマホ版準拠）
+   * =================================================== */
+  @media (orientation: portrait) {
+    :root {
+      --bench-h: 9.5vh;
+      --active-h: 10.5vh;
+      --pile-h: 8vh;
+      --prize-h: 5.2vh;
+      --hand-h: 15vh;
+      --fs: 10px;
+    }
+    .board {
+      grid-template-rows:
+        4vh      /* 相手手札 */
+        23vh     /* 相手バンド */
+        1fr      /* アリーナ */
+        23vh     /* 自分バンド */
+        16vh;    /* 手札（カードのみ。ボタンはメニューへ） */
+    }
+    .opp-hand .back { height: 6vh; width: auto; }
+    .top-menu .room { display: none; }
+    .band {
+      grid-template-columns: 19vw minmax(0, 1fr) 19vw;
+      padding: 0 1.5vw; gap: 1.5vw;
+    }
+    /* ベンチは 3枚 + 2枚 の2段 */
+    .bench-tray {
+      flex-wrap: wrap; justify-content: center;
+      width: calc(var(--bench-h) * var(--card-r) * 3 + 3.4vh);
+      gap: 0.8vh; padding: 0.8vh;
+    }
+    .prizes { grid-template-columns: repeat(2, auto); gap: 0.6vh; }
+    .side-col { align-items: center; }
+    .band.opp .side-col { align-items: center !important; }
+    /* 山札・トラッシュは縦積み */
+    .pile-col { flex-direction: column; gap: 2.2vh; justify-content: center; align-items: center; }
+    .band.opp .pile-col { flex-direction: column-reverse; justify-content: center !important; }
+    /* 山札ボタン・手札ボタンはハンバーガーメニューに集約するため非表示 */
+    .deck-btns, .hand-btns, .log-btn { display: none; }
+    .stadium { left: calc(50% + 12vw); height: 8vh; }
+    .temp { left: 2vw; right: auto; bottom: 1vh; padding: 1vw; gap: 1.5vw; }
+    .temp .card { height: 9vh; }
+    .turn-panel { right: 2vw; top: 1vh; }
+    .active-label { display: none; }
+    /* 手札：ボタン列が無くなった分カードを大きく覗かせる */
+    .hand-area {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 0 2vw;
+    }
+    .hand-info { display: none; }
+    .hand-cards { padding-top: 1vh; }
+    .hand-cards .card { margin-left: calc(var(--hand-h) * -0.35); }
+
+    /* ハンバーガーボタン：アリーナ右下（自分の山札の真上） */
+    .sp-menu-btn { display: flex; }
+  }
+
+  /* ===== ハンバーガーメニュー（スマホのみ表示） ===== */
+  .sp-menu-btn {
+    display: flex;
+    position: absolute; right: 3vw; bottom: calc(39vh + 1.2vh); z-index: 20;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(180deg, #3b7cf0, #2457c2);
+    border: 2px solid #fff; box-shadow: 0 3px 10px rgba(0,0,0,.6);
+    flex-direction: column; justify-content: center; align-items: center; gap: 4px;
+    cursor: pointer;
+  }
+  .sp-menu-btn span { display: block; width: 22px; height: 3px; background: #fff; border-radius: 2px; }
+  .sp-menu-btn .badge {
+    position: absolute; top: -4px; right: -4px; width: auto; height: auto;
+    background: #ffd84a; color: #1d1f26; font-size: 9px; font-weight: bold;
+    padding: 1px 4px; border-radius: 8px;
+  }
+  .sp-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 90;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .sp-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+    background: #151b2e; border-top: 3px solid #e0b84a;
+    border-radius: 14px 14px 0 0;
+    padding: 10px 14px 16px;
+    transform: translateY(105%); transition: transform .22s ease-out;
+    max-height: 75vh; overflow-y: auto;
+  }
+  body.menu-open .sp-backdrop { opacity: 1; pointer-events: auto; }
+  body.menu-open .sp-sheet { transform: translateY(0); }
+  .sp-sheet .grip { width: 40px; height: 4px; background: #555; border-radius: 2px; margin: 0 auto 8px; }
+  .sp-sheet h3 {
+    font-size: 11px; color: #9fb3d9; margin: 10px 0 6px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .sp-sheet h3 .sel { color: #ffd84a; font-weight: normal; }
+  .sp-sheet .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .sp-sheet .btn { font-size: 13px; padding: 10px 0; }
+  .sp-sheet .btn.wide { grid-column: span 2; }
+  @media (orientation: landscape) {
+    .sp-menu-btn, .sp-sheet, .sp-backdrop { display: none; }
+  }
+
+
+</style>
+</head>
+<body>
+<div class="board">
+
+  <!-- ① 相手の手札（上端から裏面が覗く） -->
+  <div class="opp-hand">
+    <div class="top-menu">
+      <span class="room">ROOM 482913</span>
+      <button class="btn red">退室</button>
+    </div>
+    <div class="back"></div><div class="back"></div><div class="back"></div><div class="back"></div><div class="back"></div>
+    <span class="count">相手の手札 5</span>
+  </div>
+
+  <!-- ② 相手バンド（自分側を180°回転した配置：左=山札/トラッシュ、右=サイド/ロスト） -->
+  <div class="band opp">
+    <div class="pile-col" style="justify-content:flex-start;">
+      <div class="pile"><div class="back"></div><span class="count-badge">47</span></div>
+      <div class="pile"><div class="slot">トラッシュ</div><span class="count-badge">3</span></div>
+    </div>
+    <div class="bench-tray">
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="card grass"><span>フシギダネ</span><span class="hp">HP70</span></div>
+      <div class="card grass"><span>フシギソウ</span><span class="hp">HP100</span></div>
+      <div class="slot"></div>
+    </div>
+    <div class="side-col" style="align-items:flex-end; flex-direction:column-reverse;">
+      <div class="lost">ロスト <b>0</b></div>
+      <div class="prizes">
+        <div class="back"></div><div class="back"></div><div class="back"></div>
+        <div class="back"></div><div class="back"></div><div class="back"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 中央アリーナ -->
+  <div class="arena">
+    <div class="center-line"></div>
+
+    <div class="log-btn">
+      <button class="btn">ログ</button>
+      <button class="btn gold">コイン</button>
+    </div>
+
+    <div class="active opp-active">
+      <div class="card grass"><span>フシギバナex</span><span class="hp">HP340</span><span class="dmg">60</span></div>
+      <span class="active-label">相手バトル場</span>
+    </div>
+    <div class="active my-active">
+      <div class="card fire"><span>リザードンex</span><span class="hp">HP330</span><span class="dmg">30</span></div>
+      <span class="active-label">自分バトル場</span>
+    </div>
+
+    <div class="stadium">
+      <div class="slot">スタジアム<br>(共有)</div>
+    </div>
+
+    <div class="turn-panel">
+      <span class="name">相手：プレイヤーB</span>
+      <span class="name" style="background:#2457c2;">あなた：プレイヤーA</span>
+      <button class="btn gold">ターン終了</button>
+    </div>
+
+    <!-- テンポラリエリア -->
+    <div class="temp">
+      <div class="card trainer"><span>ネストボール</span><span class="hp">グッズ</span></div>
+      <div class="temp-side">
+        <span class="title">テンポラリ</span>
+        <button class="btn green">手札に加える</button>
+        <button class="btn">山の下側に戻す</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 自分バンド（左=ロスト/サイド、中央=ベンチ、右=山札/トラッシュ） -->
+  <div class="band me">
+    <div class="side-col">
+      <div class="lost">ロスト <b>0</b></div>
+      <div class="prizes">
+        <div class="back"></div><div class="back"></div><div class="back"></div>
+        <div class="back"></div><div class="back"></div><div class="back"></div>
+      </div>
+    </div>
+    <div class="bench-tray">
+      <div class="card fire"><span>ヒトカゲ</span><span class="hp">HP70</span></div>
+      <div class="card fire"><span>リザード</span><span class="hp">HP90</span></div>
+      <div class="card trainer" style="background:linear-gradient(160deg,#e9e9e9,#cfd6df);"><span>ピジョット</span><span class="hp">HP280</span></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+    </div>
+    <div class="pile-col">
+      <div class="deck-btns">
+        <button class="btn blue">山を見る</button>
+        <button class="btn green">１枚引く</button>
+        <button class="btn red">１枚トラッシュ</button>
+        <button class="btn purple">シャッフル</button>
+      </div>
+      <div class="pile"><div class="back"></div><span class="count-badge">45</span></div>
+      <div class="pile"><div class="card trainer"><span>博士の研究</span></div><span class="count-badge">2</span></div>
+    </div>
+  </div>
+
+  <!-- ⑤ 自分の手札（下端から覗く） -->
+  <div class="hand-area">
+    <div class="hand-btns">
+      <button class="btn green">１枚引く</button>
+      <button class="btn blue">デッキを見る</button>
+      <button class="btn">手札を山にもどす</button>
+      <button class="btn">山の下に戻す</button>
+      <button class="btn red">トラッシュする</button>
+      <button class="btn blue">ベンチに出す</button>
+      <button class="btn gold wide">使用する</button>
+    </div>
+    <div class="hand-cards">
+      <div class="card fire selected"><span>ヒトカゲ</span><span class="hp">HP70</span></div>
+      <div class="card trainer"><span>ハイパーボール</span><span class="hp">グッズ</span></div>
+      <div class="card trainer"><span>ナンジャモ</span><span class="hp">サポート</span></div>
+      <div class="card fire"><span>基本炎エネ</span></div>
+      <div class="card fire"><span>基本炎エネ</span></div>
+      <div class="card trainer"><span>ふしぎなアメ</span><span class="hp">グッズ</span></div>
+    </div>
+    <div class="hand-info">
+      手札 <b>6</b> 枚<br>
+      <span style="font-size:.85em;">カードを選択 → 左のボタンで操作</span>
+    </div>
+  </div>
+  <!-- スマホ用：ハンバーガーボタン -->
+  <button class="sp-menu-btn" onclick="toggleMenu(true)" aria-label="操作メニュー">
+    <span></span><span></span><span></span>
+    <em class="badge">操作</em>
+  </button>
+
+</div>
+
+<!-- スマホ用：操作メニュー（下から出るシート） -->
+<div class="sp-backdrop" onclick="toggleMenu(false)"></div>
+<div class="sp-sheet" role="dialog" aria-label="操作メニュー">
+  <div class="grip"></div>
+
+  <h3>手札 <span class="sel">選択中：ヒトカゲ</span></h3>
+  <div class="grid">
+    <button class="btn green">１枚引く</button>
+    <button class="btn blue">デッキを見る</button>
+    <button class="btn">手札を山にもどす</button>
+    <button class="btn">山の下に戻す</button>
+    <button class="btn red">トラッシュする</button>
+    <button class="btn blue">ベンチに出す</button>
+    <button class="btn gold wide">使用する</button>
+  </div>
+
+  <h3>山札 <span class="sel" style="color:#9fb3d9;">残り 45 枚</span></h3>
+  <div class="grid">
+    <button class="btn blue">山を見る</button>
+    <button class="btn green">１枚引く</button>
+    <button class="btn red">１枚トラッシュ</button>
+    <button class="btn purple">シャッフル</button>
+  </div>
+
+  <h3>その他</h3>
+  <div class="grid">
+    <button class="btn">ログ</button>
+    <button class="btn gold">コイン</button>
+  </div>
+
+  <h3></h3>
+  <div class="grid"><button class="btn wide" onclick="toggleMenu(false)">閉じる</button></div>
+</div>
+
+<script>
+  function toggleMenu(open) { document.body.classList.toggle('menu-open', open); }
+  if (location.hash === '#menu') toggleMenu(true);   // モック確認用
+</script>
+</body>
+</html>

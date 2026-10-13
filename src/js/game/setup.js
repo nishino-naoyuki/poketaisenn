@@ -1,0 +1,398 @@
+/* 【ゲーム】対戦・一人回しセットアップ ＆ 対戦準備フェーズ */
+
+function hasBasicPokemon(cards) {
+  if (!Array.isArray(cards)) return false;
+  return cards.some(c => c && (c.category === "たね" || c.category === "Basic" || (c.type === "pokemon" && !c.category?.includes("進化") && !c.name?.includes("VSTAR") && !c.name?.includes("VMAX"))));
+}
+
+function startBattleSetup() {
+  document.getElementById("lobby").classList.add("hidden");
+  document.getElementById("game").classList.remove("hidden");
+
+  // デッキ初期化（ユーザーが読み込んだデッキを使用）
+  const sourceDeck = state.myLoadedDeck || SAMPLE_DECK;
+  state.myDeck = shuffleArray([...sourceDeck].map((c, i) => ({ ...c, uid: "c_" + i })));
+  state.myHand = [];
+  state.myPrizes = [];
+  state.myTrash = [];
+  state.myLost = [];
+  state.tempCards = [];
+  state.playCard = null;
+  state.selectedHandIndices.clear();
+  state.turn = 1;
+  state.turnStep = 1;
+  state.logs = [];
+
+  // 対戦準備フェーズを有効化
+  state.isSetupPhase = true;
+  state.setupStep = "coin";
+  state.coinResult = null;
+  state.coinChooser = null;
+  state.firstPlayer = null;
+  state.mySetupReady = false;
+  state.oppSetupReady = false;
+  state.mulliganCount = 0;
+  state.oppMulliganCount = 0;
+  state.myMulliganStep = null;
+  state.oppMulliganDeclared = false;
+  state.pendingOppMulliganQueue = [];
+
+  // 初期セットアップ: 手札7枚ドロー（サイド6枚は「対戦準備完了」を押した時にセット）
+  for (let i = 0; i < 7; i++) {
+    state.myHand.push(state.myDeck.shift());
+  }
+
+  // ★ バトル場は空にしてユーザーが手動でたねポケモンを出す
+  state.myActive = null;
+  state.myBench = [null, null, null, null, null];
+
+  // ★ 通信対戦開始時はダミーBOTデータ（フシギバナex）を完全に破棄
+  if (typeof resetOpponentCards === "function") {
+    resetOpponentCards();
+  }
+
+  state.isSoloMode = false;
+  addLog(`対戦準備フェーズを開始しました（手札7枚ドロー・準備完了時にサイド6枚がセットされます）`, { suppressSync: true });
+  showToast("対戦準備フェーズ: たねポケモンをバトル場に出してください（ない場合はマリガン宣言）");
+
+  // ホストの場合、コイントスによる先攻後攻決定を開始
+  if (P2P.connected) {
+    if (P2P.role === "host") {
+      setTimeout(() => startSetupCoinToss(), 400);
+    }
+  } else {
+    // ローカル単体プレイ時はランダムまたは選択
+    state.setupStep = "place";
+  }
+
+  renderAll();
+}
+
+// 一人回しモードのセットアップ（2デッキ同時展開）
+function startSoloBattleSetup() {
+  state.isSoloMode = true;
+  state.myName = "デッキ1 (プレイヤーA)";
+  state.oppName = "デッキ2 (プレイヤーB)";
+  state.roomNo = "SOLO-PRACTICE";
+
+  document.getElementById("lobby").classList.add("hidden");
+  document.getElementById("game").classList.remove("hidden");
+
+  // デッキA（先攻）シャッフル＆初期化
+  const deckSourceA = state.soloDeckA || SAMPLE_DECK;
+  state.myDeck = shuffleArray([...deckSourceA].map((c, i) => ({ ...c, uid: "a_" + i })));
+  state.myHand = [];
+  state.myPrizes = [];
+  state.myTrash = [];
+  state.myLost = [];
+
+  // デッキB（後攻）シャッフル＆初期化
+  const deckSourceB = state.soloDeckB || SAMPLE_DECK_B;
+  state.oppDeck = shuffleArray([...deckSourceB].map((c, i) => ({ ...c, uid: "b_" + i })));
+  state.oppHand = [];
+  state.oppPrizesList = [];
+  state.oppTrash = [];
+  state.oppLost = [];
+
+  state.tempCards = [];
+  state.playCard = null;
+  state.stadium = null;
+  state.selectedHandIndices.clear();
+  state.turn = 1;
+  state.turnStep = 1;
+  state.logs = [];
+
+  // 対戦準備フェーズ
+  state.isSetupPhase = true;
+  state.setupStep = "place";
+  state.firstPlayer = "me";
+  state.mySetupReady = false;
+  state.oppSetupReady = false;
+  state.mulliganCount = 0;
+  state.oppMulliganCount = 0;
+  state.myMulliganStep = null;
+  state.oppMulliganDeclared = false;
+  state.pendingOppMulliganQueue = [];
+
+  // デッキA: 手札7枚ドロー（サイド6枚は準備完了ボタンを押した時にセット）
+  for (let i = 0; i < 7; i++) state.myHand.push(state.myDeck.shift());
+
+  // デッキB: 手札7枚ドロー、サイド6枚
+  for (let i = 0; i < 7; i++) state.oppHand.push(state.oppDeck.shift());
+  for (let i = 0; i < 6; i++) state.oppPrizesList.push(state.oppDeck.shift());
+  state.oppDeckCount = state.oppDeck.length;
+  state.oppHandCount = state.oppHand.length;
+  state.oppPrizes = state.oppPrizesList.length;
+
+  state.myActive = null;
+  state.myBench = [null, null, null, null, null];
+  state.oppActive = null;
+  state.oppBench = [null, null, null, null, null];
+
+  // 一人回し用: デッキBの手札からポケモンを1体選んで相手バトル場にセット
+  const basicB = state.oppHand.find(c => c && c.type === "pokemon");
+  if (basicB) {
+    const bIdx = state.oppHand.indexOf(basicB);
+    state.oppHand.splice(bIdx, 1);
+    state.oppActive = {
+      card: basicB,
+      damage: 0,
+      special: null,
+      energies: [],
+      tool: null
+    };
+    state.oppHandCount = state.oppHand.length;
+  }
+
+  addLog(`【一人回し対戦準備】手札からたねポケモンをバトル場に出してください（準備完了時にサイド6枚がセットされます）`, { suppressSync: true });
+  showToast("一人回し対戦準備: たねポケモンをバトル場に出して準備完了を押してください");
+
+  renderAll();
+}
+
+/** 7枚引き直し（マリガン）宣言・実行 */
+function executeMulligan() {
+  if (!state.isSetupPhase) return;
+  if (state.myActive || state.mySetupReady || state.myBench.some(b => b !== null)) {
+    alert("バトル場やベンチにポケモンを配置した後や、準備完了後は引き直し（マリガン）できません。");
+    return;
+  }
+  if (state.myMulliganStep) {
+    return;
+  }
+
+  // 通信対戦中: 公式ルール手順（1.宣言 → 2.相手準備完了 → 3.手札公開＆相手確認OK → 4.引き直し）
+  if (typeof P2P !== "undefined" && P2P.connected) {
+    // すでに相手が準備完了している場合、または相手も「たねなし宣言」をしている場合は直ちに手札を公開
+    if (state.oppSetupReady || state.oppMulliganDeclared) {
+      sendMulliganRevealToOpponent();
+    } else {
+      // 手順1: まず「たねポケモンなし」だけを宣言し、相手がバトル場・サイドを置いて準備完了するのを待つ
+      state.myMulliganStep = "waiting_opp_ready";
+      P2P.send({ t: "mulligan_declare", name: state.myName });
+      addLog(`「たねポケモンなし（マリガン）」を宣言しました（相手の対戦準備が完了した後に手札7枚を公開します）`, { suppressSync: true });
+      showToast("たねなし宣言完了：相手の対戦準備完了を待っています");
+      renderAll();
+    }
+    return;
+  }
+
+  // オフライン・一人回し時は即座に60枚でシャッフル＆7枚引き直し
+  state.mulliganCount++;
+  performMulliganRedraw();
+}
+
+/** 手順3: 相手の準備完了後（または双方たねなし宣言時）に自分の手札7枚を相手へ公開送信 */
+function sendMulliganRevealToOpponent() {
+  if (!state.isSetupPhase) return;
+  state.mulliganCount++;
+  state.myMulliganStep = "waiting_opp_ack";
+
+  if (typeof P2P !== "undefined" && P2P.connected) {
+    P2P.send({
+      t: "mulligan_reveal",
+      count: state.mulliganCount,
+      name: state.myName,
+      hand: state.myHand
+    });
+  }
+
+  addLog(`相手（${state.oppName}）にマリガン確認のため手札7枚を公開しました（マリガン ${state.mulliganCount}回目・相手の確認待ち...）`, { suppressSync: true });
+  showToast(`手札7枚を相手に公開中... 相手の「確認OK」を待っています`);
+  renderAll();
+}
+
+/** 手順4: 相手の確認OK後（またはオフライン時）に手札をすべて山札（60枚）に戻してシャッフル＆7枚引き直す */
+function performMulliganRedraw() {
+  if (!state.isSetupPhase) return;
+
+  // 万一サイドが置かれていた場合も山札に戻して60枚全体で引き直す
+  if (state.myPrizes.length > 0) {
+    state.myDeck.push(...state.myPrizes);
+    state.myPrizes = [];
+  }
+
+  // 手札を山札に戻してシャッフル
+  state.myDeck.push(...state.myHand);
+  state.myHand = [];
+  state.myDeck = shuffleArray(state.myDeck);
+
+  // 新たに7枚引く
+  for (let i = 0; i < 7; i++) {
+    if (state.myDeck.length > 0) {
+      state.myHand.push(state.myDeck.shift());
+    }
+  }
+
+  state.myMulliganStep = null;
+  addLog(`手札をすべて山札に戻してシャッフルし、7枚引き直しました（マリガン ${state.mulliganCount}回目）`, {
+    badge: "🔄 マリガン引き直し"
+  });
+  showToast(`手札を7枚引き直しました！（マリガン ${state.mulliganCount}回目）`);
+
+  if (typeof P2P !== "undefined" && P2P.connected) {
+    P2P.syncNow();
+  }
+
+  renderAll();
+}
+
+/** 相手から公開されたマリガン手札をキューに追加し、確認モーダルを表示 */
+function enqueueOpponentMulliganReveal(item) {
+  if (!Array.isArray(state.pendingOppMulliganQueue)) {
+    state.pendingOppMulliganQueue = [];
+  }
+  state.pendingOppMulliganQueue.push(item);
+  showNextOpponentMulliganModal();
+}
+
+function showNextOpponentMulliganModal() {
+  if (!Array.isArray(state.pendingOppMulliganQueue) || state.pendingOppMulliganQueue.length === 0) {
+    return;
+  }
+  const item = state.pendingOppMulliganQueue[0];
+  const oppName = escapeHtml(item.name || state.oppName);
+  const count = item.count || 1;
+  const hand = Array.isArray(item.hand) ? item.hand : [];
+
+  let bodyHtml = `
+    <div style="margin-bottom:10px; padding:8px 10px; background:rgba(250, 204, 21, 0.12); border:1px solid rgba(250, 204, 21, 0.4); border-radius:6px; font-size:12px; color:#fef08a;">
+      📢 <b>${oppName}</b> さんが「たねポケモンなし（マリガン ${count}回目）」のため手札7枚を公開しました。<br>
+      たねポケモンがないことを確認して下の<b>「確認OK（引き直しを許可）」</b>を押してください。（カードはダブルクリックで拡大できます）
+    </div>
+    <div class="card-grid">
+  `;
+
+  hand.forEach((c, i) => {
+    const safeCard = { ...c, uid: `opp_mulligan_${count}_${i}` };
+    registerCard(safeCard);
+    const hasImg = !!safeCard.imageUrl;
+    const imgStyle = hasImg ? `style="background-image: url('${safeCard.imageUrl}');"` : '';
+    bodyHtml += `
+      <div class="card ${safeCard.color || 'pokemon'} ${hasImg ? 'has-img' : ''}"
+           ${imgStyle}
+           ondblclick="event.stopPropagation(); window.openCardZoomByUid('${safeCard.uid}')"
+           title="ダブルクリックで拡大">
+        <div class="card-top"><span class="name">${escapeHtml(safeCard.name)}</span></div>
+        <div class="card-btm"><span>${escapeHtml(safeCard.sub || safeCard.category || '')}</span></div>
+      </div>
+    `;
+  });
+  bodyHtml += `</div>`;
+
+  const footHtml = `
+    <button class="btn green" onclick="ackOpponentMulligan()">✅ たねポケモンがないことを確認（引き直しを許可）</button>
+  `;
+
+  showModal(`🔍 相手のマリガン手札確認 (${oppName} - ${count}回目)`, bodyHtml, footHtml);
+}
+
+function ackOpponentMulligan() {
+  if (!Array.isArray(state.pendingOppMulliganQueue) || state.pendingOppMulliganQueue.length === 0) {
+    closeModal();
+    return;
+  }
+  const item = state.pendingOppMulliganQueue.shift();
+  closeModal();
+
+  if (typeof P2P !== "undefined" && P2P.connected) {
+    P2P.send({
+      t: "mulligan_ack",
+      count: item.count,
+      name: state.myName
+    });
+  }
+
+  addLog(`相手（${item.name || state.oppName}）のマリガン手札（${item.count}回目）を確認し、引き直しを承認しました`, { suppressSync: true });
+  showToast(`相手の手札を確認しました（相手が7枚引き直します）`);
+
+  if (state.pendingOppMulliganQueue.length > 0) {
+    setTimeout(() => showNextOpponentMulliganModal(), 150);
+  }
+  renderAll();
+}
+
+/** 対戦準備完了ボタン処理（このタイミングでサイド6枚を山札からセット） */
+function confirmSetupReady() {
+  if (!state.isSetupPhase) return;
+  if (state.myMulliganStep) {
+    alert("現在マリガン処理中です。引き直しが完了してから準備完了を押してください。");
+    return;
+  }
+  if (!state.myActive) {
+    alert("バトル場にたねポケモンを配置してください。");
+    return;
+  }
+
+  // ★ 対戦準備完了時に山札からサイド6枚をセット
+  if (state.myPrizes.length === 0) {
+    for (let i = 0; i < 6; i++) {
+      if (state.myDeck.length > 0) {
+        state.myPrizes.push(state.myDeck.shift());
+      }
+    }
+  }
+
+  state.mySetupReady = true;
+  addLog(`バトル場の配置とサイド6枚のセットを完了しました（相手の準備を待機中...）`, { suppressSync: true });
+  showToast("サイド6枚をセットして準備完了！ 相手を待っています...");
+
+  if (P2P.connected) {
+    P2P.send({ t: "setup_ready", name: state.myName });
+    P2P.syncNow();
+    if (state.oppSetupReady) {
+      finishSetupPhaseAndStartBattle();
+    }
+  } else if (state.isSoloMode) {
+    // 一人回し時は両側が完了したかチェック
+    finishSetupPhaseAndStartBattle();
+  } else {
+    finishSetupPhaseAndStartBattle();
+  }
+
+  renderAll();
+}
+
+/** 双方準備完了後のオープン・バトル開始 */
+function finishSetupPhaseAndStartBattle() {
+  state.isSetupPhase = false;
+  state.setupStep = "done";
+  state.mySetupReady = true;
+  state.oppSetupReady = true;
+  state.myMulliganStep = null;
+  state.oppMulliganDeclared = false;
+  state.turnStep = 1;
+  state.turn = 1;
+
+  if (P2P.connected) {
+    P2P.send({ t: "match_open", turnStep: 1 });
+    P2P.syncNow();
+  }
+
+  showToast("🎉 せーの、オープン！ バトル開始！");
+  const mulliganNote = state.oppMulliganCount > 0 ? `（※相手のマリガン ${state.oppMulliganCount}回分、必要に応じて山札から引いてください）` : "";
+  const initialTurnInfo = (typeof getTurnInfo === "function") ? getTurnInfo(1) : { label: "先攻1ターン目", isMyTurn: (state.firstPlayer !== "opp"), activePlayerName: (state.firstPlayer === "opp" ? state.oppName : state.myName) };
+
+  addLog(`お互いのバトル場を公開し、対戦を開始しました！ (${initialTurnInfo.label}: 【${initialTurnInfo.activePlayerName}】の番) ${mulliganNote}`, { suppressSync: true });
+
+  renderAll();
+
+  // ★ ３）バトル開始時のバナー演出 ＆ ４）先攻プレイヤーの強制トップドロー
+  if (typeof playTurnChangeBanner === "function") {
+    playTurnChangeBanner(initialTurnInfo, () => {
+      if (initialTurnInfo.isMyTurn && typeof executeTurnStartDraw === "function") {
+        executeTurnStartDraw();
+      }
+    });
+  }
+}
+
+window.hasBasicPokemon = hasBasicPokemon;
+window.executeMulligan = executeMulligan;
+window.sendMulliganRevealToOpponent = sendMulliganRevealToOpponent;
+window.performMulliganRedraw = performMulliganRedraw;
+window.enqueueOpponentMulliganReveal = enqueueOpponentMulliganReveal;
+window.showNextOpponentMulliganModal = showNextOpponentMulliganModal;
+window.ackOpponentMulligan = ackOpponentMulligan;
+window.confirmSetupReady = confirmSetupReady;
+window.finishSetupPhaseAndStartBattle = finishSetupPhaseAndStartBattle;

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ポケカ オンライン対戦ツール（デモ）</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- =====================================================
+     画面① ロビー（名前 → ルーム → デッキコード → 対戦開始）
+     ===================================================== -->
+<section id="lobby" class="lobby">
+  <!-- 4隅のかわいいポケモンたち（ゆらゆら揺れる） -->
+  <!-- 左上：ピカチュウ -->
+  <div class="lobby-corner-pokemon top-left" title="ピカチュウ">
+    <div class="poke-balloon">⚡ ピカッ！</div>
+    <svg viewBox="0 0 100 100" width="105" height="105" class="pokemon-svg" aria-label="ピカチュウ">
+      <!-- 耳 -->
+      <polygon points="26,38 8,4 38,22" fill="#ffd533"/>
+      <polygon points="8,4 18,13 14,21 8,4" fill="#2d3748"/>
+      <polygon points="74,38 92,4 62,22" fill="#ffd533"/>
+      <polygon points="92,4 82,13 86,21 92,4" fill="#2d3748"/>
+      <!-- 頭・体 -->
+      <ellipse cx="50" cy="56" rx="36" ry="32" fill="#ffd533"/>
+      <!-- ほっぺ -->
+      <circle cx="25" cy="62" r="8.5" fill="#ef4444"/>
+      <circle cx="75" cy="62" r="8.5" fill="#ef4444"/>
+      <!-- 目 -->
+      <circle cx="36" cy="50" r="5" fill="#1e293b"/>
+      <circle cx="38" cy="48" r="2" fill="#ffffff"/>
+      <circle cx="64" cy="50" r="5" fill="#1e293b"/>
+      <circle cx="62" cy="48" r="2" fill="#ffffff"/>
+      <!-- 鼻 -->
+      <polygon points="50,56 48,54 52,54" fill="#1e293b"/>
+      <!-- 口 -->
+      <path d="M44,60 Q50,64 50,61 Q50,64 56,60" fill="none" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- 右上：イーブイ -->
+  <div class="lobby-corner-pokemon top-right" title="イーブイ">
+    <div class="poke-balloon">🌟 ブイブイ♪</div>
+    <svg viewBox="0 0 100 100" width="105" height="105" class="pokemon-svg" aria-label="イーブイ">
+      <!-- 耳 -->
+      <ellipse cx="20" cy="22" rx="10" ry="24" transform="rotate(-32 20 22)" fill="#c28b57"/>
+      <ellipse cx="22" cy="23" rx="5" ry="16" transform="rotate(-32 22 23)" fill="#78350f"/>
+      <ellipse cx="80" cy="22" rx="10" ry="24" transform="rotate(32 80 22)" fill="#c28b57"/>
+      <ellipse cx="78" cy="23" rx="5" ry="16" transform="rotate(32 78 23)" fill="#78350f"/>
+      <!-- 頭 -->
+      <ellipse cx="50" cy="50" rx="32" ry="27" fill="#c28b57"/>
+      <!-- もこもこの首毛 -->
+      <path d="M22,70 Q50,90 78,70 Q68,90 50,88 Q32,90 22,70 Z" fill="#fde68a"/>
+      <!-- 目 -->
+      <ellipse cx="37" cy="48" rx="4.5" ry="6.5" fill="#5c2d16"/>
+      <circle cx="38" cy="45" r="2" fill="#ffffff"/>
+      <ellipse cx="63" cy="48" rx="4.5" ry="6.5" fill="#5c2d16"/>
+      <circle cx="62" cy="45" r="2" fill="#ffffff"/>
+      <!-- 鼻 -->
+      <circle cx="50" cy="54" r="1.5" fill="#5c2d16"/>
+      <!-- 口 -->
+      <path d="M46,58 Q50,62 54,58" fill="none" stroke="#5c2d16" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- 左下：ポッチャマ -->
+  <div class="lobby-corner-pokemon bottom-left" title="ポッチャマ">
+    <div class="poke-balloon">💧 ポチャ♪</div>
+    <svg viewBox="0 0 100 100" width="105" height="105" class="pokemon-svg" aria-label="ポッチャマ">
+      <!-- 頭部ベース（水色） -->
+      <circle cx="50" cy="44" r="32" fill="#38bdf8"/>
+      <!-- 顔の白い模様 -->
+      <path d="M26,44 Q36,28 50,38 Q64,28 74,44 Q76,64 50,64 Q24,64 26,44 Z" fill="#ffffff"/>
+      <!-- 体・マント（濃い青） -->
+      <path d="M28,68 Q50,58 72,68 Q76,90 50,90 Q24,90 28,68 Z" fill="#1d4ed8"/>
+      <!-- 胸のボタン -->
+      <circle cx="43" cy="76" r="3.5" fill="#ffffff"/>
+      <circle cx="57" cy="76" r="3.5" fill="#ffffff"/>
+      <!-- 目 -->
+      <ellipse cx="38" cy="45" rx="3.5" ry="6" fill="#1e293b"/>
+      <circle cx="39" cy="43" r="1.5" fill="#ffffff"/>
+      <ellipse cx="62" cy="45" rx="3.5" ry="6" fill="#1e293b"/>
+      <circle cx="61" cy="43" r="1.5" fill="#ffffff"/>
+      <!-- くちばし -->
+      <ellipse cx="50" cy="52" rx="6.5" ry="4.5" fill="#facc15"/>
+    </svg>
+  </div>
+
+  <!-- 右下：プリン -->
+  <div class="lobby-corner-pokemon bottom-right" title="プリン">
+    <div class="poke-balloon">💖 プププ♪</div>
+    <svg viewBox="0 0 100 100" width="105" height="105" class="pokemon-svg" aria-label="プリン">
+      <!-- 耳 -->
+      <polygon points="22,34 16,8 40,20" fill="#f472b6"/>
+      <polygon points="20,18 24,30 34,22" fill="#701a75"/>
+      <polygon points="78,34 84,8 60,20" fill="#f472b6"/>
+      <polygon points="80,18 76,30 66,22" fill="#701a75"/>
+      <!-- 体（ピンクの球体） -->
+      <circle cx="50" cy="54" r="34" fill="#fbcfe8"/>
+      <!-- 前髪のうずまき -->
+      <path d="M46,30 Q58,22 58,34 Q58,40 50,38 Q42,36 46,30 Z" fill="#fbcfe8"/>
+      <path d="M46,30 Q58,22 58,34 Q58,40 50,38" fill="none" stroke="#f472b6" stroke-width="2"/>
+      <!-- 目（大きな青緑） -->
+      <circle cx="35" cy="52" r="8" fill="#06b6d4"/>
+      <circle cx="35" cy="52" r="5" fill="#0e7490"/>
+      <circle cx="37" cy="49" r="2.5" fill="#ffffff"/>
+      <circle cx="65" cy="52" r="8" fill="#06b6d4"/>
+      <circle cx="65" cy="52" r="5" fill="#0e7490"/>
+      <circle cx="63" cy="49" r="2.5" fill="#ffffff"/>
+      <!-- 口 -->
+      <path d="M47,64 Q50,68 53,64" fill="none" stroke="#be185d" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="lobby-panel">
+    <h1>ポケカ オンライン対戦ツール <small>DEMO</small></h1>
+
+    <!-- 最上部モード切替タブ: オンライン対戦 vs 一人回し -->
+    <div class="lobby-mode-tabs">
+      <button class="mode-tab-btn active" id="btn-mode-online" data-action="switchLobbyMode" data-arg="online">🌐 オンライン対戦</button>
+      <button class="mode-tab-btn" id="btn-mode-solo" data-action="switchLobbyMode" data-arg="solo">🃏 一人回し</button>
+    </div>
+
+    <!-- ================= モード1: オンライン対戦 ================= -->
+    <div id="mode-panel-online" class="mode-panel">
+      <p class="demo-note">デモ版：通信は行わず、対戦相手はダミーです。デッキはサンプルデッキを使用します。</p>
+
+      <div class="step">
+        <label class="step-title" for="in-name"><span class="num">1</span>あなたの名前</label>
+        <input id="in-name" type="text" maxlength="12" placeholder="ニックネーム" autocomplete="off">
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="num">2</span>ルーム</div>
+        <div class="tabs">
+          <button class="tab active" data-action="lobbyTab" data-arg="create">ルームを作る</button>
+          <button class="tab" data-action="lobbyTab" data-arg="join">ルームに入る</button>
+        </div>
+        <div id="tab-create" class="tab-body">
+          <button class="btn blue big" data-action="createRoom">ルームを作成</button>
+          <div id="room-box" class="room-box hidden">
+            ルーム番号 <b id="room-no"></b>
+            <button class="btn" data-action="copyRoom">コピー</button>
+          </div>
+        </div>
+        <div id="tab-join" class="tab-body hidden">
+          <input id="in-room" type="text" inputmode="numeric" maxlength="6" placeholder="ルーム番号（6桁）" autocomplete="off">
+          <button class="btn blue big" data-action="joinRoom">入室</button>
+        </div>
+        <div id="conn-status" class="status"><span class="status-lamp">⚪</span> 未接続</div>
+        <div id="p2p-test-panel" class="p2p-test-panel hidden">
+          <div class="p2p-test-header">
+            <span id="p2p-webrtc-info" class="p2p-webrtc-info">経路: WebRTC P2P直接通信</span>
+            <div style="display:flex; gap:4px;">
+              <button class="btn" style="font-size:10px; padding:2px 6px;" data-action="refreshWebRTCStats" title="WebRTC通信経路情報を更新">経路確認</button>
+              <button class="btn red" style="font-size:10px; padding:2px 6px;" data-action="disconnectP2P">切断</button>
+            </div>
+          </div>
+          <div class="row" style="margin-top:4px;">
+            <input id="in-test-msg" type="text" maxlength="80" placeholder="双方向テストメッセージを入力 (空欄でPing送信)" autocomplete="off" style="font-size:11px; padding:5px 8px;">
+            <button class="btn green" style="font-size:11px; padding:5px 10px; white-space:nowrap;" data-action="sendTestMsg">テスト送信</button>
+          </div>
+          <div id="p2p-test-log" class="p2p-test-log"></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label class="step-title" for="in-deck" style="margin-bottom:0;"><span class="num">3</span>デッキコード / デッキ選択</label>
+          <button class="btn blue" style="font-size:11px; padding:3px 8px;" data-action="openDeckPasteModal" data-arg="online">📋 テキスト貼付</button>
+        </div>
+        <div class="row" style="margin-top:6px;">
+          <input id="in-deck" type="text" placeholder="例: DEMO-CHARIZARD-2026 または公式コード" autocomplete="off">
+          <button class="btn green big" data-action="loadDeck">読み込む</button>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+          <span style="font-size:11px; color:#64748b; white-space:nowrap;">プリセット:</span>
+          <select id="preset-select-online" style="flex:1; padding:5px 8px; font-size:12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff;" onchange="onPresetSelectChange('online', this.value)">
+            <option value="">▼ サンプルデッキから選択</option>
+            <option value="charizard">🔥 悪リザードンex（ピジョット型）</option>
+            <option value="venusaur">🌿 フシギバナex（草回復・ビーダル型）</option>
+            <option value="blastoise">💧 カメックスex（激流ポンプ・セグレイブ型）</option>
+            <option value="miraidon">⚡ ミライドンex ＆ ピカチュウex（雷速攻型）</option>
+            <option value="dragapult">👻 ドラパルトex（ファントムダイブ型）</option>
+          </select>
+        </div>
+        <div id="deck-preview" class="deck-preview"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <div><span class="num">4</span>あなたのプレイマット選択</div>
+          <button class="btn blue" style="font-size:11px; padding:3px 8px;" data-action="openMatUpload">＋ 自作マット登録</button>
+        </div>
+        <p style="font-size:11px; color:#64748b; margin:2px 0 6px 0;">画面下半分（自分側）の背景として表示されます。</p>
+        <div id="playmat-preview-row" class="playmat-preview-row"></div>
+        <input type="file" id="mat-file-input" accept="image/*" class="hidden">
+      </div>
+
+      <div class="step">
+        <button id="btn-start" class="btn gold big wide" data-action="startBattle" disabled>相手の接続待ち...</button>
+        <div id="start-status" class="status"></div>
+      </div>
+
+      <div style="height: 1px; background: #cbd5e1; margin: 4px 0;"></div>
+      <div class="step">
+        <button class="btn blue wide" data-action="triggerCsvImport" style="font-size: 13px; padding: 10px 14px;">
+          📂 試合ログ(CSV)を読み込んで試合を再現
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= モード2: 一人回し ================= -->
+    <div id="mode-panel-solo" class="mode-panel hidden">
+      <p class="demo-note" style="border-left-color:#3b82f6; background:#eff6ff; border-color:#bfdbfe; color:#1e40af;">
+        一人回しモード：2つのデッキを登録して対戦。ターン終了ごとに<b>上下の視点が自動で入れ替わり</b>、両方の手札・場を自分で操作してじっくり研究できます！
+      </p>
+
+      <!-- デッキ1 (先攻/プレイヤーA) -->
+      <div class="step">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label class="step-title" for="in-deck-a" style="margin-bottom:0;"><span class="num">1</span>デッキ1 (先攻側 / あなた)</label>
+          <button class="btn blue" style="font-size:11px; padding:3px 8px;" data-action="openDeckPasteModal" data-arg="solo-a">📋 テキスト貼付</button>
+        </div>
+        <div class="row" style="margin-top:6px;">
+          <input id="in-deck-a" type="text" placeholder="例: DEMO-CHARIZARD-2026" autocomplete="off" value="DEMO-CHARIZARD-2026">
+          <button class="btn green big" data-action="loadSoloDeckA">読み込む</button>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+          <span style="font-size:11px; color:#64748b; white-space:nowrap;">プリセット:</span>
+          <select id="preset-select-a" style="flex:1; padding:5px 8px; font-size:12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff;" onchange="onPresetSelectChange('solo-a', this.value)">
+            <option value="">▼ サンプルデッキから選択</option>
+            <option value="charizard" selected>🔥 悪リザードンex（ピジョット型）</option>
+            <option value="venusaur">🌿 フシギバナex（草回復・ビーダル型）</option>
+            <option value="blastoise">💧 カメックスex（激流ポンプ・セグレイブ型）</option>
+            <option value="miraidon">⚡ ミライドンex ＆ ピカチュウex（雷速攻型）</option>
+            <option value="dragapult">👻 ドラパルトex（ファントムダイブ型）</option>
+          </select>
+        </div>
+        <div id="deck-preview-a" class="deck-preview"></div>
+      </div>
+
+      <!-- デッキ2 (後攻/プレイヤーB) -->
+      <div class="step">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label class="step-title" for="in-deck-b" style="margin-bottom:0;"><span class="num">2</span>デッキ2 (後攻側 / 対戦相手)</label>
+          <button class="btn blue" style="font-size:11px; padding:3px 8px;" data-action="openDeckPasteModal" data-arg="solo-b">📋 テキスト貼付</button>
+        </div>
+        <div class="row" style="margin-top:6px;">
+          <input id="in-deck-b" type="text" placeholder="例: DEMO-VENUSAUR-2026" autocomplete="off" value="DEMO-VENUSAUR-2026">
+          <button class="btn green big" data-action="loadSoloDeckB">読み込む</button>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+          <span style="font-size:11px; color:#64748b; white-space:nowrap;">プリセット:</span>
+          <select id="preset-select-b" style="flex:1; padding:5px 8px; font-size:12px; border-radius:6px; border:1px solid #cbd5e1; background:#fff;" onchange="onPresetSelectChange('solo-b', this.value)">
+            <option value="">▼ サンプルデッキから選択</option>
+            <option value="charizard">🔥 悪リザードンex（ピジョット型）</option>
+            <option value="venusaur" selected>🌿 フシギバナex（草回復・ビーダル型）</option>
+            <option value="blastoise">💧 カメックスex（激流ポンプ・セグレイブ型）</option>
+            <option value="miraidon">⚡ ミライドンex ＆ ピカチュウex（雷速攻型）</option>
+            <option value="dragapult">👻 ドラパルトex（ファントムダイブ型）</option>
+          </select>
+        </div>
+        <div id="deck-preview-b" class="deck-preview"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <div><span class="num">3</span>あなたのプレイマット選択</div>
+        </div>
+        <div id="playmat-preview-row-solo" class="playmat-preview-row"></div>
+      </div>
+
+      <div class="step">
+        <button id="btn-start-solo" class="btn gold big wide" data-action="startSoloBattle">一人回しを開始する</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     画面② 対戦画面（PTCGL準拠のプレイマット）
+     ===================================================== -->
+<section id="game" class="hidden">
+  <!-- プレイマット背景レイヤー（画面半分ずつ） -->
+  <div class="board-mat-container">
+    <div class="board-mat-half mat-opp" id="board-mat-opp"></div>
+    <div class="board-mat-half mat-me" id="board-mat-me"></div>
+  </div>
+  <div class="board">
+
+    <!-- 相手の手札（上端から裏面が覗く） -->
+    <div class="opp-hand">
+      <div class="top-menu">
+        <span class="room">ROOM <b id="g-room"></b></span>
+        <span id="g-conn-badge" class="conn-badge offline">⚪ オフライン</span>
+        <button class="btn red" data-action="exit">退室</button>
+      </div>
+      <div id="opp-hand-cards" class="opp-hand-cards"></div>
+      <span class="count">相手の手札 <b id="opp-hand-count">0</b></span>
+    </div>
+
+    <!-- 相手エリア（自分側を180°回転した配置） -->
+    <div class="band opp">
+      <div class="pile-col opp-piles">
+        <div class="pile" id="opp-deck"></div>
+        <div class="pile clickable" id="opp-trash" title="相手のトラッシュを見る"></div>
+      </div>
+      <div class="bench-col opp">
+        <div class="bench-tray" id="opp-bench"></div>
+      </div>
+      <div class="side-col opp-side">
+        <div class="lost clickable" id="opp-lost">ロスト <b>0</b></div>
+        <div class="prizes" id="opp-prizes"></div>
+      </div>
+    </div>
+
+    <!-- 中央アリーナ -->
+    <div class="arena">
+      <div class="center-line"></div>
+
+      <div class="log-btn">
+        <button class="btn" data-action="showLog">ログ</button>
+        <button class="btn gold" data-action="coin">コイン</button>
+        <button class="btn gold" data-action="declareVictory" title="勝利を宣言する">🏆 勝利宣言</button>
+        <button class="btn blue" data-action="exportCsv" title="試合ログをCSV出力">CSV出力</button>
+        <button class="btn" data-action="triggerCsvImport" title="CSVから試合を再現">再現</button>
+      </div>
+
+      <div id="zoom" class="zoom hidden"></div>
+
+      <div class="active-spot opp-active" id="opp-active"></div>
+      <div class="active-spot my-active" id="my-active"></div>
+
+      <div class="stadium" id="stadium"></div>
+
+      <!-- 使用カードエリア（バトル場左寄り・常時表示・相手とも共有表示） -->
+      <div id="play-area" class="play-area empty">
+        <div class="play-card-wrap" id="play-card-wrap">
+          <div class="slot play-slot" title="手札からドラッグ＆ドロップしてカードを使用">
+            手札使用枠<br><small style="font-size:10px; opacity:0.85;">(ここにドラッグ)</small>
+          </div>
+        </div>
+        <div class="play-actions hidden" id="play-actions">
+          <span class="play-title" id="play-area-title">使用中</span>
+          <button class="btn red" data-action="playToTrash">トラッシュへ</button>
+          <button class="btn" data-action="playToHand">手札に戻す</button>
+          <button class="btn" data-action="playToDeckTop">山の上に置く</button>
+          <button class="btn" data-action="playToDeckBottom">山の下に送る</button>
+          <button class="btn blue hidden" id="btn-play-stadium" data-action="playToStadium">スタジアムへ</button>
+          <button class="btn purple" data-action="playToLost">ロストへ</button>
+        </div>
+      </div>
+
+      <!-- カード使用時の画面中央大型ポップアップ演出 -->
+      <div id="card-use-popup" class="card-use-popup hidden" onclick="hideCardUsePopup()">
+        <div class="card-use-popup-inner">
+          <div id="card-use-popup-img" class="card-use-popup-img"></div>
+          <div id="card-use-popup-text" class="card-use-popup-text"></div>
+        </div>
+      </div>
+
+      <!-- ターン切り替え演出バナー（右からスライドイン→中央2秒静止→左へスライドアウト） -->
+      <div id="turn-banner-overlay" class="turn-banner-overlay hidden" onclick="dismissTurnBannerEarly()">
+        <div class="turn-banner-track" id="turn-banner-track">
+          <div class="turn-banner-sub" id="turn-banner-sub">⚡ 先攻 1 ターン目</div>
+          <div class="turn-banner-main" id="turn-banner-main">【プレイヤー】のターン</div>
+          <div class="turn-banner-tip">（タップでスキップ）</div>
+        </div>
+      </div>
+
+      <!-- ターン開始時トップドロー：画面中央大型カード表示 -->
+      <div id="top-draw-spotlight" class="top-draw-spotlight hidden" onclick="hideTopDrawSpotlight()">
+        <div class="top-draw-inner">
+          <div class="top-draw-badge">🃏 ターン開始ドロー！</div>
+          <div id="top-draw-card-visual" class="top-draw-card-visual"></div>
+          <div id="top-draw-card-name" class="top-draw-card-name">カード名</div>
+          <div id="top-draw-card-sub" class="top-draw-card-sub">カテゴリ</div>
+          <div class="top-draw-hint">（クリックで閉じる）</div>
+        </div>
+      </div>
+
+      <div class="turn-panel">
+        <span class="name" id="g-opp-name-wrap"><span class="turn-dot hidden" id="turn-dot-opp"></span>相手：<b id="g-opp-name"></b><span class="order-badge" id="g-opp-order"></span></span>
+        <span class="name me" id="g-my-name-wrap"><span class="turn-dot active" id="turn-dot-me"></span>あなた：<b id="g-my-name"></b><span class="order-badge" id="g-my-order"></span></span>
+        <span class="name" id="g-turn-wrap"><b id="g-turn">先攻1ターン目</b></span>
+        <button class="btn gold" id="btn-end-turn" data-action="endTurn">ターン終了</button>
+      </div>
+
+      <!-- 対戦準備フェーズ用バナー ＆ コントロール -->
+      <div id="setup-banner" class="setup-banner hidden">
+        <div class="setup-status-box">
+          <span class="setup-phase-title">⚔️ 対戦準備フェーズ</span>
+          <span id="setup-order-status" class="setup-order-status">先攻・後攻を決定中...</span>
+        </div>
+        <div class="setup-actions">
+          <button id="btn-setup-coin" class="btn gold big hidden" data-action="setupCoinToss">🪙 コイントスを行う</button>
+          <button id="btn-mulligan" class="btn red" data-action="mulligan" disabled title="手札にたねポケモンがいない場合のみ引き直せます">7枚引き直す (マリガン)</button>
+          <button id="btn-setup-ready" class="btn green big" data-action="setupReady" disabled>対戦準備完了</button>
+        </div>
+      </div>
+
+      <div id="target-banner" class="target-banner hidden">
+        <span id="target-msg"></span>
+        <button class="btn" data-action="cancelTarget">キャンセル</button>
+      </div>
+
+      <!-- テンポラリエリア -->
+      <div id="temp" class="temp hidden">
+        <div id="temp-cards" class="temp-cards"></div>
+        <div class="temp-side">
+          <span class="title">テンポラリ</span>
+          <button class="btn green" data-action="tempToHand">手札に加える</button>
+          <button class="btn" data-action="tempToTop">山の上に置く</button>
+          <button class="btn" data-action="tempToBottom">山の下に送る</button>
+          <button class="btn red" data-action="tempToTrash">トラッシュ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 自分エリア -->
+    <div class="band me">
+      <div class="side-col">
+        <div class="lost clickable" id="my-lost">ロスト <b>0</b></div>
+        <div class="prizes" id="my-prizes"></div>
+      </div>
+      <div class="bench-col me">
+        <div class="bench-ctrl-bar">
+          <button id="btn-bench-toggle" class="btn-bench-toggle" onclick="toggleBenchCapacity()">🏟️ ベンチ枠を8にする</button>
+        </div>
+        <div class="bench-tray" id="my-bench"></div>
+      </div>
+      <div class="pile-col">
+        <div class="deck-btns">
+          <button class="btn blue" data-action="viewDeck">山を見る</button>
+          <button class="btn green" data-action="draw">１枚引く</button>
+          <button class="btn red" data-action="trashTop">１枚トラッシュ</button>
+          <button class="btn purple" data-action="shuffle">シャッフル</button>
+        </div>
+        <div class="pile" id="my-deck"></div>
+        <div class="pile clickable" id="my-trash" title="トラッシュを見る"></div>
+      </div>
+    </div>
+
+    <!-- 自分の手札（下端から覗く） -->
+    <div class="hand-area">
+      <div class="hand-btns">
+        <button class="btn green" data-action="draw">１枚引く</button>
+        <button class="btn blue" data-action="viewDeck">デッキを見る</button>
+        <button class="btn" data-action="handToDeck">手札を山にもどす</button>
+        <button class="btn" data-action="handToBottom">山の下に戻す</button>
+        <button class="btn red" data-action="handTrash">トラッシュする</button>
+        <button class="btn purple" data-action="handLost">ロストへ送る</button>
+        <button class="btn blue wide" data-action="handActive">⚔️ バトル場に出す</button>
+        <button class="btn blue wide" data-action="handBench">🪑 ベンチに出す</button>
+      </div>
+      <div class="hand-cards" id="hand"></div>
+      <div class="hand-info">
+        手札 <b id="hand-count">0</b> 枚<br>
+        <span id="hand-sel" class="sel-name"></span>
+      </div>
+    </div>
+
+    <!-- スマホ用：ハンバーガーボタン -->
+    <button class="sp-menu-btn" data-action="openMenu" aria-label="操作メニュー">
+      <span></span><span></span><span></span>
+      <em class="badge">操作</em>
+    </button>
+  </div>
+</section>
+
+<!-- 手札ドラッグ範囲選択ボックス -->
+<div id="selection-box" class="selection-box hidden"></div>
+
+<!-- スマホ用：操作メニュー（下から出るシート） -->
+<div class="sp-backdrop" data-action="closeMenu"></div>
+<div class="sp-sheet" role="dialog" aria-label="操作メニュー">
+  <div class="grip"></div>
+  <div class="sheet-section-header">
+    <h3 style="margin:0;">🃏 手札メニュー <span class="sel" id="sheet-sel"></span></h3>
+    <button class="sheet-close-x" data-action="closeMenu" aria-label="閉じる">✕</button>
+  </div>
+  <div id="sheet-hand-body">
+    <!-- 手札選択状態に応じて動的に生成 -->
+  </div>
+
+  <h3 style="margin-top:14px;">🎴 山札 <span class="sel muted" id="sheet-deck"></span></h3>
+  <div class="grid">
+    <button class="btn green" data-action="draw" data-close="1">１枚引く</button>
+    <button class="btn blue" data-action="viewDeck" data-close="1">山を見る</button>
+    <button class="btn red" data-action="trashTop" data-close="1">１枚トラッシュ</button>
+    <button class="btn purple" data-action="shuffle" data-close="1">シャッフル</button>
+  </div>
+
+  <h3 style="margin-top:14px;">⚙️ その他・対戦進行</h3>
+  <div class="grid">
+    <button class="btn gold" data-action="endTurn" data-close="1">ターン終了</button>
+    <button class="btn" data-action="coin" data-close="1">🪙 コイン</button>
+    <button class="btn" data-action="showLog" data-close="1">📜 ログ</button>
+    <button class="btn blue" data-action="exportCsv" data-close="1">💾 CSV保存</button>
+    <button class="btn" data-action="triggerCsvImport" data-close="1">📂 CSV再現</button>
+    <button class="btn wide" data-action="closeMenu">閉じる</button>
+  </div>
+</div>
+
+<!-- カードダブルクリック拡大モーダル -->
+<div id="card-zoom-modal" class="modal hidden" onclick="closeCardZoom()">
+  <div class="zoom-card-container" onclick="event.stopPropagation()">
+    <div id="zoom-card-content"></div>
+    <button class="btn big wide" style="margin-top:12px;" onclick="closeCardZoom()">閉じる</button>
+  </div>
+</div>
+
+<!-- 汎用モーダル（山札・トラッシュ・ロスト・ログ） -->
+<div id="modal" class="modal hidden">
+  <div class="modal-panel">
+    <div class="modal-head" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot" id="modal-foot"></div>
+  </div>
+</div>
+
+<!-- 試合再現（リプレイ）操作バー -->
+<div id="replay-bar" class="replay-bar hidden">
+  <div class="replay-badge">🎬 試合再現モード</div>
+  <div class="replay-controls">
+    <button class="btn" data-action="replayFirst" title="最初の手へ">⏮</button>
+    <button class="btn" data-action="replayPrev" title="前の手へ">◀</button>
+    <button class="btn gold" id="btn-replay-play" data-action="replayTogglePlay" title="自動再生/一時停止">▶ 再生</button>
+    <button class="btn" data-action="replayNext" title="次の手へ">▶</button>
+    <button class="btn" data-action="replayLast" title="最後の手へ">⏭</button>
+  </div>
+  <div class="replay-slider-wrap">
+    <input type="range" id="replay-slider" min="0" max="0" value="0">
+    <span class="replay-step-info" id="replay-step-info">0 / 0</span>
+  </div>
+  <div class="replay-msg" id="replay-msg">ログメッセージ</div>
+  <button class="btn red" data-action="exitReplay">再現終了</button>
+</div>
+
+<!-- 非表示のファイル選択要素 (CSVインポート用) -->
+<input type="file" id="csv-file-input" accept=".csv" class="hidden">
+
+<!-- ド派手な勝利演出オーバーレイ -->
+<div id="victory-overlay" class="victory-overlay hidden">
+  <div class="victory-backdrop" onclick="closeVictoryOverlay()"></div>
+  <div class="victory-burst-bg"></div>
+  <canvas id="victory-confetti-canvas" class="victory-confetti-canvas"></canvas>
+  <div class="victory-modal">
+    <div class="victory-trophy-wrap">
+      <div class="victory-trophy-glow"></div>
+      <div class="victory-trophy-icon">🏆</div>
+      <div class="victory-sparkles">✨</div>
+    </div>
+    <div class="victory-title-wrap">
+      <div class="victory-title-glow" id="victory-title-text">VICTORY!!</div>
+      <div class="victory-sub-banner" id="victory-sub-banner">🎉 勝利 🎉</div>
+    </div>
+    <div class="victory-winner-box">
+      <div class="victory-winner-label">WINNER</div>
+      <div class="victory-winner-name" id="victory-winner-name">プレイヤーA</div>
+      <div class="victory-winner-desc" id="victory-winner-desc">すべてのサイドカードを取りきりました！</div>
+    </div>
+    <div class="victory-actions">
+      <button class="btn blue big" onclick="actions.exportCsv()">📊 対戦ログを保存 (CSV)</button>
+      <button class="btn gold big" onclick="closeVictoryOverlay()">👀 盤面を確認する</button>
+      <button class="btn red big" onclick="closeVictoryOverlay(); actions.exit();">🚪 ロビーに戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- 場のポケモン用コンテキストメニュー -->
+<div id="ctx" class="ctx hidden"></div>
+
+<!-- トースト通知 -->
+<div id="toast" class="toast"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="js/data/cards.js"></script>
+<script src="js/data/deck-parser.js"></script>
+<script src="js/util.js"></script>
+<script src="js/data/playmats-default.js"></script>
+<script src="js/state.js"></script>
+<script src="js/game/hand-actions.js"></script>
+<script src="js/game/actions.js"></script>
+<script src="js/game/setup.js"></script>
+<script src="js/game/replay.js"></script>
+<script src="js/ui/marquee.js"></script>
+<script src="js/ui/touch-dnd.js"></script>
+<script src="js/ui/render.js"></script>
+<script src="js/ui/modals.js"></script>
+<script src="js/ui/lobby.js"></script>
+<script src="js/ui/playmat.js"></script>
+<script src="js/net/p2p.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

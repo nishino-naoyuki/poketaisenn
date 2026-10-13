@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+<pre id="log"></pre>
+<script>
+const log = (m) => {
+  document.getElementById('log').textContent += m + '\n';
+  console.log(m);
+};
+
+const rid = 'pokeca-test-' + Math.floor(Math.random() * 100000);
+log('Init Host: ' + rid);
+const host = new Peer(rid);
+host.on('open', (id) => {
+  log('Host open: ' + id);
+  const guest = new Peer();
+  guest.on('open', (gId) => {
+    log('Guest open: ' + gId);
+    const conn = guest.connect(rid);
+    conn.on('open', () => {
+      log('Guest conn open!');
+      conn.send({ msg: 'from guest' });
+    });
+    conn.on('error', (e) => log('Guest conn error: ' + e));
+  });
+  guest.on('error', (e) => log('Guest peer error: ' + e.type));
+});
+
+host.on('connection', (conn) => {
+  log('Host received connection!');
+  conn.on('open', () => {
+    log('Host conn open!');
+    conn.send({ msg: 'from host' });
+  });
+  conn.on('data', (d) => {
+    log('Host received data: ' + JSON.stringify(d));
+  });
+  conn.on('error', (e) => log('Host conn error: ' + e));
+});
+
+host.on('error', (e) => log('Host peer error: ' + e.type));
+</script>
+</body>
+</html>

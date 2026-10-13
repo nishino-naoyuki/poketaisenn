@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Local logs
+*.log
+scratch/
