@@ -37,6 +37,10 @@ let state = {
 
   // テンポラリエリア
   tempCards: [],
+  selectedTempIndices: new Set(),
+
+  // 選択中のフィールドポケモン { location, index }
+  selectedFieldPokemon: null,
 
   // 操作履歴スタック（1手順巻き戻し用）
   historyStack: [],
@@ -122,6 +126,8 @@ function resetOpponentCards() {
   state.oppPlayCard = null;
   state.oppExited = false;
   state.historyStack = [];
+  if (state.selectedTempIndices) state.selectedTempIndices.clear();
+  state.selectedFieldPokemon = null;
 }
 
 window.resetOpponentCards = resetOpponentCards;

@@ -115,55 +115,103 @@ function drawCardToTemp() {
   renderAll();
 }
 
+function toggleSelectTempCard(index) {
+  if (!state.selectedTempIndices) state.selectedTempIndices = new Set();
+  if (state.selectedTempIndices.has(index)) {
+    state.selectedTempIndices.delete(index);
+  } else {
+    state.selectedTempIndices.add(index);
+  }
+  renderTemp();
+}
+
+function clearTempSelection() {
+  if (state.selectedTempIndices) state.selectedTempIndices.clear();
+  renderTemp();
+}
+
+/** テンポラリエリアからカードを抽出（選択されている場合は選択分のみ、未選択の場合は全カード） */
+function extractTempCards() {
+  if (!state.tempCards || state.tempCards.length === 0) return [];
+  if (!state.selectedTempIndices || state.selectedTempIndices.size === 0) {
+    const all = state.tempCards.splice(0);
+    return all;
+  }
+  const selected = [];
+  const remaining = [];
+  state.tempCards.forEach((c, idx) => {
+    if (state.selectedTempIndices.has(idx)) {
+      selected.push(c);
+    } else {
+      remaining.push(c);
+    }
+  });
+  state.tempCards = remaining;
+  state.selectedTempIndices.clear();
+  return selected;
+}
+
 function moveTempToHand() {
   if (state.tempCards.length === 0) return;
   pushHistorySnapshot("テンポラリから手札へ");
-  const cards = state.tempCards.splice(0);
+  const isSelectedOnly = state.selectedTempIndices && state.selectedTempIndices.size > 0;
+  const cards = extractTempCards();
+  if (cards.length === 0) return;
   cards.forEach(c => state.myHand.push(c));
-  addLog(`テンポラリから手札に加えました（${cards.map(c=>c.name).join(", ")}）`, {
-    oppText: `引いたカード（${cards.length}枚）を手札に加えました`,
+  const desc = isSelectedOnly ? `（選択した${cards.length}枚: ${cards.map(c=>c.name).join(", ")}）` : `（${cards.map(c=>c.name).join(", ")}）`;
+  addLog(`テンポラリから手札に加えました${desc}`, {
+    oppText: `テンポラリのカード（${cards.length}枚）を手札に加えました`,
     badge: "🖐️ 手札へ加える"
   });
-  showToast("手札に加えました");
+  showToast(`手札に加えました (${cards.length}枚)`);
   renderAll();
 }
 
 function moveTempToTop() {
   if (state.tempCards.length === 0) return;
   pushHistorySnapshot("テンポラリから山札の上へ");
-  const cards = state.tempCards.splice(0);
+  const isSelectedOnly = state.selectedTempIndices && state.selectedTempIndices.size > 0;
+  const cards = extractTempCards();
+  if (cards.length === 0) return;
   cards.reverse().forEach(c => state.myDeck.unshift(c)); // 山札の上へ追加
-  addLog(`テンポラリからカードを山札の上に置きました（${cards.map(c=>c.name).join(", ")}）`, {
+  const desc = isSelectedOnly ? `（選択した${cards.length}枚: ${cards.map(c=>c.name).join(", ")}）` : `（${cards.map(c=>c.name).join(", ")}）`;
+  addLog(`テンポラリからカードを山札の上に置きました${desc}`, {
     oppText: `テンポラリのカード（${cards.length}枚）を山札の上に置きました`,
     badge: "🔄 山札の上へ"
   });
-  showToast("山札の上に置きました");
+  showToast(`山札の上に置きました (${cards.length}枚)`);
   renderAll();
 }
 
 function moveTempToBottom() {
   if (state.tempCards.length === 0) return;
   pushHistorySnapshot("テンポラリから山札の下へ");
-  const cards = state.tempCards.splice(0);
+  const isSelectedOnly = state.selectedTempIndices && state.selectedTempIndices.size > 0;
+  const cards = extractTempCards();
+  if (cards.length === 0) return;
   cards.forEach(c => state.myDeck.push(c)); // ボトムへ追加
-  addLog(`テンポラリからカードを山札の下へ送りました（${cards.map(c=>c.name).join(", ")}）`, {
+  const desc = isSelectedOnly ? `（選択した${cards.length}枚: ${cards.map(c=>c.name).join(", ")}）` : `（${cards.map(c=>c.name).join(", ")}）`;
+  addLog(`テンポラリからカードを山札の下へ送りました${desc}`, {
     oppText: `テンポラリのカード（${cards.length}枚）を山札の下へ送りました`,
     badge: "⬇️ 山札の下へ"
   });
-  showToast("山札の下へ送りました");
+  showToast(`山札の下へ送りました (${cards.length}枚)`);
   renderAll();
 }
 
 function moveTempToTrash() {
   if (state.tempCards.length === 0) return;
   pushHistorySnapshot("テンポラリからトラッシュへ");
-  const cards = state.tempCards.splice(0);
+  const isSelectedOnly = state.selectedTempIndices && state.selectedTempIndices.size > 0;
+  const cards = extractTempCards();
+  if (cards.length === 0) return;
   cards.forEach(c => state.myTrash.push(c));
-  addLog(`テンポラリからカードをトラッシュしました（${cards.map(c=>c.name).join(", ")}）`, {
+  const desc = isSelectedOnly ? `（選択した${cards.length}枚: ${cards.map(c=>c.name).join(", ")}）` : `（${cards.map(c=>c.name).join(", ")}）`;
+  addLog(`テンポラリからカードをトラッシュしました${desc}`, {
     cards: cards,
     badge: "🗑️ トラッシュ"
   });
-  showToast("トラッシュしました");
+  showToast(`トラッシュしました (${cards.length}枚)`);
   renderAll();
 }
 
@@ -1051,25 +1099,12 @@ function usePokemonAbility(location, index) {
   renderAll();
 }
 
-// 場のポケモンコンテキストメニュー（サブメニュー方式＆特性宣言＆ダブルクリック拡大対応）
+// 場のポケモンコンテキストメニュー（右クリックで呼び出し、サブメニュー方式＆特性宣言対応）
 function showPokemonMenu(e, location, index, menuView = "main") {
   if (e && e.stopPropagation) e.stopPropagation();
   const ctx = document.getElementById("ctx");
   const target = location === "active" ? state.myActive : state.myBench[index];
   if (!target) return;
-
-  // 短時間に同じカードを2回クリックした場合はダブルクリックとみなして詳細（拡大）を開く（メイン表示時のみ）
-  if (menuView === "main") {
-    const clickKey = `${location}_${index}`;
-    const now = Date.now();
-    if (_lastOwnFieldClick.key === clickKey && (now - _lastOwnFieldClick.ts) < 380) {
-      _lastOwnFieldClick = { key: "", ts: 0 };
-      hideCtx();
-      openCardZoom(target.card, target);
-      return;
-    }
-    _lastOwnFieldClick = { key: clickKey, ts: now };
-  }
 
   const locId = location === "active" ? "active" : `bench_${index}`;
   const displayName = getFieldPokemonDisplayName(location, index);
@@ -1078,20 +1113,22 @@ function showPokemonMenu(e, location, index, menuView = "main") {
 
   if (menuView === "damage") {
     // ==========================================
-    // サブメニュー①: ダメカン操作
+    // サブメニュー①: ダメカン操作（連打対応：メニューを開いたまま維持）
     // ==========================================
     ctx.innerHTML = `
       <div class="ctx-header-row">
         <button class="ctx-back-btn" onclick="showPokemonMenu(event, '${location}', ${index}, 'main')">◀ 戻る</button>
         <span class="ctx-title-text">💥 ダメカンを載せる <small>(現在: ${target.damage})</small></span>
+        <button class="ctx-zoom-btn" onclick="hideCtx()" title="閉じる" style="padding:2px 8px;">✖</button>
       </div>
       <div class="divider"></div>
       <div class="ctx-grid-2col">
-        <button onclick="modifyDamage('${location}', ${index}, 10)">ダメカン +10</button>
-        <button onclick="modifyDamage('${location}', ${index}, -10)">ダメカン -10</button>
-        <button onclick="modifyDamage('${location}', ${index}, 50)">ダメカン +50</button>
-        <button onclick="modifyDamage('${location}', ${index}, 100)">ダメカン +100</button>
-        <button class="ctx-span-2" onclick="modifyDamage('${location}', ${index}, -999)">✨ ダメカン リセット (0にする)</button>
+        <button onclick="modifyDamage('${location}', ${index}, 10, true)">ダメカン +10</button>
+        <button onclick="modifyDamage('${location}', ${index}, -10, true)">ダメカン -10</button>
+        <button onclick="modifyDamage('${location}', ${index}, 50, true)">ダメカン +50</button>
+        <button onclick="modifyDamage('${location}', ${index}, 100, true)">ダメカン +100</button>
+        <button class="ctx-span-2" onclick="modifyDamage('${location}', ${index}, -999, true)">✨ ダメカン リセット (0にする)</button>
+        <button class="ctx-span-2" style="background:#334155; color:#f8fafc; margin-top:4px; font-weight:bold; padding:6px;" onclick="hideCtx()">✖ 完了（閉じる）</button>
       </div>
     `;
   } else if (menuView === "condition" && location === "active") {
@@ -1351,8 +1388,8 @@ function hideCtx() {
   document.getElementById("ctx").classList.add("hidden");
 }
 
-function modifyDamage(location, index, delta) {
-  hideCtx();
+function modifyDamage(location, index, delta, keepMenu = false) {
+  if (!keepMenu) hideCtx();
   const target = location === "active" ? state.myActive : state.myBench[index];
   if (!target) return;
   pushHistorySnapshot("ダメカン変更");
@@ -1375,6 +1412,12 @@ function modifyDamage(location, index, delta) {
       location: locId,
       delta: actualDelta
     });
+  }
+  if (keepMenu) {
+    const titleSmall = document.querySelector("#ctx .ctx-title-text small");
+    if (titleSmall) {
+      titleSmall.textContent = `(現在: ${target.damage})`;
+    }
   }
 }
 
@@ -2387,14 +2430,53 @@ function playDamageEffect(location, delta = 10) {
   }, 850);
 }
 
-/** 6. 🔀 山札シャッフルエフェクト */
+/** 6. 🔀 ド派手な山札シャッフルエフェクト（大げさな空中3Dリッフル＆フラッシュ演出） */
 function playDeckShuffleEffect(isOpponent = false) {
   const deckEl = document.getElementById(isOpponent ? "opp-deck" : "my-deck");
   if (!deckEl) return;
+  
+  // 1. デッキ自体の揺れ＆発光
+  deckEl.classList.remove("fx-deck-shuffling");
+  void deckEl.offsetWidth; // リフロー
   deckEl.classList.add("fx-deck-shuffling");
   setTimeout(() => {
     deckEl.classList.remove("fx-deck-shuffling");
-  }, 700);
+  }, 1100);
+
+  // 2. 空中での大げさな3Dリッフルシャッフルオーバーレイ
+  const layer = ensureFxLayer();
+  const rect = deckEl.getBoundingClientRect();
+  const centerX = (rect.width > 0) ? (rect.left + rect.width / 2) : (isOpponent ? window.innerWidth * 0.2 : window.innerWidth * 0.8);
+  const centerY = (rect.height > 0) ? (rect.top + rect.height / 2) : (isOpponent ? window.innerHeight * 0.25 : window.innerHeight * 0.75);
+
+  const container = document.createElement("div");
+  container.className = `fx-grand-shuffle-overlay ${isOpponent ? 'is-opp' : 'is-me'}`;
+  container.style.left = `${centerX}px`;
+  container.style.top = `${centerY}px`;
+
+  container.innerHTML = `
+    <div class="fx-shuffle-pack pack-left">
+      <div class="fx-shuffle-card c1"></div>
+      <div class="fx-shuffle-card c2"></div>
+      <div class="fx-shuffle-card c3"></div>
+    </div>
+    <div class="fx-shuffle-pack pack-right">
+      <div class="fx-shuffle-card c1"></div>
+      <div class="fx-shuffle-card c2"></div>
+      <div class="fx-shuffle-card c3"></div>
+    </div>
+    <div class="fx-shuffle-flash"></div>
+    <div class="fx-shuffle-badge">
+      <span class="icon">🔀</span>
+      <span class="text">SHUFFLE!!</span>
+    </div>
+  `;
+
+  layer.appendChild(container);
+
+  setTimeout(() => {
+    container.remove();
+  }, 1150);
 }
 
 window.startSetupCoinToss = startSetupCoinToss;
@@ -2729,36 +2811,25 @@ function showOpponentPokemonMenu(e, location, index, menuView = "main") {
   const target = location === "opp-active" ? state.oppActive : state.oppBench[index];
   if (!target || !target.card) return;
 
-  // 短時間に同じカードを2回クリックした場合はダブルクリックとみなして詳細を開く
-  if (menuView === "main") {
-    const clickKey = `${location}_${index}`;
-    const now = Date.now();
-    if (_lastOppFieldClick.key === clickKey && (now - _lastOppFieldClick.ts) < 380) {
-      _lastOppFieldClick = { key: "", ts: 0 };
-      hideCtx();
-      openCardZoom(target.card, target);
-      return;
-    }
-    _lastOppFieldClick = { key: clickKey, ts: now };
-  }
-
   const displayName = getOpponentPokemonDisplayName(location, index);
   ctx.classList.add("ctx-wide");
 
   if (menuView === "damage") {
-    // サブメニュー①: ダメカン操作
+    // サブメニュー①: ダメカン操作（連打対応：メニューを開いたまま維持）
     ctx.innerHTML = `
       <div class="ctx-header-row">
         <button class="ctx-back-btn" onclick="showOpponentPokemonMenu(event, '${location}', ${index}, 'main')">◀ 戻る</button>
         <span class="ctx-title-text">💥 相手のダメカン操作 <small>(現在: ${target.damage})</small></span>
+        <button class="ctx-zoom-btn" onclick="hideCtx()" title="閉じる" style="padding:2px 8px;">✖</button>
       </div>
       <div class="divider"></div>
       <div class="ctx-grid-2col">
-        <button onclick="modifyOpponentDamage('${location}', ${index}, 10)">ダメカン +10</button>
-        <button onclick="modifyOpponentDamage('${location}', ${index}, -10)">ダメカン -10</button>
-        <button onclick="modifyOpponentDamage('${location}', ${index}, 50)">ダメカン +50</button>
-        <button onclick="modifyOpponentDamage('${location}', ${index}, 100)">ダメカン +100</button>
-        <button class="ctx-span-2" onclick="modifyOpponentDamage('${location}', ${index}, -999)">✨ ダメカン リセット (0にする)</button>
+        <button onclick="modifyOpponentDamage('${location}', ${index}, 10, true)">ダメカン +10</button>
+        <button onclick="modifyOpponentDamage('${location}', ${index}, -10, true)">ダメカン -10</button>
+        <button onclick="modifyOpponentDamage('${location}', ${index}, 50, true)">ダメカン +50</button>
+        <button onclick="modifyOpponentDamage('${location}', ${index}, 100, true)">ダメカン +100</button>
+        <button class="ctx-span-2" onclick="modifyOpponentDamage('${location}', ${index}, -999, true)">✨ ダメカン リセット (0にする)</button>
+        <button class="ctx-span-2" style="background:#334155; color:#f8fafc; margin-top:4px; font-weight:bold; padding:6px;" onclick="hideCtx()">✖ 完了（閉じる）</button>
       </div>
     `;
   } else if (menuView === "condition" && location === "opp-active") {
@@ -2859,8 +2930,8 @@ function openOpponentPokemonZoom(location, index) {
   openCardZoom(target.card, target);
 }
 
-function modifyOpponentDamage(location, index, delta) {
-  hideCtx();
+function modifyOpponentDamage(location, index, delta, keepMenu = false) {
+  if (!keepMenu) hideCtx();
   const target = location === "opp-active" ? state.oppActive : state.oppBench[index];
   if (!target) return;
   const prevDamage = target.damage || 0;
@@ -2887,6 +2958,13 @@ function modifyOpponentDamage(location, index, delta) {
       location: locId,
       delta: actualDelta
     });
+  }
+
+  if (keepMenu) {
+    const titleSmall = document.querySelector("#ctx .ctx-title-text small");
+    if (titleSmall) {
+      titleSmall.textContent = `(現在: ${target.damage})`;
+    }
   }
 
   if (typeof P2P !== "undefined" && P2P.connected) {
@@ -3191,6 +3269,8 @@ window.showOpponentActiveSwapMenu = showOpponentActiveSwapMenu;
 window.removeOpponentPokemonToTrash = removeOpponentPokemonToTrash;
 window.removeOpponentPokemonToHand = removeOpponentPokemonToHand;
 window.handleOpponentRemoteAction = handleOpponentRemoteAction;
+window.toggleSelectTempCard = toggleSelectTempCard;
+window.clearTempSelection = clearTempSelection;
 
 
 

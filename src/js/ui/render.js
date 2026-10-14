@@ -269,16 +269,21 @@ function renderOpponent() {
       const cardEl = oppActiveEl.querySelector(".card");
       if (cardEl) {
         cardEl.onclick = (e) => {
-          if (typeof showOpponentPokemonMenu === "function") {
-            showOpponentPokemonMenu(e, "opp-active", 0);
+          if (isMobileMode()) {
+            if (typeof showOpponentPokemonMenu === "function") showOpponentPokemonMenu(e, "opp-active", 0);
+          } else {
+            selectFieldPokemon("opp-active", 0);
           }
+        };
+        cardEl.oncontextmenu = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof showOpponentPokemonMenu === "function") showOpponentPokemonMenu(e, "opp-active", 0);
         };
         cardEl.ondblclick = (e) => {
           e.stopPropagation();
           if (typeof hideCtx === "function") hideCtx();
-          if (typeof openCardZoom === "function") {
-            openCardZoom(state.oppActive.card, state.oppActive);
-          }
+          if (typeof openCardZoom === "function") openCardZoom(state.oppActive.card, state.oppActive);
         };
       }
     }
@@ -286,7 +291,7 @@ function renderOpponent() {
     oppActiveEl.innerHTML = `<div class="slot">相手バトル場</div>`;
   }
 
-  // 相手ベンチ（クリックでメニュー、ダブルクリックで拡大）
+  // 相手ベンチ（クリックで選択、右クリックでメニュー、ダブルクリックで拡大）
   const oppBenchEl = document.getElementById("opp-bench");
   oppBenchEl.innerHTML = "";
   const oppLimit = state.oppBenchLimit || 5;
@@ -309,16 +314,21 @@ function renderOpponent() {
         const cardEl = wrap.firstElementChild;
         const bIdx = i;
         cardEl.onclick = (e) => {
-          if (typeof showOpponentPokemonMenu === "function") {
-            showOpponentPokemonMenu(e, "opp-bench", bIdx);
+          if (isMobileMode()) {
+            if (typeof showOpponentPokemonMenu === "function") showOpponentPokemonMenu(e, "opp-bench", bIdx);
+          } else {
+            selectFieldPokemon("opp-bench", bIdx);
           }
+        };
+        cardEl.oncontextmenu = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof showOpponentPokemonMenu === "function") showOpponentPokemonMenu(e, "opp-bench", bIdx);
         };
         cardEl.ondblclick = (e) => {
           e.stopPropagation();
           if (typeof hideCtx === "function") hideCtx();
-          if (typeof openCardZoom === "function") {
-            openCardZoom(b.card, b);
-          }
+          if (typeof openCardZoom === "function") openCardZoom(b.card, b);
         };
         oppBenchEl.appendChild(cardEl);
       }
@@ -388,13 +398,24 @@ function renderMyField() {
     handleDropToTrash(e);
   };
 
-  // 自分バトル場（クリックでメニュー、ダブルクリックで拡大）
+  // 自分バトル場（クリックで選択、右クリックでメニュー、ダブルクリックで拡大）
   const myActiveEl = document.getElementById("my-active");
   if (state.myActive) {
     myActiveEl.innerHTML = renderPokemonCardHtml(state.myActive, "active");
     const cardEl = myActiveEl.querySelector(".card");
     if (cardEl) {
-      cardEl.onclick = (e) => showPokemonMenu(e, "active", 0);
+      cardEl.onclick = (e) => {
+        if (isMobileMode()) {
+          showPokemonMenu(e, "active", 0);
+        } else {
+          selectFieldPokemon("active", 0);
+        }
+      };
+      cardEl.oncontextmenu = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showPokemonMenu(e, "active", 0);
+      };
       cardEl.ondblclick = (e) => {
         e.stopPropagation();
         hideCtx();
@@ -423,7 +444,7 @@ function renderMyField() {
     };
   }
 
-  // 自分ベンチ（クリックでメニュー、ダブルクリックで拡大）
+  // 自分ベンチ（クリックで選択、右クリックでメニュー、ダブルクリックで拡大）
   const myBenchEl = document.getElementById("my-bench");
   myBenchEl.innerHTML = "";
   const myLimit = state.myBenchLimit || 5;
@@ -436,7 +457,18 @@ function renderMyField() {
       wrapper.innerHTML = renderPokemonCardHtml(b, `bench_${i}`, "bench-spot");
       const cardEl = wrapper.firstElementChild;
       cardEl.dataset.benchIndex = i.toString();
-      cardEl.onclick = (e) => showPokemonMenu(e, "bench", i);
+      cardEl.onclick = (e) => {
+        if (isMobileMode()) {
+          showPokemonMenu(e, "bench", i);
+        } else {
+          selectFieldPokemon("bench", i);
+        }
+      };
+      cardEl.oncontextmenu = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showPokemonMenu(e, "bench", i);
+      };
       cardEl.ondblclick = (e) => {
         e.stopPropagation();
         hideCtx();
@@ -669,28 +701,64 @@ function renderTemp() {
   const tempCardsEl = document.getElementById("temp-cards");
   if (state.tempCards.length === 0) {
     tempEl.classList.add("hidden");
+    if (state.selectedTempIndices) state.selectedTempIndices.clear();
     return;
   }
   tempEl.classList.remove("hidden");
   tempCardsEl.innerHTML = "";
-  state.tempCards.forEach(c => {
+
+  if (!state.selectedTempIndices) state.selectedTempIndices = new Set();
+  for (const idx of Array.from(state.selectedTempIndices)) {
+    if (idx < 0 || idx >= state.tempCards.length) {
+      state.selectedTempIndices.delete(idx);
+    }
+  }
+
+  const selectedCount = state.selectedTempIndices.size;
+  const isSelectedAny = selectedCount > 0;
+
+  state.tempCards.forEach((c, idx) => {
     registerCard(c);
     const wrapper = document.createElement("div");
     const hasImg = !!c.imageUrl;
     const imgStyle = hasImg ? `style="background-image: url('${c.imageUrl}');"` : '';
+    const isSelected = state.selectedTempIndices.has(idx);
     wrapper.innerHTML = `
-      <div class="card ${c.color} ${hasImg ? 'has-img' : ''}" ${imgStyle}>
-        <div class="card-top"><span class="name">${c.name}</span></div>
-        <div class="card-btm"><span>${c.sub || c.category || ''}</span></div>
+      <div class="card ${c.color} ${hasImg ? 'has-img' : ''} ${isSelected ? 'selected' : ''}" ${imgStyle} title="クリックで選択/解除、ダブルクリックで拡大">
+        ${isSelected ? '<div class="temp-selected-badge">✔ 選択中</div>' : ''}
+        <div class="card-top"><span class="name">${escapeHtml(c.name)}</span></div>
+        <div class="card-btm"><span>${escapeHtml(c.sub || c.category || '')}</span></div>
       </div>
     `;
     const cardEl = wrapper.firstElementChild;
+    cardEl.onclick = (e) => {
+      e.stopPropagation();
+      if (typeof toggleSelectTempCard === "function") {
+        toggleSelectTempCard(idx);
+      }
+    };
     cardEl.ondblclick = (e) => {
       e.stopPropagation();
       openCardZoom(c);
     };
     tempCardsEl.appendChild(cardEl);
   });
+
+  const btnHand = tempEl.querySelector("[data-action='tempToHand']");
+  const btnTop = tempEl.querySelector("[data-action='tempToTop']");
+  const btnBottom = tempEl.querySelector("[data-action='tempToBottom']");
+  const btnTrash = tempEl.querySelector("[data-action='tempToTrash']");
+
+  const labelSuffix = isSelectedAny ? ` (${selectedCount}枚選択)` : ` (すべて)`;
+  if (btnHand) btnHand.textContent = `手札に加える${labelSuffix}`;
+  if (btnTop) btnTop.textContent = `山札の上に置く${labelSuffix}`;
+  if (btnBottom) btnBottom.textContent = `山札の下に送る${labelSuffix}`;
+  if (btnTrash) btnTrash.textContent = `トラッシュ${labelSuffix}`;
+
+  const titleEl = tempEl.querySelector(".temp-side .title");
+  if (titleEl) {
+    titleEl.innerHTML = `テンポラリ <small style="font-size:9.5px; opacity:0.85; font-weight:normal;">(${state.tempCards.length}枚中${selectedCount}枚選択)</small>`;
+  }
 }
 
 function renderStadium() {
@@ -821,11 +889,55 @@ function findPokemonByCardUid(uid) {
   return null;
 }
 
+function selectFieldPokemon(location, index) {
+  if (state.selectedFieldPokemon && 
+      state.selectedFieldPokemon.location === location && 
+      state.selectedFieldPokemon.index === index) {
+    state.selectedFieldPokemon = null; // 選択解除
+  } else {
+    state.selectedFieldPokemon = { location, index };
+  }
+  updateFieldSelectionUi();
+}
+
+function updateFieldSelectionUi() {
+  document.querySelectorAll(".card.field-selected").forEach(el => el.classList.remove("field-selected"));
+  if (!state.selectedFieldPokemon) return;
+  const { location, index } = state.selectedFieldPokemon;
+  let targetEl = null;
+  if (location === "active") {
+    targetEl = document.querySelector("#my-active .card");
+  } else if (location === "bench") {
+    const benchCards = document.querySelectorAll("#my-bench .card");
+    targetEl = benchCards[index] || null;
+  } else if (location === "opp-active") {
+    targetEl = document.querySelector("#opp-active .card");
+  } else if (location === "opp-bench") {
+    const oppBenchCards = document.querySelectorAll("#opp-bench .card");
+    targetEl = oppBenchCards[index] || null;
+  }
+  if (targetEl) {
+    targetEl.classList.add("field-selected");
+  }
+}
+
+window.selectFieldPokemon = selectFieldPokemon;
+window.updateFieldSelectionUi = updateFieldSelectionUi;
+
 function renderPokemonCardHtml(pokemon, location, extraClass = "") {
   if (!pokemon || !pokemon.card) return "";
   registerCard(pokemon.card);
   const card = pokemon.card;
   const damage = pokemon.damage || 0;
+
+  let isFieldSelected = false;
+  if (state.selectedFieldPokemon) {
+    if (location === "active" && state.selectedFieldPokemon.location === "active") isFieldSelected = true;
+    else if (location.startsWith("bench_") && state.selectedFieldPokemon.location === "bench" && state.selectedFieldPokemon.index === parseInt(location.replace("bench_", ""), 10)) isFieldSelected = true;
+    else if (location === "opp-active" && state.selectedFieldPokemon.location === "opp-active") isFieldSelected = true;
+    else if (location.startsWith("opp-bench_") && state.selectedFieldPokemon.location === "opp-bench" && state.selectedFieldPokemon.index === parseInt(location.replace("opp-bench_", ""), 10)) isFieldSelected = true;
+  }
+  const selClass = isFieldSelected ? " field-selected" : "";
 
   // ポケモンのどうぐ（カード上部に少しはみ出る）
   let toolHtml = "";
@@ -946,7 +1058,7 @@ function renderPokemonCardHtml(pokemon, location, extraClass = "") {
   const imgClass = hasImg ? 'has-img' : '';
 
   return `
-    <div class="card ${card.color} ${imgClass} ${extraClass}${conditionCardClasses}"
+    <div class="card ${card.color} ${imgClass} ${extraClass}${conditionCardClasses}${selClass}"
          ${imgStyle}
          data-location="${location}"
          ondragover="window.handlePokemonDragOver(event)"
@@ -1325,11 +1437,15 @@ function showHandContextMenu(e, handIdx) {
   // 付与先ボタン（エネルギーまたはポケモンのどうぐ）
   let attachButtons = "";
   if (state.myActive) {
-    attachButtons += `<button class="ctx-sub-target" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'active');">⚡/🎒 バトル場 (${escapeHtml(state.myActive.card.name)})</button>`;
+    const actName = state.myActive.card.name;
+    const actFullName = `バトル場: ${actName} (HP${state.myActive.card.hp || '-'})`;
+    attachButtons += `<button class="ctx-sub-target" data-fullname="${escapeHtml(actFullName)}" title="${escapeHtml(actFullName)}" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'active');"><span class="target-tag">⚡/🎒 バトル場:</span> <span class="target-name">${escapeHtml(actName)}</span></button>`;
   }
   state.myBench.forEach((b, bIdx) => {
     if (b) {
-      attachButtons += `<button class="ctx-sub-target" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'bench_${bIdx}');">⚡/🎒 ベンチ${bIdx + 1} (${escapeHtml(b.card.name)})</button>`;
+      const bName = b.card.name;
+      const bFullName = `ベンチ${bIdx + 1}: ${bName} (HP${b.card.hp || '-'})`;
+      attachButtons += `<button class="ctx-sub-target" data-fullname="${escapeHtml(bFullName)}" title="${escapeHtml(bFullName)}" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'bench_${bIdx}');"><span class="target-tag">⚡/🎒 ベンチ${bIdx + 1}:</span> <span class="target-name">${escapeHtml(bName)}</span></button>`;
     }
   });
 
@@ -1337,11 +1453,15 @@ function showHandContextMenu(e, handIdx) {
   let evolveButtons = "";
   if (isPokemon) {
     if (state.myActive) {
-      evolveButtons += `<button class="ctx-sub-target" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'active');">✨ バトル場 (${escapeHtml(state.myActive.card.name)})</button>`;
+      const actName = state.myActive.card.name;
+      const actFullName = `バトル場: ${actName} (HP${state.myActive.card.hp || '-'})`;
+      evolveButtons += `<button class="ctx-sub-target" data-fullname="${escapeHtml(actFullName)}" title="${escapeHtml(actFullName)}" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'active');"><span class="target-tag">✨ バトル場:</span> <span class="target-name">${escapeHtml(actName)}</span></button>`;
     }
     state.myBench.forEach((b, bIdx) => {
       if (b) {
-        evolveButtons += `<button class="ctx-sub-target" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'bench_${bIdx}');">✨ ベンチ${bIdx + 1} (${escapeHtml(b.card.name)})</button>`;
+        const bName = b.card.name;
+        const bFullName = `ベンチ${bIdx + 1}: ${bName} (HP${b.card.hp || '-'})`;
+        evolveButtons += `<button class="ctx-sub-target" data-fullname="${escapeHtml(bFullName)}" title="${escapeHtml(bFullName)}" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'bench_${bIdx}');"><span class="target-tag">✨ ベンチ${bIdx + 1}:</span> <span class="target-name">${escapeHtml(bName)}</span></button>`;
       }
     });
   }
@@ -1361,12 +1481,12 @@ function showHandContextMenu(e, handIdx) {
     ${evolveButtons ? `
       <div class="divider"></div>
       <div style="font-size:11px; color:#cbd5e1; margin-bottom:4px; font-weight:bold;">✨ 重ねて進化させる対象:</div>
-      <div class="ctx-grid-2col">${evolveButtons}</div>
+      <div class="ctx-grid-targets">${evolveButtons}</div>
     ` : ''}
     ${(isEnergy || isTrainer) && attachButtons ? `
       <div class="divider"></div>
       <div style="font-size:11px; color:#cbd5e1; margin-bottom:4px; font-weight:bold;">⚡/🎒 ポケモンにつける対象:</div>
-      <div class="ctx-grid-2col">${attachButtons}</div>
+      <div class="ctx-grid-targets">${attachButtons}</div>
     ` : ''}
     <div class="divider"></div>
     <div class="ctx-grid-2col">
