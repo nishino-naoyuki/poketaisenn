@@ -245,6 +245,7 @@ function attachHandCardToPokemon(handIdx, location) {
       clearPokemonConditions(dst);
     }
     dst.card = card;
+    dst.abilityUsed = false;
     state.myHand.splice(handIdx, 1);
     state.selectedHandIndices.clear();
     state.selectedHandIndex = -1;

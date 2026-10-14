@@ -1193,7 +1193,7 @@ function renderPokemonCardHtml(pokemon, location, extraClass = "") {
       ${toolHtml}
       ${conditionFxHtml}
       ${conditionBadgesHtml}
-      ${pokemon.abilityUsed ? '<div class="ability-used-badge" title="このターン特性を使用しました">✨ 特性済</div>' : ''}
+      ${pokemon.abilityUsed ? '<div class="ability-used-badge" title="特性使用済">済</div>' : ''}
       <div class="card-top">
         <span class="name">${card.name}</span>
         ${card.hp ? `<span class="hp">HP${card.hp}</span>` : ''}

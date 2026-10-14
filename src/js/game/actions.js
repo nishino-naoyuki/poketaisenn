@@ -1833,7 +1833,8 @@ function pickPrizeCard(idx, card, inner) {
   const stamp = document.createElement("div");
   stamp.className = "prize-picked-stamp";
   stamp.textContent = "✔ 取得済";
-  inner.appendChild(stamp);
+  const frontFace = inner.querySelector(".prize-front") || inner;
+  frontFace.appendChild(stamp);
 
   _prizePickState.pickedCount++;
 
