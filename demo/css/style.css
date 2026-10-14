@@ -779,18 +779,14 @@ html, body {
 }
 
 .back {
-  background:
-    radial-gradient(circle at 50% 50%, #f2d34a 0 18%, #333 19% 23%, transparent 24%),
-    linear-gradient(135deg, #2b5fc9, #183a85);
-  border: 2px solid #9fb6e8;
+  background: #1e293b url("../img/card-back.png") center center / cover no-repeat;
+  border: 1.5px solid #d4af37;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 .opp .back, .opp-hand .back {
-  background:
-    radial-gradient(circle at 50% 50%, #f2d34a 0 18%, #333 19% 23%, transparent 24%),
-    linear-gradient(135deg, #c93b2b, #851a18);
-  border-color: #e8a49f;
+  background: #1e293b url("../img/card-back.png") center center / cover no-repeat;
+  border-color: #d4af37;
 }
 
 /* 枚数バッジ */
@@ -864,11 +860,11 @@ html, body {
 }
 
 .pile .back {
-  box-shadow: 2px 2px 0 #10265a, 4px 4px 0 #0c1d45, 0 4px 8px rgba(0, 0, 0, 0.6);
+  box-shadow: 2px 2px 0 #2a3547, 4px 4px 0 #19202c, 0 4px 8px rgba(0, 0, 0, 0.6);
 }
 
 .opp .pile .back {
-  box-shadow: 2px 2px 0 #5a1010, 4px 4px 0 #450c0c, 0 4px 8px rgba(0, 0, 0, 0.6);
+  box-shadow: 2px 2px 0 #2a3547, 4px 4px 0 #19202c, 0 4px 8px rgba(0, 0, 0, 0.6);
 }
 
 .deck-btns {
