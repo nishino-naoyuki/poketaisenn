@@ -197,6 +197,26 @@
       </div>
 
       <div class="step">
+        <div class="step-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <div><span class="num">5</span>あなたのスリーブ選択（カード裏面）</div>
+          <button class="btn blue" style="font-size:11px; padding:3px 8px;" data-action="openSleeveUpload">＋ 自作スリーブ登録</button>
+        </div>
+        <p style="font-size:11px; color:#64748b; margin:2px 0 6px 0;">サイドや山札、相手から見た手札裏面として表示されます。</p>
+        <div id="sleeve-preview-row" class="playmat-preview-row"></div>
+        <input type="file" id="sleeve-file-input" accept="image/*" class="hidden">
+      </div>
+
+      <div class="step" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:bold; color:#1e293b;">
+          <input type="checkbox" id="chk-auto-trash" checked style="width:18px; height:18px; accent-color:#2563eb; cursor:pointer;">
+          <span>⚡ 使用したカードを自動でトラッシュする（5秒後）</span>
+        </label>
+        <p style="font-size:11px; color:#64748b; margin:4px 0 0 26px;">
+          ONの場合、手札から「使用」エリアに出したカードが5秒後にアニメーション付きで自動的にトラッシュへ送られます。
+        </p>
+      </div>
+
+      <div class="step">
         <button id="btn-start" class="btn gold big wide" data-action="startBattle" disabled>相手の接続待ち...</button>
         <div id="start-status" class="status"></div>
       </div>
@@ -280,6 +300,23 @@
           <div><span class="num">3</span>あなたのプレイマット選択</div>
         </div>
         <div id="playmat-preview-row-solo" class="playmat-preview-row"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <div><span class="num">4</span>あなたのスリーブ選択（カード裏面）</div>
+        </div>
+        <div id="sleeve-preview-row-solo" class="playmat-preview-row"></div>
+      </div>
+
+      <div class="step" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:bold; color:#1e293b;">
+          <input type="checkbox" id="chk-auto-trash-solo" checked style="width:18px; height:18px; accent-color:#2563eb; cursor:pointer;">
+          <span>⚡ 使用したカードを自動でトラッシュする（5秒後）</span>
+        </label>
+        <p style="font-size:11px; color:#64748b; margin:4px 0 0 26px;">
+          ONの場合、手札から「使用」エリアに出したカードが5秒後にアニメーション付きで自動的にトラッシュへ送られます。
+        </p>
       </div>
 
       <div class="step">
@@ -497,28 +534,93 @@
 <div class="sp-sheet" role="dialog" aria-label="操作メニュー">
   <div class="grip"></div>
   <div class="sheet-section-header">
-    <h3 style="margin:0;">🃏 手札メニュー <span class="sel" id="sheet-sel"></span></h3>
+    <h3 style="margin:0;">📱 操作メニュー <span class="sel" id="sheet-sel"></span></h3>
     <button class="sheet-close-x" data-action="closeMenu" aria-label="閉じる">✕</button>
   </div>
   <div id="sheet-hand-body">
     <!-- 手札選択状態に応じて動的に生成 -->
   </div>
 
-  <h3 style="margin-top:14px;">🎴 山札 <span class="sel muted" id="sheet-deck"></span></h3>
+  <!-- 1階層目：よくやる操作 -->
+  <div class="sheet-subgroup-title" style="margin-top:12px;">⚡ クイック操作</div>
   <div class="grid">
-    <button class="btn green" data-action="draw" data-close="1">１枚引く</button>
-    <button class="btn blue" data-action="viewDeck" data-close="1">山を見る</button>
-    <button class="btn red" data-action="trashTop" data-close="1">１枚トラッシュ</button>
-    <button class="btn purple" data-action="shuffle" data-close="1">シャッフル</button>
+    <button class="btn green" data-action="draw" data-close="1">🎴 1枚引く</button>
+    <button class="btn gold" data-action="endTurn" data-close="1">⚔️ ターン終了</button>
+    <button class="btn" data-action="coin" data-close="1">🪙 コイン</button>
+    <button class="btn" id="btn-sp-undo" data-action="undo" data-close="1">↩️ 1手順戻す</button>
   </div>
 
-  <h3 style="margin-top:14px;">⚙️ その他・対戦進行</h3>
-  <div class="grid">
-    <button class="btn gold" data-action="endTurn" data-close="1">ターン終了</button>
-    <button class="btn" data-action="coin" data-close="1">🪙 コイン</button>
-    <button class="btn" data-action="showLog" data-close="1">📜 ログ</button>
-    <button class="btn blue" data-action="exportCsv" data-close="1">💾 CSV保存</button>
-    <button class="btn" data-action="triggerCsvImport" data-close="1">📂 CSV再現</button>
+  <!-- サブメニュー群（アコーディオン） -->
+  <div class="sp-sheet-accordions" style="margin-top:12px;">
+    <!-- 1. 山札操作 -->
+    <details class="sp-accordion" id="acc-deck">
+      <summary class="sp-acc-summary">🎴 山札操作 <span class="sel muted" id="sheet-deck"></span></summary>
+      <div class="sp-acc-body">
+        <div class="grid">
+          <button class="btn green" data-action="draw" data-close="1">1枚引く</button>
+          <button class="btn blue" data-action="viewDeck" data-close="1">山を見る</button>
+          <button class="btn red" data-action="trashTop" data-close="1">1枚トラッシュ</button>
+          <button class="btn purple" data-action="shuffle" data-close="1">シャッフル</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- 2. 手札操作 -->
+    <details class="sp-accordion" id="acc-hand">
+      <summary class="sp-acc-summary">🃏 手札操作 <span class="sel muted" id="sheet-hand-count"></span></summary>
+      <div class="sp-acc-body">
+        <div class="grid">
+          <button class="btn" data-action="handToDeck" data-close="1">手札を山に戻す</button>
+          <button class="btn" data-action="handToBottom" data-close="1">山の下に戻す</button>
+          <button class="btn red" data-action="handTrash" data-close="1">トラッシュする</button>
+          <button class="btn purple" data-action="handLost" data-close="1">ロストへ送る</button>
+          <button class="btn blue" data-action="handActive" data-close="1">⚔️ バトル場に出す</button>
+          <button class="btn blue" data-action="handBench" data-close="1">🪑 ベンチに出す</button>
+          <button class="btn purple wide hidden" id="btn-sp-solo-hand" onclick="closeMenu(); showSoloOpponentHandMenu();">🎴 相手手札干渉 (一人回し)</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- 3. トラッシュ操作 -->
+    <details class="sp-accordion" id="acc-trash">
+      <summary class="sp-acc-summary">🗑️ トラッシュ操作 <span class="sel muted" id="sheet-trash-count"></span></summary>
+      <div class="sp-acc-body">
+        <div class="grid">
+          <button class="btn wide" onclick="closeMenu(); showCardListModal('トラッシュ', state.myTrash);">自分のトラッシュを見る</button>
+          <button class="btn wide" onclick="closeMenu(); showCardListModal('相手のトラッシュ', state.oppTrash);">相手のトラッシュを見る</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- 4. サイド操作 -->
+    <details class="sp-accordion" id="acc-side">
+      <summary class="sp-acc-summary">🏆 サイド操作 <span class="sel muted" id="sheet-side-count"></span></summary>
+      <div class="sp-acc-body">
+        <div class="grid">
+          <button class="btn gold wide" onclick="closeMenu(); openPrizePickModal(1, '手動サイド取得');">🏆 サイドを1枚取る</button>
+          <button class="btn" onclick="closeMenu(); showCardListModal('自分のサイドカード（表確認）', state.myPrizes);">自分のサイド</button>
+          <button class="btn" onclick="closeMenu(); showCardListModal('相手のサイドカード', state.oppPrizes);">相手のサイド</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- 5. システム操作 -->
+    <details class="sp-accordion" id="acc-system">
+      <summary class="sp-acc-summary">⚙️ システム操作</summary>
+      <div class="sp-acc-body">
+        <div class="grid">
+          <button class="btn" data-action="showLog" data-close="1">📜 対戦ログ</button>
+          <button class="btn gold" data-action="declareVictory" data-close="1">🏆 勝利宣言</button>
+          <button class="btn wide" onclick="toggleBenchCapacity(); closeMenu();">🏟️ ベンチ枠切替 (5↔8)</button>
+          <button class="btn blue" data-action="exportCsv" data-close="1">💾 CSV保存</button>
+          <button class="btn" data-action="triggerCsvImport" data-close="1">📂 CSV再現</button>
+          <button class="btn red wide" data-action="exit" data-close="1">🚪 対戦から退室</button>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div style="margin-top:14px;">
     <button class="btn wide" data-action="closeMenu">閉じる</button>
   </div>
 </div>
@@ -629,6 +731,7 @@
 <script src="js/data/deck-parser.js"></script>
 <script src="js/util.js"></script>
 <script src="js/data/playmats-default.js"></script>
+<script src="js/data/sleeves-default.js"></script>
 <script src="js/state.js"></script>
 <script src="js/game/hand-actions.js"></script>
 <script src="js/game/actions.js"></script>
@@ -640,6 +743,7 @@
 <script src="js/ui/modals.js"></script>
 <script src="js/ui/lobby.js"></script>
 <script src="js/ui/playmat.js"></script>
+<script src="js/ui/sleeve.js"></script>
 <script src="js/net/p2p.js"></script>
 <script src="js/main.js"></script>
 </body>

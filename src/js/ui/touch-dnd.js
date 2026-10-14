@@ -6,6 +6,8 @@
 const touchDrag = {
   active: false,
   isDragging: false,
+  isLongPressed: false,
+  longPressTimer: null,
   type: null,
   data: null,
   startX: 0,
@@ -64,8 +66,13 @@ function initTouchDragEngine() {
 function initTouchDragStart(e, type, data, sourceEl) {
   if (!e.touches || e.touches.length === 0) return;
   const touch = e.touches[0];
+  if (touchDrag.longPressTimer) {
+    clearTimeout(touchDrag.longPressTimer);
+    touchDrag.longPressTimer = null;
+  }
   touchDrag.active = true;
   touchDrag.isDragging = false;
+  touchDrag.isLongPressed = false;
   touchDrag.type = type;
   touchDrag.data = data;
   touchDrag.sourceEl = sourceEl;
@@ -74,6 +81,26 @@ function initTouchDragStart(e, type, data, sourceEl) {
   touchDrag.currentX = touch.clientX;
   touchDrag.currentY = touch.clientY;
   touchDrag.currentHoverEl = null;
+
+  // 手札カード長押し検知 (450ms) → コンテキストメニューを開く
+  if (type === "hand" && data && typeof data.handIdx === "number") {
+    touchDrag.longPressTimer = setTimeout(() => {
+      touchDrag.isLongPressed = true;
+      window._suppressHandClickUntil = Date.now() + 500;
+      if (navigator.vibrate) {
+        try { navigator.vibrate(40); } catch (_) {}
+      }
+      if (typeof showHandContextMenu === "function") {
+        const syntheticEvent = {
+          clientX: touchDrag.currentX,
+          clientY: touchDrag.currentY,
+          preventDefault: () => {},
+          stopPropagation: () => {}
+        };
+        showHandContextMenu(syntheticEvent, data.handIdx);
+      }
+    }, 450);
+  }
 }
 
 function handleTouchMove(e) {
@@ -83,6 +110,16 @@ function handleTouchMove(e) {
   touchDrag.currentY = touch.clientY;
   const dx = touch.clientX - touchDrag.startX;
   const dy = touch.clientY - touchDrag.startY;
+
+  if (touchDrag.longPressTimer && Math.hypot(dx, dy) >= 8) {
+    clearTimeout(touchDrag.longPressTimer);
+    touchDrag.longPressTimer = null;
+  }
+
+  if (touchDrag.isLongPressed) {
+    // メニュー表示中はD&Dを開始しない
+    return;
+  }
 
   if (!touchDrag.isDragging) {
     if (Math.hypot(dx, dy) >= 8) {
@@ -113,6 +150,21 @@ function handleTouchMove(e) {
 function handleTouchEnd(e) {
   if (!touchDrag.active) return;
 
+  if (touchDrag.longPressTimer) {
+    clearTimeout(touchDrag.longPressTimer);
+    touchDrag.longPressTimer = null;
+  }
+
+  if (touchDrag.isLongPressed) {
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
+    touchDrag.active = false;
+    touchDrag.isDragging = false;
+    touchDrag.isLongPressed = false;
+    touchDrag.sourceEl = null;
+    return;
+  }
+
   const wasDragging = touchDrag.isDragging;
   const finalX = touchDrag.currentX;
   const finalY = touchDrag.currentY;
@@ -134,6 +186,7 @@ function handleTouchEnd(e) {
 
   touchDrag.active = false;
   touchDrag.isDragging = false;
+  touchDrag.isLongPressed = false;
   touchDrag.type = null;
   touchDrag.data = null;
   touchDrag.sourceEl = null;

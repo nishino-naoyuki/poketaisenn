@@ -479,8 +479,27 @@ function moveSelectedHandToBottom() {
 function trashSelectedHand() {
   const indices = getSelectedHandIndices();
   if (indices.length === 0) {
-    return alert("手札のカードをタップ/クリックして選択してください");
+    if (!state.myHand || state.myHand.length === 0) {
+      return alert("手札がありません");
+    }
+    const count = state.myHand.length;
+    if (!confirm(`手札のカード（${count}枚）をすべてトラッシュしますか？`)) {
+      return;
+    }
+    pushHistorySnapshot("手札全トラッシュ");
+    const allHand = state.myHand.splice(0, state.myHand.length);
+    allHand.forEach(card => state.myTrash.push(card));
+    state.selectedHandIndices.clear();
+    state.selectedHandIndex = -1;
+    addLog(`手札をすべて（${count}枚）トラッシュしました`, {
+      cards: allHand,
+      badge: "🗑️ 手札全トラッシュ"
+    });
+    showToast(`手札をすべてトラッシュしました (${count}枚)`);
+    renderAll();
+    return;
   }
+  pushHistorySnapshot("手札からトラッシュ");
   const movedCards = [];
   indices.forEach(idx => {
     const card = state.myHand.splice(idx, 1)[0];
@@ -770,7 +789,165 @@ function playHandCardByIndex(idx) {
   }
 
   renderAll();
+
+  if (state.autoTrashEnabled) {
+    startAutoTrashTimer(card);
+  }
 }
+
+let _autoTrashTimer = null;
+let _autoTrashInterval = null;
+
+function cancelAutoTrashTimer() {
+  if (_autoTrashTimer) {
+    clearTimeout(_autoTrashTimer);
+    _autoTrashTimer = null;
+  }
+  if (_autoTrashInterval) {
+    clearInterval(_autoTrashInterval);
+    _autoTrashInterval = null;
+  }
+  const bar = document.getElementById("auto-trash-progress-bar");
+  if (bar) bar.remove();
+}
+
+function startAutoTrashTimer(card) {
+  cancelAutoTrashTimer();
+  if (!state.autoTrashEnabled || !card) return;
+
+  const playArea = document.getElementById("play-area");
+  if (!playArea) return;
+
+  const bar = document.createElement("div");
+  bar.id = "auto-trash-progress-bar";
+  bar.className = "auto-trash-progress-bar";
+  bar.innerHTML = `
+    <div class="auto-trash-fill"></div>
+    <span class="auto-trash-label">⏱️ 5秒後に自動トラッシュ</span>
+  `;
+  playArea.appendChild(bar);
+
+  const durationMs = 5000;
+  const startTime = Date.now();
+
+  _autoTrashInterval = setInterval(() => {
+    if (!state.playCard || state.playCard !== card) {
+      cancelAutoTrashTimer();
+      return;
+    }
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, Math.ceil((durationMs - elapsed) / 1000));
+    const label = bar.querySelector(".auto-trash-label");
+    if (label) {
+      label.textContent = `⏱️ ${remaining}秒後に自動トラッシュ`;
+    }
+    if (elapsed >= durationMs) {
+      clearInterval(_autoTrashInterval);
+      _autoTrashInterval = null;
+    }
+  }, 200);
+
+  _autoTrashTimer = setTimeout(() => {
+    _autoTrashTimer = null;
+    if (state.playCard === card) {
+      executeDramaticAutoTrash(card);
+    } else {
+      cancelAutoTrashTimer();
+    }
+  }, durationMs);
+}
+
+function executeDramaticAutoTrash(card) {
+  cancelAutoTrashTimer();
+  if (!state.playCard || state.playCard !== card) return;
+
+  const playWrap = document.getElementById("play-card-wrap");
+  const trashEl = document.getElementById("my-trash");
+
+  if (!playWrap || !trashEl) {
+    movePlayCardToTrash();
+    return;
+  }
+
+  const srcRect = playWrap.getBoundingClientRect();
+  const dstRect = trashEl.getBoundingClientRect();
+
+  const flyer = document.createElement("div");
+  flyer.className = "flying-auto-trash-card";
+  const hasImg = !!card.imageUrl;
+  flyer.innerHTML = `
+    <div class="card ${card.color || 'pokemon'} ${hasImg ? 'has-img' : ''}"
+         ${hasImg ? `style="background-image: url('${card.imageUrl}');"` : ''}>
+      <div class="card-top"><span class="name">${escapeHtml(card.name)}</span></div>
+    </div>
+  `;
+
+  document.body.appendChild(flyer);
+  if (playWrap) playWrap.style.opacity = "0";
+
+  const startX = srcRect.left + srcRect.width / 2;
+  const startY = srcRect.top + srcRect.height / 2;
+  const endX = dstRect.left + dstRect.width / 2;
+  const endY = dstRect.top + dstRect.height / 2;
+
+  flyer.style.left = `${startX}px`;
+  flyer.style.top = `${startY}px`;
+
+  const anim = flyer.animate([
+    {
+      transform: "translate(-50%, -50%) scale(1) rotate(0deg)",
+      boxShadow: "0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(245, 158, 11, 0.6)",
+      opacity: 1
+    },
+    {
+      transform: `translate(${(endX - startX) * 0.45}px, ${(endY - startY) * 0.3 - 80}px) scale(1.2) rotate(15deg)`,
+      boxShadow: "0 0 35px rgba(239, 68, 68, 1), 0 0 60px rgba(245, 158, 11, 0.9)",
+      opacity: 1,
+      offset: 0.45
+    },
+    {
+      transform: `translate(${endX - startX}px, ${endY - startY}px) scale(0.85) rotate(-10deg)`,
+      boxShadow: "0 0 25px rgba(239, 68, 68, 0.9), 0 0 45px rgba(220, 38, 38, 0.8)",
+      opacity: 0.85,
+      offset: 0.85
+    },
+    {
+      transform: `translate(${endX - startX}px, ${endY - startY}px) scale(0.4) rotate(0deg)`,
+      boxShadow: "0 0 50px rgba(239, 68, 68, 1)",
+      opacity: 0
+    }
+  ], {
+    duration: 750,
+    easing: "cubic-bezier(0.25, 1, 0.5, 1)"
+  });
+
+  anim.onfinish = () => {
+    flyer.remove();
+    if (playWrap) playWrap.style.opacity = "";
+    trashEl.classList.add("trash-hit-pulse");
+    setTimeout(() => trashEl.classList.remove("trash-hit-pulse"), 600);
+
+    if (state.playCard === card) {
+      if (typeof pushHistorySnapshot === "function") {
+        pushHistorySnapshot("使用カードの自動トラッシュ");
+      }
+      state.myTrash.push(card);
+      state.playCard = null;
+      addLog(`【自動トラッシュ】使用した「${card.name}」をトラッシュへ送りました`, {
+        cards: [card],
+        badge: "🗑️ 自動トラッシュ"
+      });
+      showToast(`【自動トラッシュ】${card.name}`);
+      renderAll();
+      if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+        P2P.syncNow();
+      }
+    }
+  };
+}
+
+window.cancelAutoTrashTimer = cancelAutoTrashTimer;
+window.startAutoTrashTimer = startAutoTrashTimer;
 
 function moveSelectedHandToPlayArea() {
   const indices = getSelectedHandIndices();
@@ -781,6 +958,7 @@ function moveSelectedHandToPlayArea() {
 
 function movePlayCardToTrash() {
   if (!state.playCard) return;
+  cancelAutoTrashTimer();
   pushHistorySnapshot("使用カードをトラッシュ");
   const card = state.playCard;
   state.myTrash.push(card);
@@ -795,6 +973,7 @@ function movePlayCardToTrash() {
 
 function movePlayCardToHand() {
   if (!state.playCard) return;
+  cancelAutoTrashTimer();
   pushHistorySnapshot("使用カードを手札へ");
   const card = state.playCard;
   state.myHand.push(card);
@@ -809,6 +988,7 @@ function movePlayCardToHand() {
 
 function movePlayCardToDeckTop() {
   if (!state.playCard) return;
+  cancelAutoTrashTimer();
   pushHistorySnapshot("使用カードを山札の上へ");
   const card = state.playCard;
   state.myDeck.unshift(card);
@@ -823,6 +1003,7 @@ function movePlayCardToDeckTop() {
 
 function movePlayCardToDeckBottom() {
   if (!state.playCard) return;
+  cancelAutoTrashTimer();
   pushHistorySnapshot("使用カードを山札の下へ");
   const card = state.playCard;
   state.myDeck.push(card);
@@ -837,6 +1018,7 @@ function movePlayCardToDeckBottom() {
 
 function movePlayCardToStadium() {
   if (!state.playCard) return;
+  cancelAutoTrashTimer();
   const card = state.playCard;
   if (state.stadium) {
     const oldStadium = state.stadium;
@@ -858,6 +1040,7 @@ function movePlayCardToStadium() {
 
 function movePlayCardToLost() {
   if (!state.playCard) return;
+  cancelAutoTrashTimer();
   const card = state.playCard;
   state.myLost.push(card);
   state.playCard = null;

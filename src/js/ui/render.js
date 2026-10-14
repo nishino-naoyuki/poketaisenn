@@ -667,6 +667,7 @@ function renderHand() {
     // クリック・タップで選択（スマホモード時は即座に操作メニューを表示）
     el.onclick = () => {
       if (marqueeState.justFinished) return;
+      if (Date.now() < (window._suppressHandClickUntil || 0)) return;
       if (isMobileMode()) {
         selectHandCardAndOpenMenu(idx);
       } else {
@@ -1521,14 +1522,20 @@ function updateSheetUI() {
     }
     handBodyEl.innerHTML = `
       <div class="sheet-empty-hint">
-        💡 手札のカードをタップすると、カードごとの詳細メニュー（使う・場に出す・エネルギー付与など）が表示されます。
-      </div>
-      <div class="grid">
-        <button class="btn green" data-action="draw" data-close="1">１枚引く</button>
-        <button class="btn blue" data-action="viewDeck" data-close="1">山札を見る</button>
-        ${soloHandBtn}
+        💡 手札のカードをタップすると、カードに応じたアクション（使う・場に出す・エネルギー付与など）がここに表示されます。
       </div>
     `;
+  }
+
+  const handCountEl = document.getElementById("sheet-hand-count");
+  if (handCountEl) handCountEl.textContent = `${state.myHand.length}枚`;
+  const trashCountEl = document.getElementById("sheet-trash-count");
+  if (trashCountEl) trashCountEl.textContent = `${state.myTrash.length}枚`;
+  const sideCountEl = document.getElementById("sheet-side-count");
+  if (sideCountEl) sideCountEl.textContent = `残り${state.myPrizes.length}枚`;
+  const btnSoloHand = document.getElementById("btn-sp-solo-hand");
+  if (btnSoloHand) {
+    btnSoloHand.classList.toggle("hidden", !(state.isSoloMode && !state.isSetupPhase));
   }
 }
 

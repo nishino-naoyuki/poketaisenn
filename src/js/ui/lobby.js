@@ -76,6 +76,7 @@ function switchLobbyMode(mode) {
     renderDeckPreview(state.soloDeckA || SAMPLE_DECK, "deck-preview-a");
     renderDeckPreview(state.soloDeckB || SAMPLE_DECK_B, "deck-preview-b");
     renderPlaymatSelector();
+    if (typeof renderSleeveSelector === "function") renderSleeveSelector();
     if (typeof checkSoloResumeBanner === "function") {
       checkSoloResumeBanner();
     }
@@ -86,6 +87,7 @@ function switchLobbyMode(mode) {
     panelSolo.classList.add("hidden");
     renderDeckPreview(state.myLoadedDeck || SAMPLE_DECK, "deck-preview");
     renderPlaymatSelector();
+    if (typeof renderSleeveSelector === "function") renderSleeveSelector();
   }
 }
 

@@ -786,6 +786,28 @@ DataChannelを通じて送信されるJSONメッセージは `t` プロパティ
    - `.setup-status-box` に `min-width: 180px` を確保しつつ、`.setup-order-status` に `white-space: nowrap; text-overflow: ellipsis;` を適用。
    - Flexbox の過度な縮小によるテキスト縦並び崩れを根本排除し、スリムな横長バナーとして盤面上部に固定。
 
+4. **スマホ版メニュー最適化＆長押しコンテキストメニュー (`touch-dnd.js`, `style.css`)**:
+   - **アコーディオン式サブメニュー**: スマホ版 `.sp-sheet` にて、1階層目をクイック操作4種（1枚引く、ターン終了、コイン、1手戻す）に絞り込み、下部に「山札操作」「手札操作」「トラッシュ操作」「サイド操作」「システム操作」の5つの `<details class="sp-accordion">` を配置。リアルタイム枚数カウントバッジを動的更新。
+   - **手札長押し検知**: `initTouchDragStart` にて 450ms の `longPressTimer` を起動。8px以上の指移動（`touchDistance`）でタイマーを解除し、移動がなければ `navigator.vibrate(40)` とともに手札コンテキストメニュー（`showHandContextMenu`）を展開。直後のゴーストクリックを抑制（`window._suppressHandClickUntil`）。
+   - **対戦準備完了ボタン見切れ解消**: `@media (max-width: 768px)` にて `.setup-banner` の `max-height: none !important; height: auto !important; overflow: visible !important;` を指定し、スマホ縦画面・横画面でのボタン見切れを根本解消。
+
+5. **トラッシュ操作UIの刷新 (`modals.js`, `style.css`)**:
+   - `showCardListModal` においてカードごとの個別ボタンを廃止し、カードタップで `toggleModalCardSelection` を実行（青色発光アウトライン `selected`）。
+   - モーダル下部に「🖐️ 手札に戻す」「🔀 山札に戻す」「⚡/🎒 ポケモンにつける」アクションバーを固定配置。
+   - ポケモン装着時は `executeTrashSelectedAttach` により対象ポケモン選択ダイアログを表示し、バトル場およびベンチ1〜8へ一括アタッチ。
+
+6. **スリーブ機能アーキテクチャ (`sleeve.js`, `sleeves-default.js`, `p2p.js`)**:
+   - プリセットスリーブ（`DEFAULT_SLEEVES`）と自作スリーブ（`localStorage: pokeca_custom_sleeves_v1`）を統合管理。
+   - 自作画像は Canvas でポケカ比率（400×560）に自動リサイズ・JPEG圧縮（品質0.85）し軽量化（約50〜80KB）。
+   - `renderSleeves()` により `<style id="dynamic-sleeve-style">` へカード裏面CSS（`.band.me .back`, `#my-prizes .back`, `#my-deck .back`, `.opp-hand .back`, `#opp-prizes .back`, `#opp-deck .back`）を動的注入。
+   - P2P通信時、スナップショット（`publicSnapshot`）、開始電文（`start`）、および `sleeve_sync` メッセージにより、相手端末へスリーブIDおよび画像DataURLを完全同期。
+
+7. **5秒後自動トラッシュ機能 (`actions.js`, `style.css`)**:
+   - 手札から「使用」エリアにカードを配置した際、ロビー設定（`state.autoTrashEnabled`）がONの場合に5秒タイマー（`state.autoTrashTimer`）を起動。
+   - カード下部に5秒カウントダウンプログレスバー（`.auto-trash-progress-bar`, `.auto-trash-fill`）を表示。
+   - 5秒経過時に `executeDramaticAutoTrash()` を実行。Web Animations API を用いてクローンアバターが放物線（`translate(dx, dy) scale(0.3) rotate(360deg)`）を描いてトラッシュ枠へ高速移動し、着弾時にゴールドの衝撃波パルス（`trash-hit-pulse`）を発生。完了後にトラッシュ配列へ移動しログ出力＆P2P同期。
+   - プレイヤーが手動でカードを移動させた場合は即座にタイマーをキャンセル。
+
 ---
 
 ## 10. 非機能要件・セキュリティ設計
@@ -825,4 +847,6 @@ DataChannelを通じて送信されるJSONメッセージは `t` プロパティ
 | v13.0 | 2026-10-14 | ポケモン気絶機能（自陣/相手陣バトル場・ベンチ）、気絶時ド派手サイド取得モーダル（3Dカードフリップめくり演出・ゴールド/プリズム光彩・複数枚取得・サイド取り切り自動勝利）、相手画面のサイド取得中待機オーバーレイ同期、および対戦準備バナー（#setup-banner）サイズ・レイアウト最適化 | プロジェクトチーム |
 | v14.0 | 2026-10-14 | ターン終了ボタンの強調・大型化＆手番時パルス発光演出、ロストゾーンの山札・トラッシュ側エリア移動（公式プレイマット準拠・サイド誤認解消）、ポケモンの山札戻しコンテキストメニュー（シャッフル/山札の底選択・どうぐ/エネ同伴・P2P同期）、手札「山札に戻す」未選択時全戻し確認ダイアログ、ブラウザ誤更新（F5・閉じる・戻る）防止アラート＆一人回しオートセーブ復元機能、および公式ポケカ裏面デザイン（card-back.png）の完全適用 | プロジェクトチーム |
 | v14.1 | 2026-10-14 | サイド取得モーダルのカード裏面画像への公式デザイン（card-back.png）適用、サイドめくり時の「✔ 取得済」スタンプ鏡像反転バグ修正（表面内包による正面配置）、特性使用済みバッジの「済」1文字簡素化（視認性向上・省スペース化）、およびポケモン進化時の特性使用済みマーク自動解除 | プロジェクトチーム |
+| v15.0 | 2026-10-15 | スマホ版メニュー整理・クイック操作＆アコーディオンサブメニュー化、スマホ版手札カード長押し（450ms）コンテキストメニュー＆バイブレーション、スマホ版対戦準備完了ボタン見切れ解消、トラッシュ操作UI刷新（カード選択＆下部アクションバー・ポケモン装着対象選択）、手札「トラッシュ」未選択時全トラッシュ確認ダイアログ、スリーブ（カード裏面）選択＆自作画像登録機能（P2P同期対応）、および使用カード5秒後自動トラッシュ機能（プログレスバー＆放物線飛行アニメーション） | プロジェクトチーム |
+
 

@@ -667,6 +667,8 @@ const P2P = {
       t: "state",
       name: state.myName,
       matId: state.myMatId,
+      sleeveId: state.mySleeveId,
+      sleeveDataUrl: state.mySleeveDataUrl,
       handCount: state.myHand.length,
       deckCount: state.myDeck.length,
       prizes: state.myPrizes.length,
@@ -826,6 +828,9 @@ const P2P = {
       state.oppMatId = msg.matId || state.oppMatId;
       state.oppExited = false;
       if ("matDataUrl" in msg) state.oppMatDataUrl = msg.matDataUrl || null;
+      if (msg.sleeveId) state.oppSleeveId = msg.sleeveId;
+      if ("sleeveDataUrl" in msg) state.oppSleeveDataUrl = msg.sleeveDataUrl || null;
+      if (typeof renderSleeves === "function") renderSleeves();
       if (Array.isArray(msg.deck)) {
         state.oppLoadedDeck = msg.deck;
       }
@@ -838,6 +843,9 @@ const P2P = {
       state.oppExited = false;
       if (msg.matId) state.oppMatId = msg.matId;
       if ("matDataUrl" in msg) state.oppMatDataUrl = msg.matDataUrl || null;
+      if (msg.sleeveId) state.oppSleeveId = msg.sleeveId;
+      if ("sleeveDataUrl" in msg) state.oppSleeveDataUrl = msg.sleeveDataUrl || null;
+      if (typeof renderSleeves === "function") renderSleeves();
       if (Array.isArray(msg.deck)) {
         state.oppLoadedDeck = msg.deck;
       }
@@ -853,12 +861,14 @@ const P2P = {
         const matSync = (typeof getMyPlaymatSyncData === "function")
           ? getMyPlaymatSyncData()
           : { matId: state.myMatId, matDataUrl: null };
-        // 相手側へも自分のデッキ・プレイマットを確実に同期
+        // 相手側へも自分のデッキ・プレイマット・スリーブを確実に同期
         this.send({
           t: "deck_sync",
           name: state.myName,
           matId: matSync.matId,
           matDataUrl: matSync.matDataUrl,
+          sleeveId: state.mySleeveId,
+          sleeveDataUrl: state.mySleeveDataUrl,
           deck: state.myLoadedDeck || SAMPLE_DECK
         });
         this.syncNow();
@@ -868,6 +878,9 @@ const P2P = {
       state.oppName = msg.name || state.oppName;
       if (msg.matId) state.oppMatId = msg.matId;
       if ("matDataUrl" in msg) state.oppMatDataUrl = msg.matDataUrl || null;
+      if (msg.sleeveId) state.oppSleeveId = msg.sleeveId;
+      if ("sleeveDataUrl" in msg) state.oppSleeveDataUrl = msg.sleeveDataUrl || null;
+      if (typeof renderSleeves === "function") renderSleeves();
       if (Array.isArray(msg.deck)) {
         state.oppLoadedDeck = msg.deck;
       }
@@ -876,6 +889,10 @@ const P2P = {
       if (msg.matId) state.oppMatId = msg.matId;
       state.oppMatDataUrl = msg.matDataUrl || null;
       if (typeof renderPlaymats === "function") renderPlaymats();
+    } else if (msg.t === "sleeve_sync") {
+      if (msg.sleeveId) state.oppSleeveId = msg.sleeveId;
+      state.oppSleeveDataUrl = msg.sleeveDataUrl || null;
+      if (typeof renderSleeves === "function") renderSleeves();
     } else if (msg.t === "action_log") {
       const pName = msg.playerName || state.oppName || "相手プレイヤー";
       const text = msg.text || "";
@@ -1120,6 +1137,9 @@ const P2P = {
 
     state.oppName = s.name || state.oppName;
     state.oppMatId = s.matId || state.oppMatId;
+    if (s.sleeveId) state.oppSleeveId = s.sleeveId;
+    if ("sleeveDataUrl" in s) state.oppSleeveDataUrl = s.sleeveDataUrl || null;
+    if (typeof renderSleeves === "function") renderSleeves();
     state.oppHandCount = s.handCount | 0;
     state.oppDeckCount = s.deckCount | 0;
     state.oppPrizes = s.prizes | 0;

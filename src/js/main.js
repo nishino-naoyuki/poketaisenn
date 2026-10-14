@@ -30,6 +30,28 @@ function initLobbyDefaults() {
   // プレイマット初期化＆描画
   initPlaymats();
 
+  // スリーブ初期化＆描画
+  if (typeof initSleeves === "function") {
+    initSleeves();
+    renderSleeves();
+  }
+
+  // 自動トラッシュ機能（デフォルトON、localStorage保存）
+  try {
+    const savedAutoTrash = localStorage.getItem("pokeca_auto_trash");
+    if (savedAutoTrash !== null) {
+      state.autoTrashEnabled = (savedAutoTrash === "1");
+    } else {
+      state.autoTrashEnabled = true; // デフォルトON
+    }
+  } catch (e) {
+    state.autoTrashEnabled = true;
+  }
+  const chkOnline = document.getElementById("chk-auto-trash");
+  if (chkOnline) chkOnline.checked = !!state.autoTrashEnabled;
+  const chkSolo = document.getElementById("chk-auto-trash-solo");
+  if (chkSolo) chkSolo.checked = !!state.autoTrashEnabled;
+
   // 一人回し再開データの確認
   checkSoloResumeBanner();
 
@@ -146,6 +168,39 @@ function setupEventListeners() {
       }
       matFileInput.value = "";
     });
+  }
+
+  // スリーブ自作画像アップロードイベント
+  const sleeveFileInput = document.getElementById("sleeve-file-input");
+  if (sleeveFileInput) {
+    sleeveFileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        handleSleeveFileUpload(file);
+      }
+      sleeveFileInput.value = "";
+    });
+  }
+
+  // 自動トラッシュ機能のON/OFF切り替えイベント（オンライン・一人回しで連動）
+  const syncAutoTrashToggle = (checked) => {
+    state.autoTrashEnabled = !!checked;
+    try {
+      localStorage.setItem("pokeca_auto_trash", state.autoTrashEnabled ? "1" : "0");
+    } catch (err) {}
+    const c1 = document.getElementById("chk-auto-trash");
+    const c2 = document.getElementById("chk-auto-trash-solo");
+    if (c1) c1.checked = state.autoTrashEnabled;
+    if (c2) c2.checked = state.autoTrashEnabled;
+  };
+
+  const chk1 = document.getElementById("chk-auto-trash");
+  if (chk1) {
+    chk1.addEventListener("change", (e) => syncAutoTrashToggle(e.target.checked));
+  }
+  const chk2 = document.getElementById("chk-auto-trash-solo");
+  if (chk2) {
+    chk2.addEventListener("change", (e) => syncAutoTrashToggle(e.target.checked));
   }
 
   // リプレイスライダー
@@ -311,6 +366,8 @@ const actions = {
         name: state.myName,
         matId: matSync.matId,
         matDataUrl: matSync.matDataUrl,
+        sleeveId: state.mySleeveId,
+        sleeveDataUrl: state.mySleeveDataUrl,
         deck: state.myLoadedDeck || SAMPLE_DECK
       });
       renderAll();
@@ -413,8 +470,9 @@ const actions = {
   showLog: () => showLogModal(),
   cancelTarget: () => cancelTargetMode(),
 
-  // プレイマット選択アクション
+  // プレイマット・スリーブ選択アクション
   openMatUpload: () => openMatUpload(),
+  openSleeveUpload: () => (typeof openSleeveUpload === "function" ? openSleeveUpload() : null),
 
   // CSVログ出力・試合再現（リプレイ）
   exportCsv: () => exportMatchCsv(),

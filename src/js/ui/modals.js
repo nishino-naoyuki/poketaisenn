@@ -190,44 +190,250 @@ window.pickSelectedFromDeck = function(destination) {
   renderAll();
 };
 
+window._modalSelectedIndices = new Set();
+
 function showCardListModal(titleText, cardList) {
+  window._modalSelectedIndices = new Set();
   const isOpponentList = titleText.includes("相手");
-  let bodyHtml = `<div class="card-grid">`;
+  const isTrash = titleText.includes("トラッシュ");
+
+  let bodyHtml = `<div class="card-grid modal-card-grid" id="modal-card-grid">`;
   cardList.forEach((c, idx) => {
     registerCard(c);
     const hasImg = !!c.imageUrl;
     const imgStyle = hasImg ? `style="background-image: url('${c.imageUrl}');"` : '';
     bodyHtml += `
       <div class="card ${c.color} ${hasImg ? 'has-img' : ''}" 
+           id="modal-card-${idx}"
            ${imgStyle}
+           onclick="${!isOpponentList ? `toggleModalCardSelection(${idx})` : ''}"
            ondblclick="event.stopPropagation(); window.openCardZoomByUid('${c.uid}')" 
-           title="ダブルクリックで拡大">
-        <div class="card-top"><span class="name">${c.name}</span></div>
-        <div class="card-btm"><span>${c.sub || c.category || ''}</span></div>
-        ${!isOpponentList ? `
-        <div style="margin-top:4px;">
-          <button class="btn green" style="padding:2px 4px; font-size:9px; width:100%;" onclick="pickFromList('${titleText}', ${idx})">手札に加える</button>
-        </div>` : ''}
+           title="タップで選択 / ダブルクリックで拡大">
+        <div class="card-top"><span class="name">${escapeHtml(c.name)}</span></div>
+        <div class="card-btm"><span>${escapeHtml(c.sub || c.category || '')}</span></div>
       </div>
     `;
   });
   bodyHtml += `</div>`;
 
-  showModal(`${titleText} (${cardList.length} 枚)`, bodyHtml, `<button class="btn" onclick="closeModal()">閉じる</button>`);
+  let footHtml = "";
+  if (isOpponentList) {
+    footHtml = `<button class="btn" onclick="closeModal()">閉じる</button>`;
+  } else if (isTrash) {
+    footHtml = `
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; flex-wrap:wrap;">
+        <span id="modal-sel-status" style="font-size:12px; color:#cbd5e1; font-weight:bold;">カードをタップして選択</span>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn green" onclick="executeTrashSelectedToHand('${titleText}')">🖐️ 手札に戻す</button>
+          <button class="btn blue" onclick="executeTrashSelectedToDeck('${titleText}')">🔀 山札に戻す</button>
+          <button class="btn gold" onclick="executeTrashSelectedAttach('${titleText}')">⚡/🎒 ポケモンにつける</button>
+          <button class="btn" onclick="closeModal()">閉じる</button>
+        </div>
+      </div>
+    `;
+  } else {
+    footHtml = `
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; flex-wrap:wrap;">
+        <span id="modal-sel-status" style="font-size:12px; color:#cbd5e1; font-weight:bold;">カードをタップして選択</span>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn green" onclick="executeTrashSelectedToHand('${titleText}')">🖐️ 手札に戻す</button>
+          <button class="btn" onclick="closeModal()">閉じる</button>
+        </div>
+      </div>
+    `;
+  }
+
+  showModal(`${titleText} (${cardList.length} 枚)`, bodyHtml, footHtml);
 }
 
-window.pickFromList = function(listType, idx) {
+window.toggleModalCardSelection = function(idx) {
+  const cardEl = document.getElementById(`modal-card-${idx}`);
+  if (!cardEl) return;
+  if (window._modalSelectedIndices.has(idx)) {
+    window._modalSelectedIndices.delete(idx);
+    cardEl.classList.remove("selected");
+  } else {
+    window._modalSelectedIndices.add(idx);
+    cardEl.classList.add("selected");
+  }
+  const statusEl = document.getElementById("modal-sel-status");
+  if (statusEl) {
+    const count = window._modalSelectedIndices.size;
+    statusEl.textContent = count > 0 ? `選択中: ${count}枚` : "カードをタップして選択";
+  }
+};
+
+window.executeTrashSelectedToHand = function(listType) {
   let list = listType.includes("ロスト") ? state.myLost : state.myTrash;
-  if (idx < 0 || idx >= list.length) return;
-  const card = list.splice(idx, 1)[0];
-  state.myHand.push(card);
+  const indices = Array.from(window._modalSelectedIndices).sort((a, b) => b - a);
+  if (indices.length === 0) {
+    return alert("対象のカードをタップして選択してください");
+  }
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot(`${listType}から手札へ戻す`);
+  }
+  const moved = [];
+  indices.forEach(idx => {
+    if (idx >= 0 && idx < list.length) {
+      const c = list.splice(idx, 1)[0];
+      moved.push(c);
+      state.myHand.push(c);
+    }
+  });
+  window._modalSelectedIndices.clear();
   closeModal();
-  addLog(`${listType} から「${card.name}」を手札に戻しました`, {
-    cards: [card],
+  const names = moved.map(c => c.name).join(", ");
+  addLog(`【回収】${listType} から「${names}」（${moved.length}枚）を手札に戻しました`, {
+    cards: moved,
     badge: `🖐️ ${listType}から手札へ`
   });
-  showToast(`手札へ: ${card.name}`);
+  showToast(`手札へ: ${names}`);
   renderAll();
+  if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+    P2P.syncNow();
+  }
+};
+
+window.executeTrashSelectedToDeck = function(listType) {
+  let list = listType.includes("ロスト") ? state.myLost : state.myTrash;
+  const indices = Array.from(window._modalSelectedIndices).sort((a, b) => b - a);
+  if (indices.length === 0) {
+    return alert("対象のカードをタップして選択してください");
+  }
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot(`${listType}から山札へ戻す`);
+  }
+  const moved = [];
+  indices.forEach(idx => {
+    if (idx >= 0 && idx < list.length) {
+      const c = list.splice(idx, 1)[0];
+      moved.push(c);
+      state.myDeck.push(c);
+    }
+  });
+  state.myDeck = shuffleArray(state.myDeck);
+  window._modalSelectedIndices.clear();
+  closeModal();
+  const names = moved.map(c => c.name).join(", ");
+  addLog(`【山札戻し】${listType} から「${names}」（${moved.length}枚）を山札に戻してシャッフルしました`, {
+    cards: moved,
+    badge: `🔀 ${listType}から山札へ`
+  });
+  showToast(`山札に戻しました: ${moved.length}枚`);
+  renderAll();
+  if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+    P2P.syncNow();
+  }
+};
+
+window.executeTrashSelectedAttach = function(listType) {
+  let list = listType.includes("ロスト") ? state.myLost : state.myTrash;
+  const indices = Array.from(window._modalSelectedIndices);
+  if (indices.length === 0) {
+    return alert("ポケモンにつけるカードを1枚タップして選択してください");
+  }
+  if (indices.length > 1) {
+    return alert("ポケモンにつけるカードは1枚ずつ選択してください");
+  }
+  const cardIdx = indices[0];
+  const card = list[cardIdx];
+  if (!card) return;
+
+  const targets = [];
+  if (state.myActive) {
+    targets.push({ location: "active", name: `⚔️ バトル場: ${state.myActive.card.name}` });
+  }
+  state.myBench.forEach((b, bIdx) => {
+    if (b) {
+      targets.push({ location: `bench_${bIdx}`, name: `🪑 ベンチ${bIdx + 1}: ${b.card.name}` });
+    }
+  });
+
+  if (targets.length === 0) {
+    return alert("場につける対象のポケモンがいません");
+  }
+
+  let buttonsHtml = targets.map(t => `
+    <button class="btn gold wide" style="margin-bottom:8px; text-align:left; padding:10px 14px; font-weight:bold; font-size:13px;" onclick="applyTrashCardToPokemon('${listType}', ${cardIdx}, '${t.location}')">
+      ${escapeHtml(t.name)}
+    </button>
+  `).join("");
+
+  showModal(
+    `「${escapeHtml(card.name)}」をつける対象を選択`,
+    `<div style="padding:12px;">
+       <p style="font-size:13px; color:#cbd5e1; margin-bottom:14px; line-height:1.5;">
+         トラッシュの「<b>${escapeHtml(card.name)}</b>」をどのポケモンにつけますか？<br>
+         <small style="color:#94a3b8;">（エネルギー付与・ポケモンのどうぐ装備・重ねて進化に対応）</small>
+       </p>
+       <div style="display:flex; flex-direction:column; gap:4px;">${buttonsHtml}</div>
+     </div>`,
+    `<button class="btn" onclick="showCardListModal('${listType}', state.myTrash)">← トラッシュ一覧に戻る</button>`
+  );
+};
+
+window.applyTrashCardToPokemon = function(listType, cardIdx, location) {
+  let list = listType.includes("ロスト") ? state.myLost : state.myTrash;
+  if (cardIdx < 0 || cardIdx >= list.length) return;
+  const dst = (typeof getPokemonByLocation === "function") ? getPokemonByLocation(location) : null;
+  if (!dst) return alert("指定された位置にポケモンがいません");
+
+  const card = list.splice(cardIdx, 1)[0];
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot(`トラッシュからポケモンにカード付与`);
+  }
+
+  // 1. エネルギー
+  if (card.type === "energy") {
+    if (!dst.energies) dst.energies = [];
+    dst.energies.push(card);
+    addLog(`【トラッシュから付与】「${dst.card.name}」に「${card.name}」をつけました`, {
+      cards: [card, dst.card],
+      badge: "⚡ エネルギー付与"
+    });
+    showToast(`【エネ付与】${dst.card.name} ← ${card.name}`);
+    if (typeof triggerBoardEffect === "function") {
+      triggerBoardEffect({ fxType: "attach", location, attachType: "energy", colorType: card.color || "colorless", icon: "⚡", label: card.name });
+    }
+  }
+  // 2. ポケモン（進化）
+  else if (card.type === "pokemon") {
+    const prevName = dst.card.name;
+    const curedNames = (typeof getPokemonConditionNames === "function") ? getPokemonConditionNames(dst) : [];
+    if (typeof clearPokemonConditions === "function") clearPokemonConditions(dst);
+    dst.card = card;
+    dst.abilityUsed = false;
+    const cureSuffix = curedNames.length > 0 ? `（特殊状態【${curedNames.join("・")}】が回復）` : "";
+    addLog(`【トラッシュから進化】「${prevName}」が「${card.name}」に進化しました！${cureSuffix}`, {
+      cards: [card],
+      badge: "✨ 進化"
+    });
+    showToast(`【進化】${card.name}！`);
+    if (typeof triggerBoardEffect === "function") {
+      triggerBoardEffect({ fxType: "attach", location, attachType: "evolve", colorType: "evolve", icon: "✨", label: `進化！ ${card.name}` });
+    }
+  }
+  // 3. トレーナーズ（どうぐ）
+  else {
+    if (dst.tool) {
+      state.myTrash.push(dst.tool);
+    }
+    dst.tool = card;
+    addLog(`【トラッシュから装備】「${dst.card.name}」にどうぐ「${card.name}」をつけました`, {
+      cards: [card, dst.card],
+      badge: "🎒 どうぐ装備"
+    });
+    showToast(`【どうぐ装備】${dst.card.name} ← ${card.name}`);
+    if (typeof triggerBoardEffect === "function") {
+      triggerBoardEffect({ fxType: "attach", location, attachType: "tool", colorType: "tool", icon: "🎒", label: card.name });
+    }
+  }
+
+  closeModal();
+  renderAll();
+  if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+    P2P.syncNow();
+  }
 };
 
 
