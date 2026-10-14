@@ -756,6 +756,36 @@ DataChannelを通じて送信されるJSONメッセージは `t` プロパティ
    - オンライン対戦（P2P）との分離:
      - すべての追加処理は `state.isSoloMode` 下でのみ発動し、P2P同期メッセージやオンライン対戦ステートマシンへの干渉をゼロに抑止。
 
+### 9.5 ポケモン気絶処理およびサイド取得・待機同期アーキテクチャ (v13.0)
+
+1. **気絶処理と状態遷移 (`actions.js`)**:
+   - `knockoutPokemon(location, index)`:
+     - 自分ポケモンをトラッシュへ送り、`state.myActive` または `state.myBench[index]` を null 化。
+     - オンライン対戦時は相手へ `knockout_self_grant_prize` を送信し、自身は `showPrizeWaitOverlay()` で待機。
+     - 一人回し時は `openPrizePickModal({ forOpponent: true })` を呼び出し、相手側サイド取得画面を開く。
+   - `knockoutOpponentPokemon(location, index)`:
+     - 相手ポケモンを相手トラッシュへ送り、スロットを null 化。
+     - 自身は `openPrizePickModal({ forOpponent: false })` を呼び出し、自サイド取得画面を開く。
+     - オンライン対戦時は相手へ `knockout_by_opponent` を送信し、相手画面に `showPrizeWaitOverlay()` を表示。
+
+2. **サイド取得ポップアップおよび3Dめくり演出設計 (`actions.js`, `style.css`)**:
+   - `openPrizePickModal({ forOpponent, victimName })`:
+     - 残りサイドカード配列（自分: `state.myPrizes` / 一人回し相手: `state.oppPrizesList`）をDOM上に裏面カードとして展開。
+   - `pickPrizeCard(idx, card, inner)`:
+     - CSS 3D `rotateY(180deg)` によるリアルなカードめくり。
+     - `@keyframes prizeShineFlare` によるゴールド・プリズム発光エフェクトおよびパーティクル発生。
+     - カードを手札へ追加し、サイド配列から除外。
+     - 複数枚取得に対応（ユーザーが必要な枚数めくった後、「サイド取得完了」ボタンで終了）。
+     - 残りサイドが0枚になった場合は750ms後に自動で `playGrandVictoryEffect()` をトリガー。
+   - `finishPrizePicking()`:
+     - モーダルを閉じ、オンライン時は `finish_prize_pick` を相手へ送信して相手の待機オーバーレイを解除。
+     - バトル場不在時は出撃ダイアログ（`showPromoteActiveModal`）へスムーズに接続。
+
+3. **対戦準備バナー肥大化防止レイアウト設計 (`style.css`)**:
+   - `.setup-banner` に `max-height: 52px`、`overflow: hidden`、`max-width: min(96vw, 1050px)` を設定。
+   - `.setup-status-box` に `min-width: 180px` を確保しつつ、`.setup-order-status` に `white-space: nowrap; text-overflow: ellipsis;` を適用。
+   - Flexbox の過度な縮小によるテキスト縦並び崩れを根本排除し、スリムな横長バナーとして盤面上部に固定。
+
 ---
 
 ## 10. 非機能要件・セキュリティ設計
@@ -792,3 +822,4 @@ DataChannelを通じて送信されるJSONメッセージは `t` プロパティ
 | v11.0 | 2026-10-14 | マリガンペナルティ（差分ドロー）確認ポップアップおよび同期、画像付きカードの文字帯非表示化、PTCGL準拠スマホ版ベンチ横1列配置、非全画面時ホバー振動防止（下方向ヒット領域展開）、サイドカードの右クリックコンテキストメニュー（表確認/ロストゾーン対応） | プロジェクトチーム |
 | v11.1 | 2026-10-14 | 8枠ベンチへの配置制限解除（ハードコード5枠チェック撤廃、手札配置・先頭空き枠検索・D&D対応）、スマホ版ベンチ表示の2段化（PTCGL準拠: 5枠時は前3後2台形配置、8枠時は前4後4配置）、および非全画面・狭小画面でのホバー振動（Jitter）根本解決（overflow:visible化、全方位クッション、狭小画面での移動無効化＋発光ハイライト） | プロジェクトチーム |
 | v12.0 | 2026-10-14 | 一人回しツールの双方対戦準備（手動デッキ切替・手札確認・たね配置・個別マリガン・サイド個別セット・マリガン差分ドロー）および相手手札干渉機能（山札戻しシャッフル・山下戻し・ドロー・トラッシュ・手番を進めない一時交代手動操作モード）の実装 | プロジェクトチーム |
+| v13.0 | 2026-10-14 | ポケモン気絶機能（自陣/相手陣バトル場・ベンチ）、気絶時ド派手サイド取得モーダル（3Dカードフリップめくり演出・ゴールド/プリズム光彩・複数枚取得・サイド取り切り自動勝利）、相手画面のサイド取得中待機オーバーレイ同期、および対戦準備バナー（#setup-banner）サイズ・レイアウト最適化 | プロジェクトチーム |

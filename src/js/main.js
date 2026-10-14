@@ -367,6 +367,9 @@ const actions = {
   showSoloOpponentHandMenu: () => (typeof showSoloOpponentHandMenu === "function" ? showSoloOpponentHandMenu() : null),
   revertSoloTemporarySwap: () => (typeof revertSoloTemporarySwap === "function" ? revertSoloTemporarySwap() : null),
 
+  // サイド取得アクション
+  finishPrizePicking: () => (typeof finishPrizePicking === "function" ? finishPrizePicking() : null),
+
   // その他
   undo: () => (typeof undoAction === "function" ? undoAction() : null),
   endTurn: () => endTurn(),

@@ -170,9 +170,9 @@ function renderSetupBanner() {
     if (statusEl) {
       if (state.isSoloMode) {
         const readyCount = (state.mySetupReady ? 1 : 0) + (state.oppSetupReady ? 1 : 0);
-        const mySideOrder = (state.firstPlayer === "me") ? "【先攻】" : "【後攻】";
-        const readyStatusStr = state.mySetupReady ? "（✅準備完了済）" : "（未完了）";
-        statusEl.textContent = `【一人回し準備 ${readyCount}/2完了】現在: ${state.myName}${mySideOrder}${readyStatusStr}。たねポケモンをバトル場に出してください。`;
+        const mySideOrder = (state.firstPlayer === "me") ? "先攻" : "後攻";
+        const readyStatusStr = state.mySetupReady ? "✅準備完了" : "未完了";
+        statusEl.textContent = `【準備 ${readyCount}/2】現在: ${state.myName}（${mySideOrder}・${readyStatusStr}）たねポケモンをバトル場に出してください`;
       } else if (state.setupStep === "coin") {
         const isGuest = (typeof P2P !== "undefined" && P2P.connected && P2P.role === "guest");
         statusEl.textContent = isGuest

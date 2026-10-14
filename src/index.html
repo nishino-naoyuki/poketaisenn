@@ -579,6 +579,35 @@
   </div>
 </div>
 
+<!-- サイド取得ポップアップ（気絶時ド派手めくり演出） -->
+<div id="prize-pick-modal" class="prize-pick-overlay hidden">
+  <div class="prize-pick-backdrop"></div>
+  <div class="prize-pick-container">
+    <div class="prize-pick-header">
+      <div class="prize-pick-badge">🏆 サイドカード取得</div>
+      <h2 id="prize-pick-title" class="prize-pick-title">ポケモンが気絶しました！</h2>
+      <p id="prize-pick-desc" class="prize-pick-desc">取得するサイドカードをクリックしてください（残りサイド: <b id="prize-pick-remain-count">0</b>枚）</p>
+    </div>
+    <div id="prize-pick-cards" class="prize-pick-cards-grid"></div>
+    <div class="prize-pick-footer">
+      <span id="prize-pick-picked-info" class="prize-pick-picked-info">取得済み: 0枚</span>
+      <button id="btn-prize-pick-done" class="btn green big" onclick="finishPrizePicking()">✅ サイド取得完了（閉じる）</button>
+    </div>
+  </div>
+</div>
+
+<!-- 相手のサイド取得待機中オーバーレイ -->
+<div id="prize-wait-overlay" class="prize-wait-overlay hidden">
+  <div class="prize-wait-backdrop"></div>
+  <div class="prize-wait-content">
+    <div class="prize-wait-spinner">
+      <div class="wait-card-pulse">🃏</div>
+    </div>
+    <h3 id="prize-wait-title" class="prize-wait-title">🏆 相手がサイドを取得中...</h3>
+    <p id="prize-wait-desc" class="prize-wait-desc">相手がサイドカードを選んでいます。しばらくお待ちください。</p>
+  </div>
+</div>
+
 <!-- 場のポケモン用コンテキストメニュー -->
 <div id="ctx" class="ctx hidden"></div>
 

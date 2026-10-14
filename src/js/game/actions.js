@@ -1288,11 +1288,11 @@ function showPokemonMenu(e, location, index, menuView = "main") {
       ${benchPromoteBtnHtml}
       <button class="ctx-btn-ability ctx-span-2" style="${abilityBtnStyle}" onclick="usePokemonAbility('${location}', ${index})">${abilityBtnText}</button>
       ${subLaunchersHtml}
-      <div class="divider"></div>
       <div class="ctx-grid-2col">
         ${extraBtns}
         <button onclick="removePokemonToTrash('${location}', ${index})">🗑️ トラッシュへ</button>
         <button onclick="removePokemonToHand('${location}', ${index})">🖐️ 手札に戻す</button>
+        <button class="ctx-span-2" style="background:#7f1d1d; color:#fecaca; font-weight:bold; border:1px solid #ef4444; margin-top:2px;" onclick="knockoutPokemon('${location}', ${index})">💀 このポケモンを気絶させる</button>
       </div>
     `;
   }
@@ -1562,6 +1562,300 @@ function removePokemonToHand(location, index) {
   });
   showToast(`「${target.card.name}」を手札に戻しました`);
   renderAll();
+}
+
+// =============================================================================
+// 気絶（Knockout）および サイド取得・相手待機演出
+// =============================================================================
+
+let _prizePickState = {
+  active: false,
+  forOpponent: false,
+  victimName: "",
+  pickedCount: 0,
+  initialPrizes: []
+};
+
+/** 自分のポケモンを気絶させる（相手にサイド取得権を付与） */
+function knockoutPokemon(location, index) {
+  hideCtx();
+  const target = location === "active" ? state.myActive : state.myBench[index];
+  if (!target) return;
+
+  pushHistorySnapshot("ポケモンを気絶させる");
+  const pokemonName = target.card.name;
+
+  state.myTrash.push(target.card);
+  if (target.tool) state.myTrash.push(target.tool);
+  if (target.energies) target.energies.forEach(e => state.myTrash.push(e));
+
+  if (location === "active") state.myActive = null;
+  else state.myBench[index] = null;
+
+  addLog(`【気絶】「${pokemonName}」が気絶しました！（相手がサイドを取得します）`, {
+    oppText: `【気絶】相手の「${pokemonName}」が気絶しました！（サイドを取得してください）`,
+    cards: [target.card],
+    badge: "💀 ポケモン気絶"
+  });
+  showToast(`💀 「${pokemonName}」が気絶しました`);
+  renderAll();
+
+  if (state.isSoloMode) {
+    // 一人回しモード: デッキ2（相手側）のサイド取得画面を表示
+    openPrizePickModal({ forOpponent: true, victimName: pokemonName });
+  } else {
+    // オンライン対戦: 相手にサイド取得モーダル起動を要求、自分は待機オーバーレイを表示
+    showPrizeWaitOverlay(state.oppName || "相手プレイヤー");
+    if (typeof P2P !== "undefined" && P2P.connected) {
+      P2P.send({
+        t: "opp_remote_action",
+        action: "knockout_self_grant_prize",
+        location: location === "active" ? "active" : "bench",
+        index: index,
+        victimName: pokemonName
+      });
+      P2P.syncNow();
+    }
+  }
+}
+
+/** 相手のポケモンを気絶させる（自分がサイドを取得） */
+function knockoutOpponentPokemon(location, index) {
+  hideCtx();
+  const target = location === "opp-active" ? state.oppActive : state.oppBench[index];
+  if (!target) return;
+
+  const pokemonName = target.card.name;
+
+  state.oppTrash.push(target.card);
+  if (target.tool) state.oppTrash.push(target.tool);
+  if (target.energies) target.energies.forEach(e => state.oppTrash.push(e));
+
+  if (location === "opp-active") state.oppActive = null;
+  else state.oppBench[index] = null;
+
+  addLog(`【気絶】相手の「${pokemonName}」が気絶しました！（サイドを取得してください）`, {
+    oppText: `【気絶】あなたの「${pokemonName}」が気絶しました！（相手がサイドを取得中）`,
+    cards: [target.card],
+    badge: "💀 ポケモン気絶"
+  });
+  showToast(`💀 相手の「${pokemonName}」が気絶しました`);
+  renderAll();
+
+  if (state.isSoloMode) {
+    // 一人回しモード: 自分（デッキ1）のサイド取得画面を表示
+    openPrizePickModal({ forOpponent: false, victimName: pokemonName });
+  } else {
+    // オンライン対戦: 自分がサイド取得画面を開き、相手には待機オーバーレイを表示
+    openPrizePickModal({ forOpponent: false, victimName: pokemonName });
+    if (typeof P2P !== "undefined" && P2P.connected) {
+      P2P.send({
+        t: "opp_remote_action",
+        action: "knockout_by_opponent",
+        location: location === "opp-active" ? "active" : "bench",
+        index: index,
+        victimName: pokemonName
+      });
+      P2P.syncNow();
+    }
+  }
+}
+
+/** サイドカード取得用ポップアップを開く */
+function openPrizePickModal({ forOpponent = false, victimName = "" }) {
+  const prizesList = forOpponent ? state.oppPrizesList : state.myPrizes;
+  if (!Array.isArray(prizesList) || prizesList.length === 0) {
+    showToast("⚠️ 残りサイドカードがありません");
+    return;
+  }
+
+  _prizePickState = {
+    active: true,
+    forOpponent: forOpponent,
+    victimName: victimName,
+    pickedCount: 0,
+    initialPrizes: [...prizesList]
+  };
+
+  const modal = document.getElementById("prize-pick-modal");
+  const title = document.getElementById("prize-pick-title");
+  const desc = document.getElementById("prize-pick-desc");
+  const cardsGrid = document.getElementById("prize-pick-cards");
+  const remainCount = document.getElementById("prize-pick-remain-count");
+  const pickedInfo = document.getElementById("prize-pick-picked-info");
+
+  if (title) {
+    title.textContent = forOpponent
+      ? `【一人回し】${state.oppName} のサイド取得`
+      : `🏆 「${victimName || 'ポケモン'}」気絶によるサイド取得`;
+  }
+  if (desc) {
+    desc.innerHTML = `取得するサイドカードをクリックしてください（残りサイド: <b id="prize-pick-remain-count">${prizesList.length}</b>枚）`;
+  }
+  if (remainCount) remainCount.textContent = prizesList.length;
+  if (pickedInfo) pickedInfo.textContent = `取得済み: 0枚`;
+
+  cardsGrid.innerHTML = "";
+  _prizePickState.initialPrizes.forEach((card, idx) => {
+    registerCard(card);
+    const wrap = document.createElement("div");
+    wrap.className = "prize-slot-wrap";
+    const hasImg = !!card.imageUrl;
+    wrap.innerHTML = `
+      <div class="prize-card-inner" id="prize-card-${idx}">
+        <div class="prize-face prize-back">
+          <span class="prize-back-number">サイド ${idx + 1}</span>
+          <span class="prize-back-hint">タップでめくる</span>
+        </div>
+        <div class="prize-face prize-front ${hasImg ? 'has-img' : ''}" ${hasImg ? `style="background-image: url('${card.imageUrl}');"` : ''}>
+          <div class="prize-front-name">${escapeHtml(card.name)}</div>
+          <div class="prize-front-sub">${escapeHtml(card.sub || card.category || '')}</div>
+        </div>
+      </div>
+    `;
+    const inner = wrap.querySelector(".prize-card-inner");
+    inner.onclick = () => pickPrizeCard(idx, card, inner);
+    cardsGrid.appendChild(wrap);
+  });
+
+  modal.classList.remove("hidden");
+}
+
+/** サイドカードをクリックしてめくり、手札へ取得 */
+function pickPrizeCard(idx, card, inner) {
+  if (!_prizePickState.active) return;
+  if (inner.classList.contains("flipped")) return;
+
+  inner.classList.add("flipped");
+  inner.onclick = null;
+
+  const stamp = document.createElement("div");
+  stamp.className = "prize-picked-stamp";
+  stamp.textContent = "✔ 取得済";
+  inner.appendChild(stamp);
+
+  _prizePickState.pickedCount++;
+
+  // カードを手札へ加える
+  if (!_prizePickState.forOpponent) {
+    const pIdx = state.myPrizes.indexOf(card);
+    if (pIdx !== -1) {
+      state.myPrizes.splice(pIdx, 1);
+    }
+    state.myHand.push(card);
+    addLog(`【サイド取得】サイドから「${card.name}」を取得し手札に加えました（残り: ${state.myPrizes.length}枚）`, {
+      oppText: `相手がサイドを1枚取得しました（残りサイド: ${state.myPrizes.length}枚）`,
+      cards: [card],
+      badge: "🏆 サイド取得"
+    });
+    showToast(`サイド取得: ${card.name}`);
+
+    if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+      P2P.send({
+        t: "opp_remote_action",
+        action: "prize_taken_sync",
+        remainPrizes: state.myPrizes.length
+      });
+      P2P.syncNow();
+    }
+  } else {
+    // 一人回し相手側
+    const pIdx = state.oppPrizesList.indexOf(card);
+    if (pIdx !== -1) {
+      state.oppPrizesList.splice(pIdx, 1);
+    }
+    state.oppPrizes = state.oppPrizesList.length;
+    state.oppHand.push(card);
+    state.oppHandCount = state.oppHand.length;
+    addLog(`【一人回し・サイド取得】${state.oppName} がサイドから「${card.name}」を取得し手札に加えました（残り: ${state.oppPrizes}枚）`, {
+      cards: [card],
+      badge: "🏆 相手サイド取得"
+    });
+    showToast(`${state.oppName} がサイド取得: ${card.name}`);
+  }
+
+  const remain = _prizePickState.forOpponent ? state.oppPrizesList.length : state.myPrizes.length;
+  const remainCount = document.getElementById("prize-pick-remain-count");
+  const pickedInfo = document.getElementById("prize-pick-picked-info");
+  if (remainCount) remainCount.textContent = remain;
+  if (pickedInfo) pickedInfo.textContent = `取得済み: ${_prizePickState.pickedCount}枚 (残りサイド: ${remain}枚)`;
+
+  if (typeof triggerBoardEffect === "function") {
+    triggerBoardEffect({
+      fxType: "prize",
+      destination: "hand",
+      card: card
+    });
+  }
+
+  renderAll();
+
+  // サイドを取り切った場合は自動勝利へ遷移！
+  if (remain === 0) {
+    setTimeout(() => {
+      finishPrizePicking(true);
+      const winnerName = _prizePickState.forOpponent ? state.oppName : state.myName;
+      addLog(`【決着】${winnerName} がすべてのサイドカードを取りきり勝利しました！`, {
+        oppText: `【決着】${winnerName} がすべてのサイドカードを取りきり勝利しました！`,
+        badge: "🏆 勝利！"
+      });
+      if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+        P2P.send({
+          t: "victory",
+          winnerName: state.myName,
+          reason: "すべてのサイドカードを取りきりました！"
+        });
+      }
+      if (typeof playGrandVictoryEffect === "function") {
+        playGrandVictoryEffect(winnerName, "すべてのサイドカードを取りきりました！", _prizePickState.forOpponent);
+      }
+    }, 750);
+  }
+}
+
+/** サイド取得完了ボタン押下時 */
+function finishPrizePicking(isAutoVictory = false) {
+  const modal = document.getElementById("prize-pick-modal");
+  if (modal) modal.classList.add("hidden");
+
+  if (_prizePickState.active && !isAutoVictory) {
+    if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+      P2P.send({
+        t: "opp_remote_action",
+        action: "finish_prize_pick"
+      });
+      P2P.syncNow();
+    }
+  }
+
+  _prizePickState.active = false;
+
+  if (!isAutoVictory) {
+    if (!state.myActive && state.myBench.some(b => b !== null)) {
+      if (typeof showPromoteActiveModal === "function") {
+        showPromoteActiveModal();
+      }
+    }
+  }
+
+  renderAll();
+}
+
+/** 相手がサイド取得中の待機オーバーレイを表示 */
+function showPrizeWaitOverlay(pickerName = "相手プレイヤー") {
+  const overlay = document.getElementById("prize-wait-overlay");
+  const title = document.getElementById("prize-wait-title");
+  const desc = document.getElementById("prize-wait-desc");
+  if (!overlay) return;
+  if (title) title.textContent = `🏆 ${escapeHtml(pickerName)} がサイドを取得中...`;
+  if (desc) desc.textContent = `${escapeHtml(pickerName)} がサイドカードを選んでいます。そのままお待ちください。`;
+  overlay.classList.remove("hidden");
+}
+
+/** 待機オーバーレイを閉じる */
+function hidePrizeWaitOverlay() {
+  const overlay = document.getElementById("prize-wait-overlay");
+  if (overlay) overlay.classList.add("hidden");
 }
 
 // =============================================================================
@@ -3327,11 +3621,11 @@ function showOpponentPokemonMenu(e, location, index, menuView = "main") {
       </div>
       <div class="divider"></div>
       ${subLaunchersHtml}
-      <div class="divider"></div>
       <div class="ctx-grid-2col">
         ${swapActionHtml}
         <button onclick="removeOpponentPokemonToTrash('${location}', ${index})">🗑️ トラッシュへ</button>
         <button onclick="removeOpponentPokemonToHand('${location}', ${index})">🖐️ 手札に戻す</button>
+        <button class="ctx-span-2" style="background:#7f1d1d; color:#fecaca; font-weight:bold; border:1px solid #ef4444; margin-top:2px;" onclick="knockoutOpponentPokemon('${location}', ${index})">💀 このポケモンを気絶させる</button>
       </div>
     `;
   }
@@ -3671,6 +3965,51 @@ function handleOpponentRemoteAction(msg) {
       renderAll();
       if (typeof P2P !== "undefined") P2P.syncNow();
     }
+  } else if (msg.action === "knockout_by_opponent") {
+    const target = msg.location === "active" ? state.myActive : state.myBench[msg.index];
+    if (target) {
+      state.myTrash.push(target.card);
+      if (target.tool) state.myTrash.push(target.tool);
+      if (target.energies) target.energies.forEach(e => state.myTrash.push(e));
+      if (msg.location === "active") state.myActive = null;
+      else state.myBench[msg.index] = null;
+      addLog(`【気絶】「${target.card.name}」が気絶しました！（相手がサイドを取得中）`, {
+        cards: [target.card],
+        badge: "💀 ポケモン気絶"
+      });
+      showToast(`💀 「${target.card.name}」が気絶しました`);
+    }
+    renderAll();
+    showPrizeWaitOverlay(state.oppName || "相手プレイヤー");
+  } else if (msg.action === "knockout_self_grant_prize") {
+    const target = msg.location === "active" ? state.oppActive : state.oppBench[msg.index];
+    if (target) {
+      state.oppTrash.push(target.card);
+      if (target.tool) state.oppTrash.push(target.tool);
+      if (target.energies) target.energies.forEach(e => state.oppTrash.push(e));
+      if (msg.location === "active") state.oppActive = null;
+      else state.oppBench[msg.index] = null;
+      addLog(`【気絶】相手が「${target.card.name}」を気絶させました！（サイドを取得してください）`, {
+        cards: [target.card],
+        badge: "💀 ポケモン気絶"
+      });
+      showToast(`💀 相手の「${target.card.name}」が気絶しました`);
+    }
+    renderAll();
+    openPrizePickModal({ forOpponent: false, victimName: msg.victimName });
+  } else if (msg.action === "prize_taken_sync") {
+    state.oppPrizes = msg.remainPrizes;
+    renderAll();
+    if (typeof triggerBoardEffect === "function") {
+      triggerBoardEffect({ fxType: "prize", destination: "hand" });
+    }
+  } else if (msg.action === "finish_prize_pick") {
+    hidePrizeWaitOverlay();
+    if (!state.myActive && state.myBench.some(b => b !== null)) {
+      if (typeof showPromoteActiveModal === "function") {
+        showPromoteActiveModal();
+      }
+    }
   }
 }
 
@@ -3699,3 +4038,10 @@ window.soloOpponentDrawCards = soloOpponentDrawCards;
 window.promptSoloOpponentDraw = promptSoloOpponentDraw;
 window.startSoloTemporarySwap = startSoloTemporarySwap;
 window.revertSoloTemporarySwap = revertSoloTemporarySwap;
+window.knockoutPokemon = knockoutPokemon;
+window.knockoutOpponentPokemon = knockoutOpponentPokemon;
+window.openPrizePickModal = openPrizePickModal;
+window.pickPrizeCard = pickPrizeCard;
+window.finishPrizePicking = finishPrizePicking;
+window.showPrizeWaitOverlay = showPrizeWaitOverlay;
+window.hidePrizeWaitOverlay = hidePrizeWaitOverlay;

@@ -1449,18 +1449,24 @@ html, body {
 /* 対戦準備フェーズ用バナー */
 .setup-banner {
   position: absolute;
-  top: 10px;
+  top: 6px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(15, 23, 42, 0.96);
   border: 2px solid #eab308;
-  border-radius: 12px;
-  padding: 8px 16px;
+  border-radius: 10px;
+  padding: 5px 14px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 15px rgba(234, 179, 8, 0.3);
   z-index: 35;
+  width: max-content;
+  max-width: min(96vw, 1050px);
+  max-height: 52px;
+  overflow: hidden;
+  box-sizing: border-box;
   animation: setupBannerGlow 2s infinite alternate;
 }
 
@@ -1472,30 +1478,46 @@ html, body {
 .setup-status-box {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  flex: 1 1 auto;
+  min-width: 180px;
+  overflow: hidden;
 }
 
 .setup-phase-title {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
   color: #facc15;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .setup-order-status {
-  font-size: 12px;
+  font-size: 11.5px;
   color: #e2e8f0;
   font-weight: bold;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 45vw;
 }
 
 .setup-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 .setup-actions .btn {
   white-space: nowrap;
+  font-size: 11.5px;
+  padding: 4px 9px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 /* 対戦準備中の相手裏面伏せカード */
@@ -4587,7 +4609,309 @@ body.menu-open .sp-sheet {
   50% { transform: scale(1.3) rotate(20deg); opacity: 1; }
 }
 
+/* =====================================================
+   気絶時サイドカード取得ポップアップ & ド派手演出
+   ===================================================== */
+.prize-pick-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: victoryFadeIn 0.3s ease;
+}
 
+.prize-pick-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 12, 28, 0.88);
+  backdrop-filter: blur(8px);
+}
 
+.prize-pick-container {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(155deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.98));
+  border: 2px solid #eab308;
+  border-radius: 18px;
+  padding: 22px 28px;
+  max-width: min(92vw, 840px);
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.85), 0 0 30px rgba(234, 179, 8, 0.35);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: victoryBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: border-box;
+}
 
+.prize-pick-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
 
+.prize-pick-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #ca8a04, #eab308);
+  color: #0f172a;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 3px 14px;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(234, 179, 8, 0.45);
+  letter-spacing: 0.5px;
+}
+
+.prize-pick-title {
+  font-size: 21px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 4px 0 0 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.prize-pick-desc {
+  font-size: 13px;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+.prize-pick-cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 3Dカードフリップ要素 */
+.prize-slot-wrap {
+  perspective: 900px;
+  width: 112px;
+  height: 156px;
+  position: relative;
+  user-select: none;
+}
+
+.prize-card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.prize-card-inner:not(.flipped):hover {
+  transform: translateY(-8px) scale(1.05);
+}
+
+.prize-card-inner:not(.flipped):hover .prize-back {
+  box-shadow: 0 8px 24px rgba(234, 179, 8, 0.5), 0 0 12px rgba(253, 224, 71, 0.6);
+  border-color: #facc15;
+}
+
+.prize-card-inner.flipped {
+  transform: rotateY(180deg) scale(1.06);
+  cursor: default;
+}
+
+.prize-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+}
+
+.prize-back {
+  background-image: url('https://assets.pokemon.com/assets/cms2/img/cards/web/back/card_back.png'),
+                    repeating-linear-gradient(45deg, #1e3a8a, #1e3a8a 10px, #172554 10px, #172554 20px);
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #94a3b8;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px;
+  transition: all 0.2s;
+}
+
+.prize-back-number {
+  background: rgba(0, 0, 0, 0.7);
+  color: #fde047;
+  font-weight: 900;
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(253, 224, 71, 0.4);
+}
+
+.prize-back-hint {
+  background: rgba(0, 0, 0, 0.75);
+  color: #f8fafc;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.prize-front {
+  transform: rotateY(180deg);
+  background-color: #0f172a;
+  border: 2px solid #facc15;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px;
+}
+
+.prize-front.has-img {
+  background-size: cover;
+  background-position: center;
+}
+
+.prize-front-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 4px #000;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 4px;
+  border-radius: 4px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.prize-front-sub {
+  font-size: 9.5px;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1px 4px;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.prize-card-inner.flipped .prize-front {
+  animation: prizeShineFlare 1s ease-out;
+  box-shadow: 0 0 25px rgba(250, 204, 21, 0.8), 0 0 50px rgba(245, 158, 11, 0.5);
+}
+
+@keyframes prizeShineFlare {
+  0% { filter: brightness(2.5) drop-shadow(0 0 30px #fef08a); transform: rotateY(180deg) scale(0.9); }
+  50% { filter: brightness(1.6) drop-shadow(0 0 20px #facc15); transform: rotateY(180deg) scale(1.15); }
+  100% { filter: brightness(1) drop-shadow(0 0 10px #eab308); transform: rotateY(180deg) scale(1.06); }
+}
+
+.prize-picked-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  background: rgba(22, 163, 74, 0.95);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 2px solid #86efac;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: prizeStampPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 5;
+}
+
+@keyframes prizeStampPop {
+  from { transform: translate(-50%, -50%) rotate(-30deg) scale(0.3); opacity: 0; }
+  to { transform: translate(-50%, -50%) rotate(-12deg) scale(1); opacity: 1; }
+}
+
+.prize-pick-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 14px;
+}
+
+.prize-pick-picked-info {
+  font-size: 13.5px;
+  font-weight: bold;
+  color: #fde047;
+}
+
+/* 待機側オーバーレイ */
+.prize-wait-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 92;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: victoryFadeIn 0.3s ease;
+}
+
+.prize-wait-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 15, 30, 0.82);
+  backdrop-filter: blur(6px);
+}
+
+.prize-wait-content {
+  position: relative;
+  z-index: 2;
+  background: rgba(30, 41, 59, 0.95);
+  border: 2px solid #38bdf8;
+  border-radius: 18px;
+  padding: 24px 38px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75), 0 0 25px rgba(56, 189, 248, 0.35);
+  animation: victoryBounceIn 0.35s ease-out;
+  max-width: 90vw;
+  box-sizing: border-box;
+}
+
+.prize-wait-spinner {
+  margin-bottom: 8px;
+}
+
+.wait-card-pulse {
+  font-size: 42px;
+  display: inline-block;
+  animation: waitCardPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes waitCardPulse {
+  0%, 100% { transform: scale(1) rotate(-8deg); }
+  50% { transform: scale(1.28) rotate(8deg); }
+}
+
+.prize-wait-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #38bdf8;
+  margin: 0 0 6px 0;
+}
+
+.prize-wait-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
