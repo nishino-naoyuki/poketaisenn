@@ -415,8 +415,28 @@ function getSelectedCard() {
 function moveSelectedHandToDeck() {
   const indices = getSelectedHandIndices();
   if (indices.length === 0) {
-    return alert("手札のカードをタップ/クリックして選択してください");
+    if (!state.myHand || state.myHand.length === 0) {
+      return alert("手札がありません");
+    }
+    const count = state.myHand.length;
+    if (!confirm(`手札のカード（${count}枚）をすべて山札に戻してシャッフルしますか？`)) {
+      return;
+    }
+    pushHistorySnapshot("手札全戻しシャッフル");
+    const allHand = state.myHand.splice(0, state.myHand.length);
+    allHand.forEach(card => state.myDeck.push(card));
+    state.myDeck = shuffleArray(state.myDeck);
+    state.selectedHandIndices.clear();
+    state.selectedHandIndex = -1;
+    addLog(`手札をすべて（${count}枚）山札に戻してシャッフルしました`, {
+      oppText: `手札をすべて（${count}枚）山札に戻してシャッフルしました`,
+      badge: "🔀 手札全戻し"
+    });
+    showToast(`手札をすべて山札に戻しました (${count}枚)`);
+    renderAll();
+    return;
   }
+  pushHistorySnapshot("手札から山札へ戻す");
   const movedCards = [];
   indices.forEach(idx => {
     const card = state.myHand.splice(idx, 1)[0];
@@ -425,6 +445,7 @@ function moveSelectedHandToDeck() {
   });
   state.myDeck = shuffleArray(state.myDeck);
   state.selectedHandIndices.clear();
+  state.selectedHandIndex = -1;
   const names = movedCards.map(c => c.name).join(", ");
   addLog(`手札から${movedCards.length}枚（${names}）を山札に戻してシャッフルしました`, {
     oppText: `手札から ${movedCards.length}枚 を山札に戻してシャッフルしました`,
@@ -1226,6 +1247,27 @@ function showPokemonMenu(e, location, index, menuView = "main") {
         ${hasAny ? `<button class="ctx-cond-btn clear ctx-span-2" onclick="clearActivePokemonConditions()">✨ 特殊状態を全回復</button>` : ''}
       </div>
     `;
+  } else if (menuView === "deck") {
+    // ==========================================
+    // サブメニュー③: 山札に戻す（案2: シャッフル / 山札の下）
+    // ==========================================
+    ctx.innerHTML = `
+      <div class="ctx-header-row">
+        <button class="ctx-back-btn" onclick="showPokemonMenu(event, '${location}', ${index}, 'main')">◀ 戻る</button>
+        <span class="ctx-title-text">🎴 山札に戻す <small>(${escapeHtml(displayName)})</small></span>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <button class="btn blue" style="text-align:left; padding:8px 10px; font-weight:bold;" onclick="returnPokemonToDeck('${location}', ${index}, 'shuffle')">
+          🔀 山札に戻してシャッフル
+          <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:normal;">ポケモン本体・どうぐ・エネルギーを山札へ戻しシャッフル</div>
+        </button>
+        <button class="btn" style="text-align:left; padding:8px 10px; font-weight:bold;" onclick="returnPokemonToDeck('${location}', ${index}, 'bottom')">
+          ⬇️ 山札の下へ送る
+          <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:normal;">ポケモン本体・どうぐ・エネルギーを山札の底に送る</div>
+        </button>
+      </div>
+    `;
   } else {
     // ==========================================
     // メインメニュー
@@ -1292,6 +1334,7 @@ function showPokemonMenu(e, location, index, menuView = "main") {
         ${extraBtns}
         <button onclick="removePokemonToTrash('${location}', ${index})">🗑️ トラッシュへ</button>
         <button onclick="removePokemonToHand('${location}', ${index})">🖐️ 手札に戻す</button>
+        <button class="ctx-span-2" onclick="showPokemonMenu(event, '${location}', ${index}, 'deck')">🎴 山札に戻す ▶</button>
         <button class="ctx-span-2" style="background:#7f1d1d; color:#fecaca; font-weight:bold; border:1px solid #ef4444; margin-top:2px;" onclick="knockoutPokemon('${location}', ${index})">💀 このポケモンを気絶させる</button>
       </div>
     `;
@@ -1563,6 +1606,64 @@ function removePokemonToHand(location, index) {
   showToast(`「${target.card.name}」を手札に戻しました`);
   renderAll();
 }
+
+/**
+ * 自分のポケモンを山札に戻す（シャッフルまたは山札の底）
+ * @param {"active" | "bench"} location
+ * @param {number} index
+ * @param {"shuffle" | "bottom"} mode
+ */
+function returnPokemonToDeck(location, index, mode = "shuffle") {
+  hideCtx();
+  const target = location === "active" ? state.myActive : state.myBench[index];
+  if (!target || !target.card) return;
+
+  pushHistorySnapshot(mode === "shuffle" ? "ポケモンを山札へ戻しシャッフル" : "ポケモンを山札の下へ送る");
+
+  const cardsToDeck = [target.card];
+  if (target.tool) cardsToDeck.push(target.tool);
+  if (target.energies && Array.isArray(target.energies)) {
+    target.energies.forEach(e => cardsToDeck.push(e));
+  }
+
+  if (location === "active") {
+    state.myActive = null;
+    if (typeof clearPokemonConditions === "function") {
+      clearPokemonConditions(target);
+    }
+  } else {
+    state.myBench[index] = null;
+  }
+
+  const name = target.card.name;
+  const count = cardsToDeck.length;
+
+  if (mode === "bottom") {
+    cardsToDeck.forEach(c => state.myDeck.push(c));
+    const extraInfo = count > 1 ? `（どうぐ・エネルギー等含む計${count}枚）` : "";
+    addLog(`「${name}」${extraInfo}を山札の下に戻しました`, {
+      oppText: state.isSetupPhase
+        ? `配置していたポケモン${extraInfo}を山札の下に戻しました`
+        : `「${name}」${extraInfo}を山札の下に戻しました`,
+      badge: "⬇️ 山札の下へ"
+    });
+    showToast(`「${name}」を山札の下に戻しました (${count}枚)`);
+  } else {
+    cardsToDeck.forEach(c => state.myDeck.push(c));
+    state.myDeck = shuffleArray(state.myDeck);
+    const extraInfo = count > 1 ? `（どうぐ・エネルギー等含む計${count}枚）` : "";
+    addLog(`「${name}」${extraInfo}を山札に戻してシャッフルしました`, {
+      oppText: state.isSetupPhase
+        ? `配置していたポケモン${extraInfo}を山札に戻してシャッフルしました`
+        : `「${name}」${extraInfo}を山札に戻してシャッフルしました`,
+      badge: "🔀 山札戻しシャッフル"
+    });
+    showToast(`「${name}」を山札に戻してシャッフルしました (${count}枚)`);
+  }
+
+  renderAll();
+}
+
 
 // =============================================================================
 // 気絶（Knockout）および サイド取得・相手待機演出
@@ -3584,6 +3685,27 @@ function showOpponentPokemonMenu(e, location, index, menuView = "main") {
         ${hasAny ? `<button class="ctx-cond-btn clear ctx-span-2" onclick="clearOpponentConditions()">✨ 特殊状態を全回復</button>` : ''}
       </div>
     `;
+  } else if (menuView === "deck") {
+    // ==========================================
+    // サブメニュー③: 相手の山札に戻す（案2: シャッフル / 山札の下）
+    // ==========================================
+    ctx.innerHTML = `
+      <div class="ctx-header-row">
+        <button class="ctx-back-btn" onclick="showOpponentPokemonMenu(event, '${location}', ${index}, 'main')">◀ 戻る</button>
+        <span class="ctx-title-text">🎴 相手の山札に戻す <small>(${escapeHtml(displayName)})</small></span>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <button class="btn blue" style="text-align:left; padding:8px 10px; font-weight:bold;" onclick="returnOpponentPokemonToDeck('${location}', ${index}, 'shuffle')">
+          🔀 相手の山札に戻してシャッフル
+          <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:normal;">ポケモン本体・どうぐ・エネルギーを相手の山札へ戻しシャッフル</div>
+        </button>
+        <button class="btn" style="text-align:left; padding:8px 10px; font-weight:bold;" onclick="returnOpponentPokemonToDeck('${location}', ${index}, 'bottom')">
+          ⬇️ 相手の山札の下へ送る
+          <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:normal;">ポケモン本体・どうぐ・エネルギーを相手の山札の底に送る</div>
+        </button>
+      </div>
+    `;
   } else {
     // メインメニュー（※特性を使うボタンは相手には含めない）
     let subLaunchersHtml = "";
@@ -3625,6 +3747,7 @@ function showOpponentPokemonMenu(e, location, index, menuView = "main") {
         ${swapActionHtml}
         <button onclick="removeOpponentPokemonToTrash('${location}', ${index})">🗑️ トラッシュへ</button>
         <button onclick="removeOpponentPokemonToHand('${location}', ${index})">🖐️ 手札に戻す</button>
+        <button class="ctx-span-2" onclick="showOpponentPokemonMenu(event, '${location}', ${index}, 'deck')">🎴 山札に戻す ▶</button>
         <button class="ctx-span-2" style="background:#7f1d1d; color:#fecaca; font-weight:bold; border:1px solid #ef4444; margin-top:2px;" onclick="knockoutOpponentPokemon('${location}', ${index})">💀 このポケモンを気絶させる</button>
       </div>
     `;
@@ -3906,6 +4029,70 @@ function removeOpponentPokemonToHand(location, index) {
   }
 }
 
+/**
+ * 相手のポケモンを相手の山札に戻す（一人回し・手動操作用）
+ * @param {"opp-active" | "opp-bench"} location
+ * @param {number} index
+ * @param {"shuffle" | "bottom"} mode
+ */
+function returnOpponentPokemonToDeck(location, index, mode = "shuffle") {
+  hideCtx();
+  const target = location === "opp-active" ? state.oppActive : state.oppBench[index];
+  if (!target || !target.card) return;
+
+  pushHistorySnapshot(mode === "shuffle" ? "相手ポケモンを山札へ戻しシャッフル" : "相手ポケモンを山札の下へ送る");
+
+  const cardsToDeck = [target.card];
+  if (target.tool) cardsToDeck.push(target.tool);
+  if (target.energies && Array.isArray(target.energies)) {
+    target.energies.forEach(e => cardsToDeck.push(e));
+  }
+
+  if (location === "opp-active") {
+    state.oppActive = null;
+    if (typeof clearOpponentConditions === "function") {
+      clearOpponentConditions();
+    }
+  } else {
+    state.oppBench[index] = null;
+  }
+
+  const name = target.card.name;
+  const count = cardsToDeck.length;
+
+  if (mode === "bottom") {
+    cardsToDeck.forEach(c => state.oppDeck.push(c));
+    const extraInfo = count > 1 ? `（どうぐ・エネルギー等含む計${count}枚）` : "";
+    addLog(`相手の「${name}」${extraInfo}を山札の下に戻しました`, {
+      oppText: `あなたの「${name}」${extraInfo}が山札の下に戻されました`,
+      badge: "⬇️ 相手ポケモン山札の下へ"
+    });
+    showToast(`相手の「${name}」を山札の下に戻しました (${count}枚)`);
+  } else {
+    cardsToDeck.forEach(c => state.oppDeck.push(c));
+    state.oppDeck = shuffleArray(state.oppDeck);
+    const extraInfo = count > 1 ? `（どうぐ・エネルギー等含む計${count}枚）` : "";
+    addLog(`相手の「${name}」${extraInfo}を山札に戻してシャッフルしました`, {
+      oppText: `あなたの「${name}」${extraInfo}が山札に戻されシャッフルされました`,
+      badge: "🔀 相手ポケモン山札戻し"
+    });
+    showToast(`相手の「${name}」を山札に戻してシャッフルしました (${count}枚)`);
+  }
+
+  renderAll();
+
+  if (typeof P2P !== "undefined" && P2P.connected) {
+    P2P.send({
+      t: "opp_remote_action",
+      action: "remove_to_deck",
+      mode: mode,
+      location: location === "opp-active" ? "active" : "bench",
+      index: index
+    });
+    P2P.syncNow();
+  }
+}
+
 function handleOpponentRemoteAction(msg) {
   if (!msg) return;
   if (msg.action === "modify_damage") {
@@ -3962,6 +4149,26 @@ function handleOpponentRemoteAction(msg) {
       if (msg.location === "active") state.myActive = null;
       else state.myBench[msg.index] = null;
       addLog(`【相手の操作】「${target.card.name}」が手札に戻されました`, { isRemote: true });
+      renderAll();
+      if (typeof P2P !== "undefined") P2P.syncNow();
+    }
+  } else if (msg.action === "remove_to_deck") {
+    const target = msg.location === "active" ? state.myActive : state.myBench[msg.index];
+    if (target) {
+      const cardsToDeck = [target.card];
+      if (target.tool) cardsToDeck.push(target.tool);
+      if (target.energies) target.energies.forEach(e => cardsToDeck.push(e));
+      if (msg.location === "active") state.myActive = null;
+      else state.myBench[msg.index] = null;
+
+      if (msg.mode === "bottom") {
+        cardsToDeck.forEach(c => state.myDeck.push(c));
+        addLog(`【相手の操作】「${target.card.name}」が山札の下に戻されました`, { isRemote: true });
+      } else {
+        cardsToDeck.forEach(c => state.myDeck.push(c));
+        state.myDeck = shuffleArray(state.myDeck);
+        addLog(`【相手の操作】「${target.card.name}」が山札に戻されシャッフルされました`, { isRemote: true });
+      }
       renderAll();
       if (typeof P2P !== "undefined") P2P.syncNow();
     }
@@ -4040,6 +4247,8 @@ window.startSoloTemporarySwap = startSoloTemporarySwap;
 window.revertSoloTemporarySwap = revertSoloTemporarySwap;
 window.knockoutPokemon = knockoutPokemon;
 window.knockoutOpponentPokemon = knockoutOpponentPokemon;
+window.returnPokemonToDeck = returnPokemonToDeck;
+window.returnOpponentPokemonToDeck = returnOpponentPokemonToDeck;
 window.openPrizePickModal = openPrizePickModal;
 window.pickPrizeCard = pickPrizeCard;
 window.finishPrizePicking = finishPrizePicking;

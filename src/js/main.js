@@ -30,6 +30,9 @@ function initLobbyDefaults() {
   // プレイマット初期化＆描画
   initPlaymats();
 
+  // 一人回し再開データの確認
+  checkSoloResumeBanner();
+
   if (location.hash.includes("solo")) {
     switchLobbyMode("solo");
     startSoloBattleSetup();
@@ -191,6 +194,34 @@ function setupEventListeners() {
       });
     }
   });
+
+  // 対戦中のページ離脱（F5・閉じる・戻る）防止アラート
+  window.addEventListener("beforeunload", (e) => {
+    const isGameActive = document.getElementById("game") && !document.getElementById("game").classList.contains("hidden");
+    if (isGameActive && !window._isExitingToLobby) {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    }
+  });
+
+  // キーボードショートカット（F5、Ctrl+R、Cmd+R）誤打防止
+  window.addEventListener("keydown", (e) => {
+    const isReloadKey = e.key === "F5" || ((e.ctrlKey || e.metaKey) && (e.key === "r" || e.key === "R"));
+    if (isReloadKey) {
+      const isGameActive = document.getElementById("game") && !document.getElementById("game").classList.contains("hidden");
+      if (isGameActive) {
+        e.preventDefault();
+        const msg = state.isSoloMode
+          ? "⚠️ 画面を更新すると対戦が中断されます（セーブデータから再開は可能です）。\n本当にページを再読み込みしますか？"
+          : "⚠️ 画面を更新するとオンライン対戦が切断されます。\n本当にページを再読み込みしますか？";
+        if (confirm(msg)) {
+          window._isExitingToLobby = true;
+          location.reload();
+        }
+      }
+    }
+  });
 }
 
 // =============================================================================
@@ -289,6 +320,7 @@ const actions = {
 
   exit: () => {
     if (confirm("対戦を終了してロビーに戻りますか？")) {
+      window._isExitingToLobby = true;
       if (typeof P2P !== "undefined" && P2P.connected) {
         try {
           P2P.send({
@@ -301,6 +333,9 @@ const actions = {
       state.oppExited = false;
       document.getElementById("game").classList.add("hidden");
       document.getElementById("lobby").classList.remove("hidden");
+      if (typeof checkSoloResumeBanner === "function") {
+        checkSoloResumeBanner();
+      }
     }
   },
 
@@ -402,6 +437,130 @@ function closeMenu() {
 }
 
 // =============================================================================
-// 対戦セットアップ
+// 一人回しセッションの自動セーブ ＆ 復元（F5リロード対策）
 // =============================================================================
 
+let _saveSoloTimer = null;
+function debouncedSaveSoloSession() {
+  if (!state.isSoloMode) return;
+  const gameSec = document.getElementById("game");
+  if (!gameSec || gameSec.classList.contains("hidden")) return;
+
+  if (_saveSoloTimer) clearTimeout(_saveSoloTimer);
+  _saveSoloTimer = setTimeout(() => {
+    try {
+      const now = new Date();
+      const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      const data = {
+        timestamp: Date.now(),
+        dateStr: timeStr,
+        isSoloMode: true,
+        isSetupPhase: !!state.isSetupPhase,
+        setupReadyMy: !!state.setupReadyMy,
+        setupReadyOpp: !!state.setupReadyOpp,
+        turn: state.turn,
+        turnNumber: state.turnNumber,
+        firstPlayer: state.firstPlayer,
+        mustPromoteToActive: !!state.mustPromoteToActive,
+        limitBench8: !!state.limitBench8,
+        oppLimitBench8: !!state.oppLimitBench8,
+        isSoloTemporarySwap: !!state.isSoloTemporarySwap,
+        myName: state.myName,
+        oppName: state.oppName,
+        myActive: state.myActive,
+        myBench: state.myBench,
+        myHand: state.myHand,
+        myDeck: state.myDeck,
+        myTrash: state.myTrash,
+        myLost: state.myLost,
+        myPrizes: state.myPrizes,
+        oppActive: state.oppActive,
+        oppBench: state.oppBench,
+        oppHand: state.oppHand,
+        oppDeck: state.oppDeck,
+        oppTrash: state.oppTrash,
+        oppLost: state.oppLost,
+        oppPrizes: state.oppPrizes,
+        stadium: state.stadium,
+        playCard: state.playCard,
+        tempCards: state.tempCards,
+        logs: state.logs || []
+      };
+      sessionStorage.setItem("pokeca_solo_save", JSON.stringify(data));
+    } catch (e) {
+      console.warn("[SoloSave] Failed to save session:", e);
+    }
+  }, 250);
+}
+
+function checkSoloResumeBanner() {
+  const banner = document.getElementById("solo-resume-banner");
+  if (!banner) return;
+  try {
+    const raw = sessionStorage.getItem("pokeca_solo_save");
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data && data.isSoloMode) {
+        const infoEl = document.getElementById("solo-resume-info");
+        if (infoEl) {
+          const tText = data.isSetupPhase ? "対戦準備中" : `${data.turn === "me" ? "先攻側" : "後攻側"} (${data.turnNumber || 1}ターン目)`;
+          infoEl.textContent = `中断時刻: ${data.dateStr || "直前"} | 状況: ${tText} | 手札: ${data.myHand ? data.myHand.length : 0}枚 / 相手手札: ${data.oppHand ? data.oppHand.length : 0}枚`;
+        }
+        banner.style.display = "flex";
+        banner.classList.remove("hidden");
+        return;
+      }
+    }
+  } catch (e) {}
+  banner.style.display = "none";
+  banner.classList.add("hidden");
+}
+
+function resumeSoloSession() {
+  try {
+    const raw = sessionStorage.getItem("pokeca_solo_save");
+    if (!raw) return alert("保存データが見つかりませんでした");
+    const data = JSON.parse(raw);
+    
+    // stateに復元
+    Object.assign(state, data);
+    
+    // UIを対戦画面に切り替え
+    document.getElementById("lobby").classList.add("hidden");
+    document.getElementById("game").classList.remove("hidden");
+    window._isExitingToLobby = false;
+
+    // 対戦準備バナーの表示制御
+    const setupBanner = document.getElementById("setup-banner");
+    if (setupBanner) {
+      if (state.isSetupPhase) {
+        setupBanner.classList.remove("hidden");
+        const btnSoloSwap = document.getElementById("btn-solo-swap-setup");
+        if (btnSoloSwap) btnSoloSwap.classList.remove("hidden");
+      } else {
+        setupBanner.classList.add("hidden");
+      }
+    }
+
+    renderAll();
+    showToast("✨ 前回の対戦データを復元しました！");
+  } catch (e) {
+    console.error("Resume failed:", e);
+    alert("データの復元に失敗しました");
+  }
+}
+
+function discardSoloSession() {
+  sessionStorage.removeItem("pokeca_solo_save");
+  const banner = document.getElementById("solo-resume-banner");
+  if (banner) {
+    banner.style.display = "none";
+    banner.classList.add("hidden");
+  }
+  showToast("セーブデータを破棄しました");
+}
+
+window.debouncedSaveSoloSession = debouncedSaveSoloSession;
+window.checkSoloResumeBanner = checkSoloResumeBanner;
+window.resumeSoloSession = resumeSoloSession;
+window.discardSoloSession = discardSoloSession;

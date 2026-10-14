@@ -213,6 +213,18 @@
 
     <!-- ================= モード2: 一人回し ================= -->
     <div id="mode-panel-solo" class="mode-panel hidden">
+      <!-- 直前の対戦データ復元バナー -->
+      <div id="solo-resume-banner" class="solo-resume-banner hidden" style="background:#fef3c7; border:2px solid #f59e0b; border-radius:8px; padding:10px 14px; margin-bottom:12px; display:none; align-items:center; justify-content:space-between; gap:10px;">
+        <div>
+          <b style="color:#b45309; font-size:13px;">⚠️ 中断された前回の対戦データがあります</b>
+          <div id="solo-resume-info" style="font-size:11px; color:#78350f; margin-top:2px;">ブラウザ更新や誤操作で中断された試合をそのまま再開できます</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn gold" style="font-weight:bold; padding:5px 12px; font-size:12px;" onclick="resumeSoloSession()">▶ 続きから再開</button>
+          <button class="btn" style="font-size:11px; padding:5px 8px; color:#78350f;" onclick="discardSoloSession()">破棄</button>
+        </div>
+      </div>
+
       <p class="demo-note" style="border-left-color:#3b82f6; background:#eff6ff; border-color:#bfdbfe; color:#1e40af;">
         一人回しモード：2つのデッキを登録して対戦。ターン終了ごとに<b>上下の視点が自動で入れ替わり</b>、両方の手札・場を自分で操作してじっくり研究できます！
       </p>
@@ -305,14 +317,14 @@
     <!-- 相手エリア（自分側を180°回転した配置） -->
     <div class="band opp">
       <div class="pile-col opp-piles">
-        <div class="pile" id="opp-deck"></div>
         <div class="pile clickable" id="opp-trash" title="相手のトラッシュを見る"></div>
+        <div class="pile" id="opp-deck"></div>
+        <div class="lost clickable" id="opp-lost" title="相手のロストゾーンを見る">ロスト <b>0</b></div>
       </div>
       <div class="bench-col opp">
         <div class="bench-tray" id="opp-bench"></div>
       </div>
       <div class="side-col opp-side">
-        <div class="lost clickable" id="opp-lost">ロスト <b>0</b></div>
         <div class="prizes" id="opp-prizes"></div>
       </div>
     </div>
@@ -430,7 +442,6 @@
     <!-- 自分エリア -->
     <div class="band me">
       <div class="side-col">
-        <div class="lost clickable" id="my-lost">ロスト <b>0</b></div>
         <div class="prizes" id="my-prizes"></div>
       </div>
       <div class="bench-col me">
@@ -440,6 +451,7 @@
         <div class="bench-tray" id="my-bench"></div>
       </div>
       <div class="pile-col">
+        <div class="lost clickable" id="my-lost" title="ロストゾーンを見る">ロスト <b>0</b></div>
         <div class="deck-btns">
           <button class="btn blue" data-action="viewDeck">山を見る</button>
           <button class="btn green" data-action="draw">１枚引く</button>

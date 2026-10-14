@@ -76,6 +76,9 @@ function switchLobbyMode(mode) {
     renderDeckPreview(state.soloDeckA || SAMPLE_DECK, "deck-preview-a");
     renderDeckPreview(state.soloDeckB || SAMPLE_DECK_B, "deck-preview-b");
     renderPlaymatSelector();
+    if (typeof checkSoloResumeBanner === "function") {
+      checkSoloResumeBanner();
+    }
   } else {
     btnOnline.classList.add("active");
     btnSolo.classList.remove("active");

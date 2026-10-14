@@ -63,24 +63,29 @@ function renderAll() {
     if (state.isSetupPhase) {
       btnEndTurn.disabled = true;
       btnEndTurn.style.display = "none";
+      btnEndTurn.classList.remove("my-turn-glow");
     } else {
       btnEndTurn.style.display = "";
       if (state.mustPromoteToActive) {
         btnEndTurn.disabled = true;
         btnEndTurn.textContent = "出撃待ち";
         btnEndTurn.classList.add("disabled-turn");
+        btnEndTurn.classList.remove("my-turn-glow");
       } else if (state.isSoloTemporarySwap) {
         btnEndTurn.disabled = true;
         btnEndTurn.textContent = "相手側操作中";
         btnEndTurn.classList.add("disabled-turn");
+        btnEndTurn.classList.remove("my-turn-glow");
       } else if (turnInfo.isMyTurn || state.isSoloMode) {
         btnEndTurn.disabled = false;
         btnEndTurn.textContent = "ターン終了";
         btnEndTurn.classList.remove("disabled-turn");
+        btnEndTurn.classList.add("my-turn-glow");
       } else {
         btnEndTurn.disabled = true;
         btnEndTurn.textContent = "相手の手番中";
         btnEndTurn.classList.add("disabled-turn");
+        btnEndTurn.classList.remove("my-turn-glow");
       }
     }
   }
@@ -114,6 +119,9 @@ function renderAll() {
   updateSheetUI();
   renderSetupBanner();
   if (typeof P2P !== "undefined") P2P.syncSoon();
+  if (state.isSoloMode && typeof debouncedSaveSoloSession === "function") {
+    debouncedSaveSoloSession();
+  }
 }
 
 function renderSoloTemporaryBanner() {
