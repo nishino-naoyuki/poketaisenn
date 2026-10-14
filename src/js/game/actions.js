@@ -1257,14 +1257,14 @@ function showPokemonMenu(e, location, index, menuView = "main") {
         <span class="ctx-title-text">🎴 山札に戻す <small>(${escapeHtml(displayName)})</small></span>
       </div>
       <div class="divider"></div>
-      <div style="display:flex; flex-direction:column; gap:6px;">
-        <button class="btn blue" style="text-align:left; padding:8px 10px; font-weight:bold;" onclick="returnPokemonToDeck('${location}', ${index}, 'shuffle')">
-          🔀 山札に戻してシャッフル
-          <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:normal;">ポケモン本体・どうぐ・エネルギーを山札へ戻しシャッフル</div>
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+        <button class="ctx-deck-btn ctx-deck-shuffle" onclick="returnPokemonToDeck('${location}', ${index}, 'shuffle')">
+          <span class="ctx-deck-btn-title">🔀 山札に戻してシャッフル</span>
+          <span class="ctx-deck-btn-desc">ポケモン本体・どうぐ・エネルギーを山札へ戻しシャッフル</span>
         </button>
-        <button class="btn" style="text-align:left; padding:8px 10px; font-weight:bold;" onclick="returnPokemonToDeck('${location}', ${index}, 'bottom')">
-          ⬇️ 山札の下へ送る
-          <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:normal;">ポケモン本体・どうぐ・エネルギーを山札の底に送る</div>
+        <button class="ctx-deck-btn ctx-deck-bottom" onclick="returnPokemonToDeck('${location}', ${index}, 'bottom')">
+          <span class="ctx-deck-btn-title">⬇️ 山札の下へ送る</span>
+          <span class="ctx-deck-btn-desc">ポケモン本体・どうぐ・エネルギーを山札の底に送る</span>
         </button>
       </div>
     `;
@@ -3695,14 +3695,14 @@ function showOpponentPokemonMenu(e, location, index, menuView = "main") {
         <span class="ctx-title-text">🎴 相手の山札に戻す <small>(${escapeHtml(displayName)})</small></span>
       </div>
       <div class="divider"></div>
-      <div style="display:flex; flex-direction:column; gap:6px;">
-        <button class="btn blue" style="text-align:left; padding:8px 10px; font-weight:bold;" onclick="returnOpponentPokemonToDeck('${location}', ${index}, 'shuffle')">
-          🔀 相手の山札に戻してシャッフル
-          <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:normal;">ポケモン本体・どうぐ・エネルギーを相手の山札へ戻しシャッフル</div>
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+        <button class="ctx-deck-btn ctx-deck-shuffle" onclick="returnOpponentPokemonToDeck('${location}', ${index}, 'shuffle')">
+          <span class="ctx-deck-btn-title">🔀 相手の山札に戻してシャッフル</span>
+          <span class="ctx-deck-btn-desc">ポケモン本体・どうぐ・エネルギーを相手の山札へ戻しシャッフル</span>
         </button>
-        <button class="btn" style="text-align:left; padding:8px 10px; font-weight:bold;" onclick="returnOpponentPokemonToDeck('${location}', ${index}, 'bottom')">
-          ⬇️ 相手の山札の下へ送る
-          <div style="font-size:11px; opacity:0.85; margin-top:2px; font-weight:normal;">ポケモン本体・どうぐ・エネルギーを相手の山札の底に送る</div>
+        <button class="ctx-deck-btn ctx-deck-bottom" onclick="returnOpponentPokemonToDeck('${location}', ${index}, 'bottom')">
+          <span class="ctx-deck-btn-title">⬇️ 相手の山札の下へ送る</span>
+          <span class="ctx-deck-btn-desc">ポケモン本体・どうぐ・エネルギーを相手の山札の底に送る</span>
         </button>
       </div>
     `;
