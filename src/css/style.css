@@ -1544,7 +1544,7 @@ html, body {
 .hand-cards {
   display: flex;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   padding-top: calc(var(--u) * 1.2);
   height: 100%;
 }
@@ -1567,15 +1567,13 @@ html, body {
   z-index: 5;
 }
 
-/* ホバー時の下方向透明ヒット領域（カードが上に移動してもカーソルが外れず、プルプル震える振動ループを完全防止） */
+/* ホバー時の全方位透明ヒット領域（カードが上に移動してもカーソルが外れず、プルプル震える振動ループを完全防止） */
 .hand-cards .card:hover::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: calc(var(--u) * 2.5);
+  inset: -10px -6px -28px -6px;
   pointer-events: auto;
+  z-index: -1;
 }
 
 .hand-cards .card.selected {
@@ -2174,10 +2172,22 @@ body.menu-open .sp-sheet {
     display: none;
   }
   .hand-cards {
+    overflow: visible;
     padding-top: 0.8vh;
   }
   .hand-cards .card {
     margin-left: calc(var(--hand-h) * -0.32);
+  }
+  /* スマホ・狭小画面では上下移動(translateY)による振動ループを根本防止するため位置移動を無効化し、発光ハイライトで明示 */
+  .hand-cards .card:hover {
+    transform: none !important;
+    filter: brightness(1.15);
+    box-shadow: 0 0 14px rgba(96, 165, 250, 0.9), 0 0 25px rgba(250, 204, 21, 0.5);
+    outline: 2px solid #60a5fa;
+    z-index: 5;
+  }
+  .hand-cards .card:hover::after {
+    display: none;
   }
   .sp-menu-btn {
     display: flex !important;
