@@ -1519,6 +1519,39 @@ html, body {
   text-align: center;
 }
 
+/* 一人回し用: 相手側一時手動操作バナー */
+.solo-temp-banner {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid #facc15;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 16px rgba(250, 204, 21, 0.5);
+  padding: 6px 14px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 50;
+  font-size: 13px;
+  font-weight: bold;
+  color: #fef08a;
+  animation: setupBannerGlow 2s infinite alternate;
+}
+
+/* 一人回し時の相手手札クリック可能スタイル */
+.opp-hand-cards.clickable,
+.opp-hand.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.opp-hand-cards.clickable:hover,
+.opp-hand.clickable:hover {
+  filter: brightness(1.2);
+}
+
 /* 手札エリア */
 .hand-area {
   position: relative;

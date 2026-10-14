@@ -69,6 +69,10 @@ function renderAll() {
         btnEndTurn.disabled = true;
         btnEndTurn.textContent = "出撃待ち";
         btnEndTurn.classList.add("disabled-turn");
+      } else if (state.isSoloTemporarySwap) {
+        btnEndTurn.disabled = true;
+        btnEndTurn.textContent = "相手側操作中";
+        btnEndTurn.classList.add("disabled-turn");
       } else if (turnInfo.isMyTurn || state.isSoloMode) {
         btnEndTurn.disabled = false;
         btnEndTurn.textContent = "ターン終了";
@@ -106,9 +110,24 @@ function renderAll() {
   renderPlayArea();
   renderStadium();
   renderPlaymats();
+  renderSoloTemporaryBanner();
   updateSheetUI();
   renderSetupBanner();
   if (typeof P2P !== "undefined") P2P.syncSoon();
+}
+
+function renderSoloTemporaryBanner() {
+  const banner = document.getElementById("solo-temp-banner");
+  if (!banner) return;
+  if (state.isSoloMode && state.isSoloTemporarySwap) {
+    banner.classList.remove("hidden");
+    const msg = document.getElementById("solo-temp-msg");
+    if (msg) {
+      msg.textContent = `⚠️ 【${escapeHtml(state.myName)}（相手側）を手動操作中】`;
+    }
+  } else {
+    banner.classList.add("hidden");
+  }
 }
 
 function renderSetupBanner() {
@@ -121,6 +140,7 @@ function renderSetupBanner() {
     const btnCoin = document.getElementById("btn-setup-coin");
     const btnMulligan = document.getElementById("btn-mulligan");
     const btnReady = document.getElementById("btn-setup-ready");
+    const btnSoloSwapSetup = document.getElementById("btn-solo-swap-setup");
 
     const btnReopenMulligan = document.getElementById("btn-reopen-mulligan");
     if (btnReopenMulligan) {
@@ -137,8 +157,23 @@ function renderSetupBanner() {
       }
     }
 
+    if (btnSoloSwapSetup) {
+      if (state.isSoloMode) {
+        btnSoloSwapSetup.classList.remove("hidden");
+        btnSoloSwapSetup.textContent = `🔄 側を交代 (${state.oppName}へ)`;
+        btnSoloSwapSetup.title = "対戦準備中にデッキ1とデッキ2を切り替えて配置・確認を行います";
+      } else {
+        btnSoloSwapSetup.classList.add("hidden");
+      }
+    }
+
     if (statusEl) {
-      if (state.setupStep === "coin") {
+      if (state.isSoloMode) {
+        const readyCount = (state.mySetupReady ? 1 : 0) + (state.oppSetupReady ? 1 : 0);
+        const mySideOrder = (state.firstPlayer === "me") ? "【先攻】" : "【後攻】";
+        const readyStatusStr = state.mySetupReady ? "（✅準備完了済）" : "（未完了）";
+        statusEl.textContent = `【一人回し準備 ${readyCount}/2完了】現在: ${state.myName}${mySideOrder}${readyStatusStr}。たねポケモンをバトル場に出してください。`;
+      } else if (state.setupStep === "coin") {
         const isGuest = (typeof P2P !== "undefined" && P2P.connected && P2P.role === "guest");
         statusEl.textContent = isGuest
           ? "🪙 ルームオーナーが先攻・後攻を決めるコイントスを行っています..."
@@ -189,26 +224,49 @@ function renderSetupBanner() {
 
     // 対戦準備完了ボタン制御: バトル場にポケモンがいる場合のみ有効化
     if (btnReady) {
-      if (state.mySetupReady) {
-        btnReady.disabled = true;
-        btnReady.textContent = "相手の準備待ち...";
-        btnReady.classList.remove("green");
-        btnReady.classList.add("gold");
-      } else if (state.myMulliganStep) {
-        btnReady.disabled = true;
-        btnReady.textContent = "マリガン処理中...";
-        btnReady.classList.remove("gold");
-        btnReady.classList.remove("green");
-      } else if (!state.myActive) {
-        btnReady.disabled = true;
-        btnReady.textContent = "バトル場に配置してください";
-        btnReady.classList.remove("gold");
-        btnReady.classList.remove("green");
+      if (state.isSoloMode) {
+        if (state.mySetupReady) {
+          btnReady.disabled = false;
+          btnReady.textContent = `↩️ ${state.myName} 準備完了を取り消す`;
+          btnReady.classList.remove("green");
+          btnReady.classList.add("gold");
+          btnReady.title = "クリックして準備完了を取り消し、カードの再配置ができます";
+        } else if (!state.myActive) {
+          btnReady.disabled = true;
+          btnReady.textContent = "バトル場に配置してください";
+          btnReady.classList.remove("gold");
+          btnReady.classList.remove("green");
+          btnReady.title = "バトル場にたねポケモンを出してください";
+        } else {
+          btnReady.disabled = false;
+          const nextSide = state.oppSetupReady ? "対戦開始" : `続けて ${state.oppName} の配置へ`;
+          btnReady.textContent = `✅ ${state.myName} 準備完了 (${nextSide})`;
+          btnReady.classList.remove("gold");
+          btnReady.classList.add("green");
+          btnReady.title = "サイドを6枚セットし、準備完了とします";
+        }
       } else {
-        btnReady.disabled = false;
-        btnReady.textContent = "✅ 対戦準備完了 (サイド6枚セット)";
-        btnReady.classList.remove("gold");
-        btnReady.classList.add("green");
+        if (state.mySetupReady) {
+          btnReady.disabled = true;
+          btnReady.textContent = "相手の準備待ち...";
+          btnReady.classList.remove("green");
+          btnReady.classList.add("gold");
+        } else if (state.myMulliganStep) {
+          btnReady.disabled = true;
+          btnReady.textContent = "マリガン処理中...";
+          btnReady.classList.remove("gold");
+          btnReady.classList.remove("green");
+        } else if (!state.myActive) {
+          btnReady.disabled = true;
+          btnReady.textContent = "バトル場に配置してください";
+          btnReady.classList.remove("gold");
+          btnReady.classList.remove("green");
+        } else {
+          btnReady.disabled = false;
+          btnReady.textContent = "✅ 対戦準備完了 (サイド6枚セット)";
+          btnReady.classList.remove("gold");
+          btnReady.classList.add("green");
+        }
       }
     }
   } else {
@@ -226,6 +284,32 @@ function renderOpponent() {
     oppHandEl.appendChild(b);
   }
   document.getElementById("opp-hand-count").textContent = state.oppHandCount;
+
+  // 一人回しモード時の相手手札クリックで干渉メニュー表示
+  const oppHandWrap = document.getElementById("opp-hand");
+  if (state.isSoloMode && !state.isSetupPhase) {
+    oppHandEl.classList.add("clickable");
+    oppHandEl.title = "クリックして相手手札の干渉メニュー（山札戻し、ドロー、トラッシュ等）を開く";
+    oppHandEl.onclick = () => {
+      if (typeof showSoloOpponentHandMenu === "function") showSoloOpponentHandMenu();
+    };
+    if (oppHandWrap) {
+      oppHandWrap.classList.add("clickable");
+      oppHandWrap.title = "クリックして相手手札の干渉メニュー（山札戻し、ドロー、トラッシュ等）を開く";
+      oppHandWrap.onclick = () => {
+        if (typeof showSoloOpponentHandMenu === "function") showSoloOpponentHandMenu();
+      };
+    }
+  } else {
+    oppHandEl.classList.remove("clickable");
+    oppHandEl.title = "";
+    oppHandEl.onclick = null;
+    if (oppHandWrap) {
+      oppHandWrap.classList.remove("clickable");
+      oppHandWrap.title = "";
+      oppHandWrap.onclick = null;
+    }
+  }
 
   // 相手山札・トラッシュ
   document.getElementById("opp-deck").innerHTML = `
@@ -529,6 +613,15 @@ function renderHand() {
   const handEl = document.getElementById("hand");
   handEl.innerHTML = "";
   document.getElementById("hand-count").textContent = state.myHand.length;
+
+  const btnSoloHand = document.getElementById("btn-solo-hand-interfere");
+  if (btnSoloHand) {
+    if (state.isSoloMode && !state.isSetupPhase) {
+      btnSoloHand.classList.remove("hidden");
+    } else {
+      btnSoloHand.classList.add("hidden");
+    }
+  }
 
   const selNameEl = document.getElementById("hand-sel");
   const selectedCards = getSelectedHandCards();
@@ -1414,6 +1507,10 @@ function updateSheetUI() {
   }
   // 3. 未選択状態：案内と基本手札操作
   else {
+    let soloHandBtn = "";
+    if (state.isSoloMode && !state.isSetupPhase) {
+      soloHandBtn = `<button class="btn purple wide" onclick="closeMenu(); showSoloOpponentHandMenu();">🎴 相手手札干渉メニュー</button>`;
+    }
     handBodyEl.innerHTML = `
       <div class="sheet-empty-hint">
         💡 手札のカードをタップすると、カードごとの詳細メニュー（使う・場に出す・エネルギー付与など）が表示されます。
@@ -1421,6 +1518,7 @@ function updateSheetUI() {
       <div class="grid">
         <button class="btn green" data-action="draw" data-close="1">１枚引く</button>
         <button class="btn blue" data-action="viewDeck" data-close="1">山札を見る</button>
+        ${soloHandBtn}
       </div>
     `;
   }

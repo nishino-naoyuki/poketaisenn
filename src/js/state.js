@@ -103,6 +103,7 @@ let state = {
   oppMatId: "mat_02",
   oppMatDataUrl: null,  // 相手が自作プレイマット画像を選択している場合のDataURL
   isSoloMode: false,
+  isSoloTemporarySwap: false, // 一人回し中、手番を進めずに相手側視点に一時交代しているか
   oppDeck: [],          // 一人回し用の完全な相手デッキ
   oppHand: [],          // 一人回し用の完全な相手手札
   oppPrizesList: [],    // 一人回し用の完全な相手サイドカード

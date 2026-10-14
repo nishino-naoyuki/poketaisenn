@@ -1955,6 +1955,11 @@ function endTurn() {
     return;
   }
 
+  if (state.isSoloMode && state.isSoloTemporarySwap) {
+    alert("現在、相手側の手動操作（一時交代）モード中です。\n画面上の「元の手番側に戻る」を押して元の手番視点に戻してからターンを終了してください。");
+    return;
+  }
+
   const currentInfo = getTurnInfo(state.turnStep || 1);
   if (!currentInfo.isMyTurn && !state.isSoloMode) {
     showToast("相手のターン中です");
@@ -2049,6 +2054,16 @@ function swapSoloTurn() {
   state.myBenchLimit = state.oppBenchLimit || 5;
   state.oppBenchLimit = tmpBenchLimit;
 
+  if (state.isSetupPhase) {
+    const tmpReady = state.mySetupReady;
+    state.mySetupReady = state.oppSetupReady;
+    state.oppSetupReady = tmpReady;
+
+    const tmpMull = state.mulliganCount;
+    state.mulliganCount = state.oppMulliganCount;
+    state.oppMulliganCount = tmpMull;
+  }
+
   if (state.firstPlayer) {
     state.firstPlayer = (state.firstPlayer === "me" ? "opp" : "me");
   }
@@ -2061,14 +2076,196 @@ function swapSoloTurn() {
   state.draggedEnergy = null;
   state.actionTargetMode = null;
 
-  addLog(`【一人回し】手番が交代しました（現在の手番: ${state.myName}）`, {
-    action: "SOLO_SWAP",
-    player: state.myName,
-    details: `手番交代: ${state.myName}`,
-    suppressSync: true
-  });
-  showToast(`手番交代！ 現在: 【${state.myName}】の手番`);
+  if (state.isSetupPhase) {
+    addLog(`【一人回し対戦準備】操作側が交代しました（現在: 【${state.myName}】を準備中）`, {
+      action: "SOLO_SETUP_SWAP",
+      player: state.myName,
+      suppressSync: true
+    });
+    showToast(`準備交代: 現在【${state.myName}】を操作中`);
+  } else if (state.isSoloTemporarySwap) {
+    addLog(`【一人回し】相手側（${state.myName}）の手動操作モードに切り替えました`, {
+      suppressSync: true
+    });
+  } else {
+    addLog(`【一人回し】手番が交代しました（現在の手番: ${state.myName}）`, {
+      action: "SOLO_SWAP",
+      player: state.myName,
+      details: `手番交代: ${state.myName}`,
+      suppressSync: true
+    });
+    showToast(`手番交代！ 現在: 【${state.myName}】の手番`);
+  }
 }
+
+/** 一人回し用: 相手手札操作・手札干渉メニュー表示 */
+function showSoloOpponentHandMenu() {
+  if (!state.isSoloMode) return;
+  const title = `🎴 相手手札操作・手札干渉（一人回し）`;
+  const body = `
+    <div style="font-size:13px; color:#94a3b8; margin-bottom:14px; line-height:1.6; background:rgba(0,0,0,0.25); padding:8px 12px; border-radius:6px;">
+      相手（<b>${state.oppName}</b>）の手札：<b style="color:#fde047; font-size:15px;">${state.oppHand.length}枚</b> ／ 
+      山札：<b style="color:#f8fafc;">${state.oppDeck.length}枚</b> ／ 
+      サイド：<b style="color:#f8fafc;">${state.oppPrizes}枚</b>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button class="btn blue" style="text-align:left; padding:9px 12px;" onclick="soloOpponentHandToDeck()">
+        🔀 <b>相手手札をすべて山札に戻してシャッフル</b>
+        <div style="font-size:11px; opacity:0.8; margin-top:2px;">相手手札（${state.oppHand.length}枚）を山札に混ぜてシャッフルします</div>
+      </button>
+
+      <button class="btn blue" style="text-align:left; padding:9px 12px;" onclick="soloOpponentHandToBottom()">
+        ⬇️ <b>相手手札をすべて山札の下に戻す</b>
+        <div style="font-size:11px; opacity:0.8; margin-top:2px;">相手手札（${state.oppHand.length}枚）をそのまま山札の一番下に戻します</div>
+      </button>
+
+      <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
+        <div style="font-weight:bold; font-size:12.5px; color:#fde047; margin-bottom:6px;">📥 相手山札からカードを引く（ドロー）</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button class="btn green" style="padding:5px 10px; font-size:11.5px;" onclick="soloOpponentDrawCards(1)">＋1枚引く</button>
+          <button class="btn green" style="padding:5px 10px; font-size:11.5px;" onclick="soloOpponentDrawCards(${state.oppPrizes})">サイド枚数 (${state.oppPrizes}枚)</button>
+          <button class="btn green" style="padding:5px 10px; font-size:11.5px;" onclick="soloOpponentDrawCards(4)">4枚引く</button>
+          <button class="btn green" style="padding:5px 10px; font-size:11.5px;" onclick="soloOpponentDrawCards(2)">2枚引く</button>
+          <button class="btn green" style="padding:5px 10px; font-size:11.5px;" onclick="promptSoloOpponentDraw()">任意枚数...</button>
+        </div>
+      </div>
+
+      <button class="btn red" style="text-align:left; padding:8px 12px;" onclick="soloOpponentHandTrash()">
+        🗑️ <b>相手手札をすべてトラッシュする</b>
+      </button>
+
+      <button class="btn purple" style="text-align:left; padding:10px 12px; margin-top:4px;" onclick="startSoloTemporarySwap()">
+        🔄 <b>相手側と一時交代（手動操作モード）</b>
+        <div style="font-size:11px; opacity:0.85; margin-top:2px;">手番を進めずに上下を反転し、相手手札を見ながら手動で1枚ずつ操作します</div>
+      </button>
+    </div>
+  `;
+  const foot = `
+    <button class="btn" style="padding:6px 16px;" onclick="closeModal()">閉じる</button>
+  `;
+  showModal(title, body, foot);
+}
+
+/** 一人回し: 相手手札をすべて山札に戻してシャッフル */
+function soloOpponentHandToDeck() {
+  if (!state.isSoloMode) return;
+  if (state.oppHand.length === 0) {
+    return alert("相手の手札は0枚です。");
+  }
+  const count = state.oppHand.length;
+  state.oppDeck.push(...state.oppHand);
+  state.oppDeck = shuffleArray(state.oppDeck);
+  state.oppHand = [];
+  state.oppHandCount = 0;
+  state.oppDeckCount = state.oppDeck.length;
+  addLog(`【手札干渉】相手（${state.oppName}）の手札 ${count}枚 を山札に戻してシャッフルしました`, {
+    suppressSync: true,
+    badge: "🔀 相手手札シャッフル"
+  });
+  showToast(`相手の手札（${count}枚）を山札に戻してシャッフルしました`);
+  renderAll();
+  showSoloOpponentHandMenu();
+}
+
+/** 一人回し: 相手手札をすべて山札の下に戻す */
+function soloOpponentHandToBottom() {
+  if (!state.isSoloMode) return;
+  if (state.oppHand.length === 0) {
+    return alert("相手の手札は0枚です。");
+  }
+  const count = state.oppHand.length;
+  state.oppDeck.push(...state.oppHand);
+  state.oppHand = [];
+  state.oppHandCount = 0;
+  state.oppDeckCount = state.oppDeck.length;
+  addLog(`【手札干渉】相手（${state.oppName}）の手札 ${count}枚 を山札の下に戻しました`, {
+    suppressSync: true,
+    badge: "⬇️ 相手手札山下へ"
+  });
+  showToast(`相手の手札（${count}枚）を山札の下に戻しました`);
+  renderAll();
+  showSoloOpponentHandMenu();
+}
+
+/** 一人回し: 相手手札をすべてトラッシュ */
+function soloOpponentHandTrash() {
+  if (!state.isSoloMode) return;
+  if (state.oppHand.length === 0) {
+    return alert("相手の手札は0枚です。");
+  }
+  const count = state.oppHand.length;
+  state.oppTrash.push(...state.oppHand);
+  state.oppHand = [];
+  state.oppHandCount = 0;
+  addLog(`【手札干渉】相手（${state.oppName}）の手札 ${count}枚 をトラッシュしました`, {
+    suppressSync: true,
+    badge: "🗑️ 相手手札トラッシュ"
+  });
+  showToast(`相手の手札（${count}枚）をトラッシュしました`);
+  renderAll();
+  showSoloOpponentHandMenu();
+}
+
+/** 一人回し: 相手山札からカードを引く */
+function soloOpponentDrawCards(count) {
+  if (!state.isSoloMode) return;
+  const actualCount = Math.min(count, state.oppDeck.length);
+  if (actualCount <= 0) {
+    return alert("相手の山札にカードがありません。");
+  }
+  const drawn = [];
+  for (let i = 0; i < actualCount; i++) {
+    drawn.push(state.oppDeck.shift());
+  }
+  state.oppHand.push(...drawn);
+  state.oppHandCount = state.oppHand.length;
+  state.oppDeckCount = state.oppDeck.length;
+  addLog(`【手札干渉】相手（${state.oppName}）の山札からカードを ${actualCount}枚 引きました`, {
+    suppressSync: true,
+    badge: "📥 相手ドロー"
+  });
+  showToast(`相手（${state.oppName}）が ${actualCount}枚 引きました`);
+  renderAll();
+  showSoloOpponentHandMenu();
+}
+
+/** 一人回し: 相手山札から任意枚数引くプロンプト */
+function promptSoloOpponentDraw() {
+  const input = prompt(`相手（${state.oppName}）の山札（残り${state.oppDeck.length}枚）から何枚引きますか？`, "1");
+  if (input === null) return;
+  const count = parseInt(input, 10);
+  if (isNaN(count) || count <= 0) return alert("1以上の数値を入力してください");
+  soloOpponentDrawCards(count);
+}
+
+/** 一人回し: 相手側視点への一時交代（手動操作モード開始） */
+function startSoloTemporarySwap() {
+  if (!state.isSoloMode) return;
+  closeModal();
+  state.isSoloTemporarySwap = true;
+  swapSoloTurn();
+  showToast(`【一時交代】相手側（${state.myName}）を手動操作中。終了時は画面上の「元の手番側に戻る」を押してください`);
+  renderAll();
+}
+
+/** 一人回し: 一時交代から元の手番側へ復帰 */
+function revertSoloTemporarySwap() {
+  if (!state.isSoloMode || !state.isSoloTemporarySwap) return;
+  state.isSoloTemporarySwap = false;
+  swapSoloTurn();
+  showToast(`手番プレイヤー（${state.myName}）の視点に戻りました`);
+  renderAll();
+}
+
+window.showSoloOpponentHandMenu = showSoloOpponentHandMenu;
+window.soloOpponentHandToDeck = soloOpponentHandToDeck;
+window.soloOpponentHandToBottom = soloOpponentHandToBottom;
+window.soloOpponentHandTrash = soloOpponentHandTrash;
+window.soloOpponentDrawCards = soloOpponentDrawCards;
+window.promptSoloOpponentDraw = promptSoloOpponentDraw;
+window.startSoloTemporarySwap = startSoloTemporarySwap;
+window.revertSoloTemporarySwap = revertSoloTemporarySwap;
 
 function tossCoin() {
   const isHeads = Math.random() < 0.5;
@@ -3494,7 +3691,11 @@ window.removeOpponentPokemonToHand = removeOpponentPokemonToHand;
 window.handleOpponentRemoteAction = handleOpponentRemoteAction;
 window.toggleSelectTempCard = toggleSelectTempCard;
 window.clearTempSelection = clearTempSelection;
-
-
-
-
+window.showSoloOpponentHandMenu = showSoloOpponentHandMenu;
+window.soloOpponentHandToDeck = soloOpponentHandToDeck;
+window.soloOpponentHandToBottom = soloOpponentHandToBottom;
+window.soloOpponentHandTrash = soloOpponentHandTrash;
+window.soloOpponentDrawCards = soloOpponentDrawCards;
+window.promptSoloOpponentDraw = promptSoloOpponentDraw;
+window.startSoloTemporarySwap = startSoloTemporarySwap;
+window.revertSoloTemporarySwap = revertSoloTemporarySwap;

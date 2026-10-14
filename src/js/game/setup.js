@@ -117,36 +117,28 @@ function startSoloBattleSetup() {
   // デッキA: 手札7枚ドロー（サイド6枚は準備完了ボタンを押した時にセット）
   for (let i = 0; i < 7; i++) state.myHand.push(state.myDeck.shift());
 
-  // デッキB: 手札7枚ドロー、サイド6枚
+  // デッキB: 手札7枚ドロー（サイド6枚は準備完了ボタンを押した時にセット）
   for (let i = 0; i < 7; i++) state.oppHand.push(state.oppDeck.shift());
-  for (let i = 0; i < 6; i++) state.oppPrizesList.push(state.oppDeck.shift());
   state.oppDeckCount = state.oppDeck.length;
   state.oppHandCount = state.oppHand.length;
-  state.oppPrizes = state.oppPrizesList.length;
+  state.oppPrizes = 0; // サイドは各デッキの準備完了時にセット
 
   state.myActive = null;
   state.myBench = [null, null, null, null, null, null, null, null];
   state.oppActive = null;
   state.oppBench = [null, null, null, null, null, null, null, null];
 
-  // 一人回し用: デッキBの手札からポケモンを1体選んで相手バトル場にセット
-  const basicB = state.oppHand.find(c => c && c.type === "pokemon");
-  if (basicB) {
-    const bIdx = state.oppHand.indexOf(basicB);
-    state.oppHand.splice(bIdx, 1);
-    state.oppActive = {
-      card: basicB,
-      damage: 0,
-      special: null,
-      energies: [],
-      tool: null
-    };
-    state.oppHandCount = state.oppHand.length;
-  }
+  addLog(`【一人回し対戦準備】まず【デッキ1】の手札からたねポケモンをバトル場に出してください（準備完了時にサイド6枚がセットされます）`, { suppressSync: true });
+  showToast("一人回し対戦準備: まず【デッキ1】のたねポケモンをバトル場に出してください");
 
-  addLog(`【一人回し対戦準備】手札からたねポケモンをバトル場に出してください（準備完了時にサイド6枚がセットされます）`, { suppressSync: true });
-  showToast("一人回し対戦準備: たねポケモンをバトル場に出して準備完了を押してください");
+  renderAll();
+}
 
+/** 一人回し準備フェーズ: 操作するデッキ側（デッキ1 ⇔ デッキ2）を手動切り替え */
+function toggleSoloSetupSide() {
+  if (!state.isSoloMode || !state.isSetupPhase) return;
+  swapSoloTurn();
+  showToast(`操作側を切り替えました: 現在【${state.myName}】を準備中`);
   renderAll();
 }
 
@@ -375,6 +367,21 @@ function rejectOpponentMulligan() {
 /** 対戦準備完了ボタン処理（このタイミングでサイド6枚を山札からセット） */
 function confirmSetupReady() {
   if (!state.isSetupPhase) return;
+
+  // 一人回しモードで、すでに準備完了している場合は取り消し可能
+  if (state.isSoloMode && state.mySetupReady) {
+    state.mySetupReady = false;
+    // サイド6枚を山札の先頭に戻す
+    if (state.myPrizes.length > 0) {
+      state.myDeck.unshift(...state.myPrizes);
+      state.myPrizes = [];
+    }
+    addLog(`【${state.myName}】対戦準備完了を取り消しました`, { suppressSync: true });
+    showToast(`【${state.myName}】の準備完了を取り消しました。カードを再配置できます`);
+    renderAll();
+    return;
+  }
+
   if (state.myMulliganStep) {
     alert("現在マリガン処理中です。引き直しが完了してから準備完了を押してください。");
     return;
@@ -394,8 +401,7 @@ function confirmSetupReady() {
   }
 
   state.mySetupReady = true;
-  addLog(`バトル場の配置とサイド6枚のセットを完了しました（相手の準備を待機中...）`, { suppressSync: true });
-  showToast("サイド6枚をセットして準備完了！ 相手を待っています...");
+  addLog(`【${state.myName}】バトル場の配置とサイド6枚のセットを完了しました`, { suppressSync: true });
 
   if (P2P.connected) {
     P2P.send({ t: "setup_ready", name: state.myName });
@@ -404,7 +410,18 @@ function confirmSetupReady() {
       handlePreMatchMulliganPenalty();
     }
   } else if (state.isSoloMode) {
-    handlePreMatchMulliganPenalty();
+    if (state.oppSetupReady) {
+      // 双方とも準備完了！
+      showToast("双方の対戦準備が完了しました！");
+      renderAll();
+      setTimeout(() => {
+        handlePreMatchMulliganPenalty();
+      }, 350);
+    } else {
+      // もう一方のデッキが未完了 -> 自動で上下を交代して続けて準備
+      showToast(`【${state.myName}】準備完了！ 続けて【${state.oppName}】の準備を行います`);
+      swapSoloTurn();
+    }
   } else {
     handlePreMatchMulliganPenalty();
   }
@@ -562,6 +579,11 @@ window.resolveSoloDeckBMulliganPenalty = resolveSoloDeckBMulliganPenalty;
 
 /** 双方準備完了後のオープン・バトル開始 */
 function finishSetupPhaseAndStartBattle() {
+  // 一人回しモード時、先攻（デッキ1）が下側（操作側）に来るように整える
+  if (state.isSoloMode && state.myName && state.myName.includes("デッキ2")) {
+    swapSoloTurn();
+  }
+
   state.isSetupPhase = false;
   state.setupStep = "done";
   state.mySetupReady = true;
@@ -615,6 +637,7 @@ function handleMulliganRejected(reason, rejectorName) {
 
 window.hasBasicPokemon = hasBasicPokemon;
 window.executeMulligan = executeMulligan;
+window.toggleSoloSetupSide = toggleSoloSetupSide;
 window.sendMulliganRevealToOpponent = sendMulliganRevealToOpponent;
 window.performMulliganRedraw = performMulliganRedraw;
 window.enqueueOpponentMulliganReveal = enqueueOpponentMulliganReveal;

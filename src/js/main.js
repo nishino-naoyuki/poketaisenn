@@ -361,6 +361,11 @@ const actions = {
   setupCoinToss: () => startSetupCoinToss(),
   mulligan: () => executeMulligan(),
   setupReady: () => confirmSetupReady(),
+  toggleSoloSetupSide: () => (typeof toggleSoloSetupSide === "function" ? toggleSoloSetupSide() : null),
+
+  // 一人回し手札干渉・一時交代アクション
+  showSoloOpponentHandMenu: () => (typeof showSoloOpponentHandMenu === "function" ? showSoloOpponentHandMenu() : null),
+  revertSoloTemporarySwap: () => (typeof revertSoloTemporarySwap === "function" ? revertSoloTemporarySwap() : null),
 
   // その他
   undo: () => (typeof undoAction === "function" ? undoAction() : null),
