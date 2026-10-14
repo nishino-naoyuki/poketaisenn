@@ -1019,6 +1019,8 @@ const P2P = {
       if (state.myMulliganStep === "waiting_opp_ready" && typeof sendMulliganRevealToOpponent === "function") {
         showToast("相手が準備完了しました！あなたの手札7枚を相手に公開します");
         sendMulliganRevealToOpponent();
+      } else if (state.mySetupReady && typeof handlePreMatchMulliganPenalty === "function") {
+        handlePreMatchMulliganPenalty();
       } else if (state.mySetupReady && typeof finishSetupPhaseAndStartBattle === "function") {
         finishSetupPhaseAndStartBattle();
       } else {
@@ -1027,6 +1029,24 @@ const P2P = {
         }
         showToast("相手が対戦準備を完了しました！");
         renderAll();
+      }
+    } else if (msg.t === "mulligan_penalty_done") {
+      if (typeof closeModal === "function") closeModal();
+      if (msg.drawn && msg.count > 0) {
+        addLog(`【対戦準備】相手（${msg.name || state.oppName}）がマリガンペナルティによりカードを${msg.count}枚引きました`, {
+          isRemote: true,
+          badge: "🎴 ペナルティドロー"
+        });
+        showToast(`相手がマリガンペナルティで${msg.count}枚引きました`);
+      } else {
+        addLog(`【対戦準備】相手（${msg.name || state.oppName}）はマリガンペナルティの追加ドローを行いませんでした`, {
+          isRemote: true,
+          badge: "▶️ ドロー辞退"
+        });
+      }
+      renderAll();
+      if (typeof finishSetupPhaseAndStartBattle === "function") {
+        finishSetupPhaseAndStartBattle();
       }
     } else if (msg.t === "turn_change") {
       state.turnStep = msg.turnStep || ((state.turnStep || 1) + 1);

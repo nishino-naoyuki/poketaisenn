@@ -246,30 +246,67 @@ function shuffleMyDeck() {
 }
 
 function showPrizeMenu(e, idx) {
-  if (e) e.stopPropagation();
+  if (e) {
+    if (e.stopPropagation) e.stopPropagation();
+    if (e.preventDefault) e.preventDefault();
+  }
+  if (state.mustPromoteToActive) {
+    showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+    return;
+  }
   if (idx < 0 || idx >= state.myPrizes.length) return;
   const ctx = document.getElementById("ctx");
   if (!ctx) return;
 
+  ctx.classList.add("ctx-wide");
   ctx.innerHTML = `
     <div style="font-size:12px; font-weight:bold; color:#fde047; padding:4px 8px; display:flex; align-items:center; gap:6px;">
       <span>🏆</span> サイド (${idx + 1}枚目 / 残り${state.myPrizes.length}枚)
     </div>
     <div class="divider"></div>
     <button onclick="handlePrizeAction(${idx}, 'hand')" style="color:#86efac; font-weight:bold;">🖐️ 手札に加える</button>
+    <button onclick="handlePrizeAction(${idx}, 'peek')">👁️ 表を確認する（拡大表示）</button>
     <button onclick="handlePrizeAction(${idx}, 'deck')">🔀 山に戻す（シャッフル）</button>
     <button onclick="handlePrizeAction(${idx}, 'trash')" style="color:#fca5a5;">🗑️ トラッシュする</button>
+    <button onclick="handlePrizeAction(${idx}, 'lost')" style="color:#c084fc;">🌀 ロストゾーンに送る</button>
   `;
-  const clientX = (e && e.clientX) ? e.clientX : window.innerWidth / 2;
-  const clientY = (e && e.clientY) ? e.clientY : window.innerHeight / 2;
-  ctx.style.left = `${Math.min(clientX, window.innerWidth - 200)}px`;
-  ctx.style.top = `${Math.min(clientY, window.innerHeight - 160)}px`;
+
+  ctx.style.visibility = "hidden";
   ctx.classList.remove("hidden");
+  const menuW = ctx.offsetWidth || 230;
+  const menuH = ctx.offsetHeight || 220;
+  let posX = (e && e.clientX !== undefined) ? e.clientX + 10 : window.innerWidth / 2 - 115;
+  let posY = (e && e.clientY !== undefined) ? e.clientY + 10 : window.innerHeight / 2 - 110;
+
+  if (posX + menuW > window.innerWidth - 10) {
+    posX = Math.max(10, window.innerWidth - menuW - 10);
+  }
+  if (posY + menuH > window.innerHeight - 10) {
+    posY = Math.max(10, (e ? e.clientY : posY) - menuH - 8);
+  }
+
+  ctx.style.left = `${posX}px`;
+  ctx.style.top = `${posY}px`;
+  ctx.style.visibility = "visible";
 }
 
 function handlePrizeAction(idx, destination = "hand") {
   hideCtx();
   if (idx < 0 || idx >= state.myPrizes.length) return;
+
+  if (destination === "peek") {
+    const card = state.myPrizes[idx];
+    if (!card) return;
+    addLog(`【サイド確認】サイド（${idx + 1}枚目）のカードを確認しました`, {
+      oppText: `相手がサイドのカードを確認しました`,
+      badge: "👁️ サイド確認"
+    });
+    showToast(`サイド確認: ${card.name}`);
+    if (typeof openCardZoom === "function") {
+      openCardZoom(card);
+    }
+    return;
+  }
 
   // アニメーション用にクリックされたサイド要素の座標を取得
   let srcRect = null;
@@ -346,6 +383,15 @@ function handlePrizeAction(idx, destination = "hand") {
         srcRect: srcRect
       });
     }
+  } else if (destination === "lost") {
+    state.myLost.push(card);
+    addLog(`サイドを1枚ロストゾーンに送りました: ${card.name}`, {
+      oppText: `サイドを1枚ロストゾーンに送りました: ${card.name}（残りサイド: ${state.myPrizes.length}枚）`,
+      cards: [card],
+      badge: "🌀 サイドをロストへ"
+    });
+    showToast(`サイドからロスト: ${card.name}`);
+    renderAll();
   }
 }
 

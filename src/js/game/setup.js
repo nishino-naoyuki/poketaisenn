@@ -401,17 +401,164 @@ function confirmSetupReady() {
     P2P.send({ t: "setup_ready", name: state.myName });
     P2P.syncNow();
     if (state.oppSetupReady) {
-      finishSetupPhaseAndStartBattle();
+      handlePreMatchMulliganPenalty();
     }
   } else if (state.isSoloMode) {
-    // 一人回し時は両側が完了したかチェック
-    finishSetupPhaseAndStartBattle();
+    handlePreMatchMulliganPenalty();
   } else {
-    finishSetupPhaseAndStartBattle();
+    handlePreMatchMulliganPenalty();
   }
 
   renderAll();
 }
+
+/**
+ * 対戦準備完了後・対戦開始前のマリガンペナルティ（差分ドロー）判定
+ */
+function handlePreMatchMulliganPenalty() {
+  const myMulligans = state.mulliganCount || 0;
+  const oppMulligans = state.oppMulliganCount || 0;
+  const diff = oppMulligans - myMulligans;
+
+  if (diff > 0) {
+    // 自分に追加ドローの権利がある（相手の方が多くマリガンした）
+    showMulliganPenaltyModal(diff);
+  } else if (myMulligans > oppMulligans) {
+    // 相手に追加ドローの権利がある（自分の方が多くマリガンした）
+    if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+      showMulliganWaitingNotice(myMulligans - oppMulligans);
+    } else if (state.isSoloMode) {
+      showSoloDeckBMulliganPenaltyModal(myMulligans - oppMulligans);
+    } else {
+      finishSetupPhaseAndStartBattle();
+    }
+  } else {
+    // 差分なし（0枚）: マリガン同数または0回
+    finishSetupPhaseAndStartBattle();
+  }
+}
+
+function showMulliganPenaltyModal(diff) {
+  const title = `🎴 マリガンペナルティ（追加ドロー）`;
+  const body = `
+    <div style="font-size:13.5px; line-height:1.7; color:#e2e8f0; margin-bottom:8px;">
+      相手のマリガン回数が <b>${state.oppMulliganCount}回</b>、あなたのマリガン回数が <b>${state.mulliganCount}回</b> でした。<br>
+      公式ルールに基づき、マリガンの差分として山札から <span style="font-size:16px; font-weight:bold; color:#fde047;">${diff}枚</span> カードを引くことができます。<br>
+      <div style="margin-top:12px; font-weight:bold; color:#f8fafc; font-size:14px;">カードを引きますか？</div>
+    </div>
+  `;
+  const foot = `
+    <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
+      <button class="btn" style="background:#475569; color:#f1f5f9; padding:6px 14px;" onclick="resolveMulliganPenalty(false, 0)">引かない</button>
+      <button class="btn green" style="font-weight:bold; padding:6px 16px;" onclick="resolveMulliganPenalty(true, ${diff})">はい、引きます（${diff}枚）</button>
+    </div>
+  `;
+  showModal(title, body, foot, { dismissible: false });
+}
+
+function showMulliganWaitingNotice(diff) {
+  const title = `⏳ 相手の追加ドロー待ち`;
+  const body = `
+    <div style="font-size:13.5px; line-height:1.7; color:#e2e8f0; text-align:center; padding:12px 0;">
+      あなたが相手よりマリガンが多いため、<br>
+      相手（${state.oppName}）がマリガンペナルティの追加ドロー（最大 <b>${diff}枚</b>）を選択しています。<br>
+      <span style="font-size:12px; color:#94a3b8; display:inline-block; margin-top:8px;">相手の選択が完了すると自動的に対戦が開始されます...</span>
+    </div>
+  `;
+  const foot = `
+    <div style="text-align:center; width:100%; color:#fde047; font-size:12px; font-weight:bold;">
+      相手の操作を待っています...
+    </div>
+  `;
+  showModal(title, body, foot, { dismissible: false });
+}
+
+function showSoloDeckBMulliganPenaltyModal(diff) {
+  const title = `🎴 一人回し: 相手側（デッキB）マリガンペナルティ`;
+  const body = `
+    <div style="font-size:13.5px; line-height:1.7; color:#e2e8f0;">
+      自分（デッキA）のマリガンが多いため、相手側（デッキB）がマリガン差分の <b>${diff}枚</b> 引くことができます。<br>
+      デッキBの手札に追加しますか？
+    </div>
+  `;
+  const foot = `
+    <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
+      <button class="btn" style="background:#475569; color:#f1f5f9;" onclick="resolveSoloDeckBMulliganPenalty(false, 0)">引かない</button>
+      <button class="btn green" style="font-weight:bold;" onclick="resolveSoloDeckBMulliganPenalty(true, ${diff})">デッキBに${diff}枚引く</button>
+    </div>
+  `;
+  showModal(title, body, foot, { dismissible: false });
+}
+
+function resolveSoloDeckBMulliganPenalty(shouldDraw, count) {
+  closeModal();
+  if (shouldDraw && count > 0) {
+    for (let i = 0; i < count; i++) {
+      if (state.oppDeck.length > 0) {
+        state.oppHand.push(state.oppDeck.shift());
+      }
+    }
+    state.oppDeckCount = state.oppDeck.length;
+    state.oppHandCount = state.oppHand.length;
+    addLog(`【対戦準備】マリガンペナルティにより、相手側（デッキB）がカードを${count}枚引きました`, {
+      suppressSync: true,
+      badge: "🎴 ペナルティドロー"
+    });
+    showToast(`デッキBがペナルティで${count}枚引きました`);
+  } else {
+    addLog(`【対戦準備】相手側（デッキB）はマリガンペナルティの追加ドローを行いませんでした`, {
+      suppressSync: true,
+      badge: "▶️ ドロー辞退"
+    });
+  }
+  renderAll();
+  setTimeout(() => {
+    finishSetupPhaseAndStartBattle();
+  }, 350);
+}
+
+function resolveMulliganPenalty(shouldDraw, count) {
+  closeModal();
+  if (shouldDraw && count > 0) {
+    const drawnCards = [];
+    for (let i = 0; i < count; i++) {
+      if (state.myDeck.length > 0) {
+        drawnCards.push(state.myDeck.shift());
+      }
+    }
+    drawnCards.forEach(c => state.myHand.push(c));
+    addLog(`【対戦準備】相手のマリガンペナルティにより、山札からカードを${drawnCards.length}枚引きました`, {
+      oppText: `相手がマリガンペナルティによりカードを${drawnCards.length}枚引きました`,
+      badge: "🎴 ペナルティドロー"
+    });
+    showToast(`マリガンペナルティ: ${drawnCards.length}枚引きました`);
+    renderAll();
+  } else {
+    addLog(`【対戦準備】相手のマリガンペナルティによる追加ドローを行わずに開始します`, {
+      oppText: `相手はマリガンペナルティの追加ドローを行いませんでした`,
+      badge: "▶️ ドロー辞退"
+    });
+  }
+
+  if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+    P2P.send({
+      t: "mulligan_penalty_done",
+      drawn: shouldDraw,
+      count: shouldDraw ? count : 0,
+      name: state.myName
+    });
+    P2P.syncNow();
+  }
+
+  setTimeout(() => {
+    finishSetupPhaseAndStartBattle();
+  }, 400);
+}
+
+window.handlePreMatchMulliganPenalty = handlePreMatchMulliganPenalty;
+window.showMulliganPenaltyModal = showMulliganPenaltyModal;
+window.resolveMulliganPenalty = resolveMulliganPenalty;
+window.resolveSoloDeckBMulliganPenalty = resolveSoloDeckBMulliganPenalty;
 
 /** 双方準備完了後のオープン・バトル開始 */
 function finishSetupPhaseAndStartBattle() {

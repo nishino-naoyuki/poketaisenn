@@ -713,7 +713,10 @@ html, body {
   font-size: calc(var(--fs) * 0.85);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
   position: relative;
-  transition: transform 0.15s;
+  transition: transform 0.15s ease-out;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+  transform: translateZ(0);
 }
 
 .card.pokemon {
@@ -755,29 +758,32 @@ html, body {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
 }
 
-.card.has-img .card-top,
-.card.has-img .card-btm {
-  background: rgba(15, 23, 42, 0.78);
-  backdrop-filter: blur(2px);
-  padding: 1px 4px;
-  border-radius: 3px;
+.card.has-img .card-top .name {
+  display: none !important;
 }
 
-.card.has-img .card-top .name {
-  color: #ffffff;
-  font-weight: 800;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+.card.has-img .card-btm {
+  display: none !important;
+}
+
+.card.has-img .card-top {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  justify-content: flex-end !important;
+  pointer-events: none;
 }
 
 .card.has-img .card-top .hp {
+  background: rgba(15, 23, 42, 0.85);
   color: #fca5a5;
   font-weight: 800;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-}
-
-.card.has-img .card-btm {
-  color: #e2e8f0;
-  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 
 .card .card-top {
@@ -1546,8 +1552,10 @@ html, body {
 .hand-cards .card {
   height: var(--hand-h);
   margin-left: calc(var(--hand-h) * -0.12);
-  transition: transform 0.15s;
+  transition: transform 0.15s ease-out;
   cursor: pointer;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .hand-cards .card:first-child {
@@ -1557,6 +1565,17 @@ html, body {
 .hand-cards .card:hover {
   transform: translateY(calc(var(--u) * -1.5));
   z-index: 5;
+}
+
+/* ホバー時の下方向透明ヒット領域（カードが上に移動してもカーソルが外れず、プルプル震える振動ループを完全防止） */
+.hand-cards .card:hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: calc(var(--u) * 2.5);
+  pointer-events: auto;
 }
 
 .hand-cards .card.selected {
@@ -1863,21 +1882,56 @@ body.menu-open .sp-sheet {
     padding: 0 1.2vw;
     gap: 1vw;
   }
-  /* ベンチはPTCGLスマホ版同様 3枚＋2枚 の2段配置 */
-  .bench-tray {
-    flex-wrap: wrap;
-    justify-content: center;
-    align-content: center;
-    width: calc(var(--bench-h) * var(--card-r) * 3 + min(2.6vh, 5.2vw));
+  .bench-col {
     max-width: 100%;
-    gap: min(0.55vh, 1.1vw);
-    padding: min(0.55vh, 1.1vw);
+    overflow: hidden;
+    gap: 2px;
+  }
+  .bench-ctrl-bar {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2px;
+  }
+  .btn-bench-toggle {
+    font-size: 8px;
+    padding: 1px 7px;
+    line-height: 1.2;
+    border-radius: 8px;
+  }
+  /* ベンチ：PTCGLスマホ版準拠の横1列スマート配置（1段横並び・折り返しなし） */
+  .bench-tray {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: min(0.4vh, 0.8vw);
+    padding: min(0.3vh, 0.6vw);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.35);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .bench-tray::-webkit-scrollbar {
+    display: none;
   }
   .band.opp .bench-tray {
-    flex-wrap: wrap-reverse;
+    flex-wrap: nowrap;
+  }
+  .bench-tray .card,
+  .bench-tray .slot {
+    height: var(--bench-h);
+    flex-shrink: 0;
   }
   .bench-tray .slot {
     font-size: 7.5px;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.03);
   }
   .prizes {
     grid-template-columns: repeat(2, auto);
@@ -2540,6 +2594,16 @@ body.menu-open .sp-sheet {
 
 .temp .card:hover {
   transform: translateY(-3px) scale(1.02);
+}
+
+.temp .card:hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 8px;
+  pointer-events: auto;
 }
 
 .temp .card.selected {
@@ -4225,11 +4289,19 @@ body.menu-open .sp-sheet {
 
 @media (max-width: 768px) {
   .bench-tray.limit-8 {
-    width: calc(var(--bench-h) * 0.88 * var(--card-r) * 4 + min(3vh, 6vw));
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: min(0.4vh, 0.8vw);
-    padding: min(0.4vh, 0.8vw);
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: min(0.3vh, 0.6vw);
+    padding: 2px 3px;
+    width: auto;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .bench-tray.limit-8 .card,
+  .bench-tray.limit-8 .slot {
+    height: calc(var(--bench-h) * 0.88);
+    flex-shrink: 0;
   }
 }
 

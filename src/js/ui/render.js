@@ -358,14 +358,26 @@ function renderMyField() {
     handleDropToLost(e);
   };
 
-  // 自分サイド（クリックで操作メニューを表示）
+  // 自分サイド（PC左クリックで手札に加える、右クリックでコンテキストメニュー、スマホ時はタップでメニュー）
   const myPrizesEl = document.getElementById("my-prizes");
   myPrizesEl.innerHTML = "";
   state.myPrizes.forEach((p, idx) => {
     const el = document.createElement("div");
     el.className = "back clickable";
-    el.title = "クリックでサイド操作メニュー（手札に加える／山に戻す／トラッシュ）";
-    el.onclick = (e) => showPrizeMenu(e, idx);
+    el.title = `サイド ${idx + 1}枚目 (左クリック: 手札に加える / 右クリック: メニュー)`;
+    el.onclick = (e) => {
+      e.stopPropagation();
+      if (typeof isMobileMode === "function" && isMobileMode()) {
+        showPrizeMenu(e, idx);
+      } else {
+        handlePrizeAction(idx, "hand");
+      }
+    };
+    el.oncontextmenu = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showPrizeMenu(e, idx);
+    };
     myPrizesEl.appendChild(el);
   });
 
