@@ -1043,8 +1043,16 @@ const P2P = {
 
       if (typeof playTurnChangeBanner === "function") {
         playTurnChangeBanner(newTurnInfo, () => {
-          if (newTurnInfo.isMyTurn && typeof executeTurnStartDraw === "function") {
-            executeTurnStartDraw();
+          if (newTurnInfo.isMyTurn) {
+            if (typeof checkTurnStartActiveCondition === "function") {
+              checkTurnStartActiveCondition(() => {
+                if (typeof executeTurnStartDraw === "function") {
+                  executeTurnStartDraw();
+                }
+              });
+            } else if (typeof executeTurnStartDraw === "function") {
+              executeTurnStartDraw();
+            }
           }
         });
       }

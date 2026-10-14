@@ -42,6 +42,9 @@ let state = {
   // 選択中のフィールドポケモン { location, index }
   selectedFieldPokemon: null,
 
+  // バトル場不在によるベンチ出撃待ちフェーズ
+  mustPromoteToActive: false,
+
   // 操作履歴スタック（1手順巻き戻し用）
   historyStack: [],
 
@@ -128,6 +131,7 @@ function resetOpponentCards() {
   state.historyStack = [];
   if (state.selectedTempIndices) state.selectedTempIndices.clear();
   state.selectedFieldPokemon = null;
+  state.mustPromoteToActive = false;
 }
 
 window.resetOpponentCards = resetOpponentCards;

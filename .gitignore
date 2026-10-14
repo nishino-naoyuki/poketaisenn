@@ -11,4 +11,5 @@ Thumbs.db
 
 # Local logs
 *.log
+*.zip
 scratch/

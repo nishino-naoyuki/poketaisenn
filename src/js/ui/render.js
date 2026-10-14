@@ -65,7 +65,11 @@ function renderAll() {
       btnEndTurn.style.display = "none";
     } else {
       btnEndTurn.style.display = "";
-      if (turnInfo.isMyTurn || state.isSoloMode) {
+      if (state.mustPromoteToActive) {
+        btnEndTurn.disabled = true;
+        btnEndTurn.textContent = "出撃待ち";
+        btnEndTurn.classList.add("disabled-turn");
+      } else if (turnInfo.isMyTurn || state.isSoloMode) {
         btnEndTurn.disabled = false;
         btnEndTurn.textContent = "ターン終了";
         btnEndTurn.classList.remove("disabled-turn");
@@ -425,6 +429,10 @@ function renderMyField() {
   } else {
     myActiveEl.innerHTML = `<div class="slot ${state.actionTargetMode === 'active' ? 'targetable' : ''}">バトル場に出す<br><small style="font-size:9px; opacity:0.8;">(ドラッグまたはタップ)</small></div>`;
     myActiveEl.onclick = () => {
+      if (state.mustPromoteToActive) {
+        showToast("⚠️ ダイアログから出撃させるベンチポケモンを選択してください");
+        return;
+      }
       const selectedCards = (typeof getSelectedHandCards === "function") ? getSelectedHandCards() : [];
       if (selectedCards.length > 0) {
         placeSelectedHandToActive();
@@ -439,6 +447,10 @@ function renderMyField() {
     myActiveEl.ondrop = (e) => {
       e.preventDefault();
       myActiveEl.classList.remove("drag-over");
+      if (state.mustPromoteToActive) {
+        showToast("⚠️ ダイアログから出撃させるベンチポケモンを選択してください");
+        return;
+      }
       const handIdx = getDroppedHandIndex(e);
       if (handIdx !== null) placeHandCardToActive(handIdx);
     };
@@ -1408,6 +1420,11 @@ function updateSheetUI() {
 function showHandContextMenu(e, handIdx) {
   if (e && e.preventDefault) e.preventDefault();
   if (e && e.stopPropagation) e.stopPropagation();
+
+  if (state.mustPromoteToActive) {
+    showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+    return;
+  }
 
   const card = state.myHand[handIdx];
   if (!card) return;

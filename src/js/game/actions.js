@@ -101,6 +101,10 @@ window.undoAction = undoAction;
 window.resetAllAbilitiesUsed = resetAllAbilitiesUsed;
 
 function drawCardToTemp() {
+  if (state.mustPromoteToActive) {
+    showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+    return;
+  }
   if (state.myDeck.length === 0) {
     return alert("山札がありません！");
   }
@@ -1102,6 +1106,10 @@ function usePokemonAbility(location, index) {
 // 場のポケモンコンテキストメニュー（右クリックで呼び出し、サブメニュー方式＆特性宣言対応）
 function showPokemonMenu(e, location, index, menuView = "main") {
   if (e && e.stopPropagation) e.stopPropagation();
+  if (state.mustPromoteToActive) {
+    showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+    return;
+  }
   const ctx = document.getElementById("ctx");
   const target = location === "active" ? state.myActive : state.myBench[index];
   if (!target) return;
@@ -1628,12 +1636,169 @@ function dismissTurnBannerEarly() {
 }
 window.dismissTurnBannerEarly = dismissTurnBannerEarly;
 
+let _pendingPromoteCallback = null;
+
+/**
+ * ターン開始時のバトル場ポケモン存在チェック
+ * １）ベンチにポケモンがいる場合は出撃モーダルを展開（出撃まで他操作を完全ロック）
+ * ２）ベンチにもポケモンがいない場合は「負け」
+ */
+function checkTurnStartActiveCondition(onReady) {
+  if (state.isSetupPhase) {
+    if (typeof onReady === "function") onReady();
+    return;
+  }
+
+  // バトル場にポケモンがいる場合はそのまま続行
+  if (state.myActive) {
+    state.mustPromoteToActive = false;
+    if (typeof onReady === "function") onReady();
+    return;
+  }
+
+  // バトル場が空の場合、ベンチポケモンを走査
+  const benchIndices = [];
+  state.myBench.forEach((b, idx) => {
+    if (b && b.card) benchIndices.push(idx);
+  });
+
+  // ２）ベンチにポケモンがおらず、バトル場に出せない場合は「負け」
+  if (benchIndices.length === 0) {
+    state.mustPromoteToActive = false;
+    handleNoPokemonDefeat();
+    return;
+  }
+
+  // １）ベンチにポケモンがいる場合は出撃選出フェーズへ移行（出撃完了まで操作ロック）
+  state.mustPromoteToActive = true;
+  showPromoteActiveModal(benchIndices, onReady);
+}
+
+/** 場にポケモンがいなくなったプレイヤーの敗北処理（ポケカ公式ルール準拠） */
+function handleNoPokemonDefeat() {
+  const reason = "場にポケモンがいなくなったため、敗北となりました";
+  addLog(`【対戦決着】場にポケモンがいなくなったため、【${state.myName}】の敗北となります。`, {
+    oppText: `【対戦決着】相手の場にポケモンがいなくなったため、あなたの勝利となります！`,
+    badge: "💀 敗北確定"
+  });
+
+  if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+    P2P.send({
+      t: "victory",
+      winnerName: state.oppName,
+      reason: "相手の場にポケモンがいなくなりました！"
+    });
+    P2P.syncNow();
+  }
+
+  // 自分側画面で敗北/終了画面を表示
+  if (typeof playGrandVictoryEffect === "function") {
+    playGrandVictoryEffect(state.oppName, reason, false);
+  } else {
+    alert("【敗北】場にポケモンがいなくなったため、あなたの負けとなります。");
+  }
+}
+
+/** バトル場不在時の出撃選出モーダル（操作ロック・背景クリックで閉じない） */
+function showPromoteActiveModal(benchIndices, onComplete) {
+  _pendingPromoteCallback = onComplete;
+
+  addLog(`【出撃待ち】バトル場が空のため、ベンチからバトル場に出すポケモンを選択してください`, {
+    oppText: `相手がバトル場に出すベンチポケモンを選択しています...`,
+    badge: "⚠️ 出撃選択"
+  });
+
+  const title = `⚠️ バトル場にポケモンがいません！`;
+  let bodyHtml = `
+    <div style="font-size:13px; color:#fca5a5; font-weight:bold; margin-bottom:8px; line-height:1.6;">
+      バトル場が空になっています。出撃させるベンチポケモンを選択してください。<br>
+      <span style="color:#94a3b8; font-size:11px; font-weight:normal;">※ポケモンを出撃させるまで、他の操作はできません。出撃後にターン開始ドローが行われます。</span>
+    </div>
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px; margin-top:8px;">
+  `;
+
+  benchIndices.forEach(bIdx => {
+    const b = state.myBench[bIdx];
+    if (!b || !b.card) return;
+    registerCard(b.card);
+    const hasImg = !!b.card.imageUrl;
+    const imgStyle = hasImg ? `style="background-image: url('${b.card.imageUrl}');"` : '';
+    const energyCount = (b.energies && b.energies.length) ? b.energies.length : 0;
+    const dmg = b.damage || 0;
+
+    bodyHtml += `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:6px; background:rgba(30,41,59,0.7); padding:8px; border-radius:8px; border:1.5px solid #3b82f6;">
+        <span style="font-size:11px; font-weight:bold; color:#ffd84a;">🪑 ベンチ ${bIdx + 1}</span>
+        <div class="card ${b.card.color} ${hasImg ? 'has-img' : ''}" ${imgStyle} style="width:100px; height:140px; cursor:default;">
+          <div class="card-top">
+            <span class="name">${escapeHtml(b.card.name)}</span>
+            ${b.card.hp ? `<span class="hp">HP${b.card.hp}</span>` : ''}
+          </div>
+          <div class="card-btm">
+            <span>${escapeHtml(b.card.sub || b.card.category || '')}</span>
+          </div>
+          ${dmg > 0 ? `<div class="dmg">${dmg}</div>` : ''}
+        </div>
+        <div style="font-size:10px; color:#cbd5e1; display:flex; gap:6px;">
+          <span>⚡エネ:${energyCount}</span>
+          ${b.tool ? `<span>🎒どうぐ</span>` : ''}
+        </div>
+        <button class="btn green" style="width:100%; font-weight:bold; font-size:12px; padding:6px 4px;" onclick="window.promoteBenchToActive(${bIdx})">
+          ⚔️ バトル場に出す
+        </button>
+      </div>
+    `;
+  });
+
+  bodyHtml += `</div>`;
+
+  const footHtml = `
+    <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+      <span style="font-size:11.5px; color:#fde047; font-weight:bold;">⚠️ いずれかのポケモンを選んで「バトル場に出す」を押してください</span>
+    </div>
+  `;
+
+  showModal(title, bodyHtml, footHtml, { dismissible: false });
+}
+
+function promoteBenchToActive(benchIndex) {
+  state.mustPromoteToActive = false;
+  closeModal();
+
+  swapActiveBench(benchIndex);
+  if (typeof P2P !== "undefined" && P2P.connected) {
+    P2P.syncNow();
+  }
+
+  const cb = _pendingPromoteCallback;
+  _pendingPromoteCallback = null;
+
+  if (typeof cb === "function") {
+    setTimeout(() => {
+      cb();
+    }, 380);
+  }
+}
+
+window.checkTurnStartActiveCondition = checkTurnStartActiveCondition;
+window.handleNoPokemonDefeat = handleNoPokemonDefeat;
+window.showPromoteActiveModal = showPromoteActiveModal;
+window.promoteBenchToActive = promoteBenchToActive;
+
 /**
  * ４）自分のターンの最初の強制トップドロー処理
  * ３）のバナーエフェクトの後に実行され、山札からドローアニメーション ＆ 画面中央大型カード表示を行う
  */
 function executeTurnStartDraw() {
   if (state.isSetupPhase) return;
+
+  // バトル場が空の場合は強制的に選出または敗北処理へ転送
+  if (!state.myActive) {
+    checkTurnStartActiveCondition(() => {
+      executeTurnStartDraw();
+    });
+    return;
+  }
 
   if (!state.myDeck || state.myDeck.length === 0) {
     showToast("⚠️ 山札が0枚です！（引けるカードがありません）");
@@ -1738,6 +1903,11 @@ function endTurn() {
     return;
   }
 
+  if (state.mustPromoteToActive) {
+    showToast("バトル場に出すベンチポケモンを選択してください");
+    return;
+  }
+
   const currentInfo = getTurnInfo(state.turnStep || 1);
   if (!currentInfo.isMyTurn && !state.isSoloMode) {
     showToast("相手のターン中です");
@@ -1760,9 +1930,11 @@ function endTurn() {
   if (state.isSoloMode) {
     swapSoloTurn();
     renderAll();
-    // 一人回し時は上下交代後にバナー演出 ＆ 新手番プレイヤーの強制トップドロー
+    // 一人回し時は上下交代後にバナー演出 ＆ 新手番プレイヤーのバトル場判定 ＆ 強制トップドロー
     playTurnChangeBanner(newTurnInfo, () => {
-      executeTurnStartDraw();
+      checkTurnStartActiveCondition(() => {
+        executeTurnStartDraw();
+      });
     });
   } else {
     if (typeof P2P !== "undefined" && P2P.connected) {
@@ -2807,6 +2979,10 @@ function getOpponentPokemonDisplayName(location, index) {
 
 function showOpponentPokemonMenu(e, location, index, menuView = "main") {
   if (e && e.stopPropagation) e.stopPropagation();
+  if (state.mustPromoteToActive) {
+    showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+    return;
+  }
   const ctx = document.getElementById("ctx");
   const target = location === "opp-active" ? state.oppActive : state.oppBench[index];
   if (!target || !target.card) return;

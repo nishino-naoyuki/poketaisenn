@@ -47,6 +47,25 @@ function initLobbyDefaults() {
 }
 
 function setupEventListeners() {
+  // バトル場不在による出撃選択中の操作ロック（モーダル外の全クリック・右クリックを抑止）
+  document.addEventListener("click", (e) => {
+    if (state.mustPromoteToActive) {
+      if (e.target.closest("#modal") || e.target.closest("[data-action='exit']")) return;
+      e.stopPropagation();
+      e.preventDefault();
+      showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+    }
+  }, true);
+
+  document.addEventListener("contextmenu", (e) => {
+    if (state.mustPromoteToActive) {
+      if (e.target.closest("#modal")) return;
+      e.stopPropagation();
+      e.preventDefault();
+      showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+    }
+  }, true);
+
   // data-action 属性によるイベント委任
   document.body.addEventListener("click", (e) => {
     const target = e.target.closest("[data-action]");
@@ -54,6 +73,11 @@ function setupEventListeners() {
     const action = target.dataset.action;
     const arg = target.dataset.arg;
     const shouldClose = target.dataset.close;
+
+    if (state.mustPromoteToActive && action !== "exit") {
+      showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+      return;
+    }
 
     if (shouldClose) {
       closeMenu();
@@ -282,13 +306,23 @@ const actions = {
 
   // スマホメニュー開閉
   openMenu: () => {
+    if (state.mustPromoteToActive) {
+      showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+      return;
+    }
     document.body.classList.add("menu-open");
     updateSheetUI();
   },
   closeMenu: () => closeMenu(),
 
   // 山札アクション
-  draw: () => drawCardToTemp(),
+  draw: () => {
+    if (state.mustPromoteToActive) {
+      showToast("⚠️ バトル場に出すベンチポケモンを選択してください");
+      return;
+    }
+    drawCardToTemp();
+  },
   viewDeck: () => showDeckModal(),
   trashTop: () => trashDeckTop(),
   shuffle: () => shuffleMyDeck(),
