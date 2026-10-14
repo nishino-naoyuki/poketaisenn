@@ -108,7 +108,8 @@ function placeHandCardToActive(handIdx) {
 
 function placeHandCardToBenchIndex(handIdx, benchIdx) {
   if (handIdx < 0 || handIdx >= state.myHand.length) return;
-  if (benchIdx < 0 || benchIdx >= 5) return;
+  const limit = state.myBenchLimit || 5;
+  if (benchIdx < 0 || benchIdx >= limit) return;
   if (state.isSetupPhase && state.myMulliganStep) {
     alert("現在「たねポケモンなし（マリガン）」の待機中です。引き直しが完了するまで場に出すことはできません。");
     return;
@@ -146,9 +147,16 @@ function placeHandCardToBenchIndex(handIdx, benchIdx) {
 }
 
 function placeHandCardToFirstEmptyBench(handIdx) {
-  const emptyIdx = state.myBench.findIndex(b => b === null);
+  const limit = state.myBenchLimit || 5;
+  let emptyIdx = -1;
+  for (let i = 0; i < limit; i++) {
+    if (!state.myBench[i]) {
+      emptyIdx = i;
+      break;
+    }
+  }
   if (emptyIdx === -1) {
-    return alert("ベンチに空きがありません（最大5匹）");
+    return alert(`ベンチに空きがありません（最大${limit}匹）`);
   }
   placeHandCardToBenchIndex(handIdx, emptyIdx);
 }

@@ -504,13 +504,14 @@ function placeSelectedHandToBench() {
   }
 
   // 空きベンチ枠を探す
+  const limit = state.myBenchLimit || 5;
   const emptySlots = [];
-  state.myBench.forEach((b, i) => {
-    if (b === null) emptySlots.push(i);
-  });
+  for (let i = 0; i < limit; i++) {
+    if (!state.myBench[i]) emptySlots.push(i);
+  }
 
   if (emptySlots.length === 0) {
-    return alert("ベンチに空きがありません（最大5匹）");
+    return alert(`ベンチに空きがありません（最大${limit}匹）`);
   }
 
   // 選択順（元の手札順、昇順）で配置（対戦準備フェーズ時のみポケモンカードに限定）

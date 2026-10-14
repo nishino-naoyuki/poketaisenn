@@ -1833,7 +1833,7 @@ body.menu-open .sp-sheet {
    ===================================================== */
 @media (orientation: portrait), (max-width: 768px) {
   :root {
-    --bench-h: min(8.6vh, 18.2vw);
+    --bench-h: min(7.6vh, 15vw);
     --active-h: min(11.2vh, 23.5vw);
     --pile-h: min(7.2vh, 14.5vw);
     --prize-h: min(4.8vh, 9.6vw);
@@ -1899,18 +1899,17 @@ body.menu-open .sp-sheet {
     line-height: 1.2;
     border-radius: 8px;
   }
-  /* ベンチ：PTCGLスマホ版準拠の横1列スマート配置（1段横並び・折り返しなし） */
+  /* ベンチ：PTCGLスマホ版準拠の2段配置（5枠: 前3・後2 / 8枠: 前4・後4） */
   .bench-tray {
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
     justify-content: center;
     align-items: center;
     width: auto;
     max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    gap: min(0.4vh, 0.8vw);
-    padding: min(0.3vh, 0.6vw);
+    overflow: visible;
+    gap: min(0.35vh, 0.7vw);
+    padding: min(0.25vh, 0.5vw);
     border-radius: 6px;
     background: rgba(0, 0, 0, 0.35);
     scrollbar-width: none;
@@ -1919,20 +1918,81 @@ body.menu-open .sp-sheet {
   .bench-tray::-webkit-scrollbar {
     display: none;
   }
-  .band.opp .bench-tray {
-    flex-wrap: nowrap;
-  }
   .bench-tray .card,
   .bench-tray .slot {
     height: var(--bench-h);
+    aspect-ratio: 63 / 88;
+    width: auto;
+    max-width: 100%;
+    justify-self: center;
+    align-self: center;
     flex-shrink: 0;
   }
   .bench-tray .slot {
-    font-size: 7.5px;
+    font-size: 7px;
+    line-height: 1.1;
     border: 1px dashed rgba(255, 255, 255, 0.2);
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.03);
+    text-align: center;
+    padding: 1px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
+  .bench-tray .slot small {
+    display: none; /* スマホ画面のベンチ枠内テキスト溢れを防止 */
+  }
+
+  /* 自分ベンチ (5枠: 前3・後2) */
+  /* 前＝バトル場に近い側(上段: row 1)、後ろ＝手札側(下段: row 2) */
+  .band.me .bench-tray > :nth-child(1) { grid-row: 1; grid-column: 1 / span 2; }
+  .band.me .bench-tray > :nth-child(2) { grid-row: 1; grid-column: 3 / span 2; }
+  .band.me .bench-tray > :nth-child(3) { grid-row: 1; grid-column: 5 / span 2; }
+  .band.me .bench-tray > :nth-child(4) { grid-row: 2; grid-column: 2 / span 2; }
+  .band.me .bench-tray > :nth-child(5) { grid-row: 2; grid-column: 4 / span 2; }
+
+  /* 相手ベンチ (5枠: 前3・後2) */
+  /* 前＝バトル場に近い側(下段: row 2)、後ろ＝相手手札側(上段: row 1) */
+  .band.opp .bench-tray > :nth-child(1) { grid-row: 2; grid-column: 1 / span 2; }
+  .band.opp .bench-tray > :nth-child(2) { grid-row: 2; grid-column: 3 / span 2; }
+  .band.opp .bench-tray > :nth-child(3) { grid-row: 2; grid-column: 5 / span 2; }
+  .band.opp .bench-tray > :nth-child(4) { grid-row: 1; grid-column: 2 / span 2; }
+  .band.opp .bench-tray > :nth-child(5) { grid-row: 1; grid-column: 4 / span 2; }
+
+  /* 8枠モードの2段配置 (前4・後4) */
+  .bench-tray.limit-8 {
+    grid-template-columns: repeat(4, 1fr);
+    gap: min(0.25vh, 0.5vw);
+    padding: min(0.25vh, 0.5vw);
+    width: auto;
+    max-width: 100%;
+    overflow: visible;
+  }
+  .bench-tray.limit-8 .card,
+  .bench-tray.limit-8 .slot {
+    height: calc(var(--bench-h) * 0.92);
+  }
+  /* 自分ベンチ (8枠: 前4・後4) - 前＝バトル場側(row 1)、後ろ＝手札側(row 2) */
+  .band.me .bench-tray.limit-8 > :nth-child(1) { grid-row: 1; grid-column: 1; }
+  .band.me .bench-tray.limit-8 > :nth-child(2) { grid-row: 1; grid-column: 2; }
+  .band.me .bench-tray.limit-8 > :nth-child(3) { grid-row: 1; grid-column: 3; }
+  .band.me .bench-tray.limit-8 > :nth-child(4) { grid-row: 1; grid-column: 4; }
+  .band.me .bench-tray.limit-8 > :nth-child(5) { grid-row: 2; grid-column: 1; }
+  .band.me .bench-tray.limit-8 > :nth-child(6) { grid-row: 2; grid-column: 2; }
+  .band.me .bench-tray.limit-8 > :nth-child(7) { grid-row: 2; grid-column: 3; }
+  .band.me .bench-tray.limit-8 > :nth-child(8) { grid-row: 2; grid-column: 4; }
+
+  /* 相手ベンチ (8枠: 前4・後4) - 前＝バトル場側(row 2)、後ろ＝相手手札側(row 1) */
+  .band.opp .bench-tray.limit-8 > :nth-child(1) { grid-row: 2; grid-column: 1; }
+  .band.opp .bench-tray.limit-8 > :nth-child(2) { grid-row: 2; grid-column: 2; }
+  .band.opp .bench-tray.limit-8 > :nth-child(3) { grid-row: 2; grid-column: 3; }
+  .band.opp .bench-tray.limit-8 > :nth-child(4) { grid-row: 2; grid-column: 4; }
+  .band.opp .bench-tray.limit-8 > :nth-child(5) { grid-row: 1; grid-column: 1; }
+  .band.opp .bench-tray.limit-8 > :nth-child(6) { grid-row: 1; grid-column: 2; }
+  .band.opp .bench-tray.limit-8 > :nth-child(7) { grid-row: 1; grid-column: 3; }
+  .band.opp .bench-tray.limit-8 > :nth-child(8) { grid-row: 1; grid-column: 4; }
   .prizes {
     grid-template-columns: repeat(2, auto);
     gap: min(0.45vh, 0.9vw);
@@ -4287,23 +4347,7 @@ body.menu-open .sp-sheet {
   height: calc(var(--bench-h) * 0.88);
 }
 
-@media (max-width: 768px) {
-  .bench-tray.limit-8 {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    gap: min(0.3vh, 0.6vw);
-    padding: 2px 3px;
-    width: auto;
-    max-width: 100%;
-    overflow-x: auto;
-  }
-  .bench-tray.limit-8 .card,
-  .bench-tray.limit-8 .slot {
-    height: calc(var(--bench-h) * 0.88);
-    flex-shrink: 0;
-  }
-}
+/* スマホ版8枠ベンチ（前4・後4の2段表示）は主メディアクエリ（line 1900付近）にて設定済み */
 
 /* =============================================================================
    ド派手な勝利演出 (Grand Victory Overlay)

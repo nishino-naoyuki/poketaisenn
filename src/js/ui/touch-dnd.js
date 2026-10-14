@@ -210,16 +210,25 @@ function resolveDropTarget(hitEl, dragType, dragData) {
 
     const benchContainer = hitEl.closest("#my-bench");
     if (benchContainer) {
+      const limit = state.myBenchLimit || 5;
       const benchItem = hitEl.closest("[data-bench-index]");
       if (benchItem && benchItem.dataset.benchIndex !== undefined) {
         const bIdx = parseInt(benchItem.dataset.benchIndex, 10);
-        if (state.myBench[bIdx]) {
-          return { type: "pokemon", location: `bench_${bIdx}` };
-        } else {
-          return { type: "empty-bench", benchIndex: bIdx };
+        if (bIdx >= 0 && bIdx < limit) {
+          if (state.myBench[bIdx]) {
+            return { type: "pokemon", location: `bench_${bIdx}` };
+          } else {
+            return { type: "empty-bench", benchIndex: bIdx };
+          }
         }
       }
-      const firstEmpty = state.myBench.findIndex(b => b === null);
+      let firstEmpty = -1;
+      for (let i = 0; i < limit; i++) {
+        if (!state.myBench[i]) {
+          firstEmpty = i;
+          break;
+        }
+      }
       if (firstEmpty !== -1) return { type: "empty-bench", benchIndex: firstEmpty };
     }
 
@@ -235,7 +244,8 @@ function resolveDropTarget(hitEl, dragType, dragData) {
     const benchItem = hitEl.closest("#my-bench [data-bench-index]");
     if (benchItem && benchItem.dataset.benchIndex !== undefined) {
       const bIdx = parseInt(benchItem.dataset.benchIndex, 10);
-      if (state.myBench[bIdx]) return { type: "pokemon-energy", location: `bench_${bIdx}` };
+      const limit = state.myBenchLimit || 5;
+      if (bIdx >= 0 && bIdx < limit && state.myBench[bIdx]) return { type: "pokemon-energy", location: `bench_${bIdx}` };
     }
 
     if (hitEl.closest("#my-trash")) return { type: "trash-energy" };

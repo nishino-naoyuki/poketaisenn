@@ -44,7 +44,7 @@ function startBattleSetup() {
 
   // ★ バトル場は空にしてユーザーが手動でたねポケモンを出す
   state.myActive = null;
-  state.myBench = [null, null, null, null, null];
+  state.myBench = [null, null, null, null, null, null, null, null];
 
   // ★ 通信対戦開始時はダミーBOTデータ（フシギバナex）を完全に破棄
   if (typeof resetOpponentCards === "function") {
@@ -125,9 +125,9 @@ function startSoloBattleSetup() {
   state.oppPrizes = state.oppPrizesList.length;
 
   state.myActive = null;
-  state.myBench = [null, null, null, null, null];
+  state.myBench = [null, null, null, null, null, null, null, null];
   state.oppActive = null;
-  state.oppBench = [null, null, null, null, null];
+  state.oppBench = [null, null, null, null, null, null, null, null];
 
   // 一人回し用: デッキBの手札からポケモンを1体選んで相手バトル場にセット
   const basicB = state.oppHand.find(c => c && c.type === "pokemon");
