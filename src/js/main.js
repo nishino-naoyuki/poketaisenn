@@ -64,9 +64,24 @@ function setupEventListeners() {
     }
   });
 
-  // モーダル背景クリックで閉じる
+  // モーダル背景クリックで閉じる（必須ダイアログ指定時は背景クリックで閉じない）
   document.getElementById("modal").addEventListener("click", (e) => {
-    if (e.target.id === "modal") closeModal();
+    if (e.target.id === "modal") {
+      if (e.target.dataset.noBackdropClose === "true") return;
+      closeModal();
+    }
+  });
+
+  // ブラウザがアクティブ（フォーカス）に復帰した際、相手のマリガン確認待ちがあれば自動で再表示
+  window.addEventListener("focus", () => {
+    if (Array.isArray(state.pendingOppMulliganQueue) && state.pendingOppMulliganQueue.length > 0) {
+      const modalEl = document.getElementById("modal");
+      if (modalEl && modalEl.classList.contains("hidden")) {
+        if (typeof showNextOpponentMulliganModal === "function") {
+          showNextOpponentMulliganModal();
+        }
+      }
+    }
   });
 
   // コンテキストメニュー外クリックで閉じる
@@ -314,6 +329,7 @@ const actions = {
   setupReady: () => confirmSetupReady(),
 
   // その他
+  undo: () => (typeof undoAction === "function" ? undoAction() : null),
   endTurn: () => endTurn(),
   coin: () => tossCoin(),
   declareVictory: () => (typeof declareVictory === "function" ? declareVictory() : null),

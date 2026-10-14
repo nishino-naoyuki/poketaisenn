@@ -1034,6 +1034,9 @@ const P2P = {
         ? getTurnInfo(state.turnStep)
         : { label: `ターン ${state.turn}`, isMyTurn: false, activePlayerName: state.oppName };
       state.turn = newTurnInfo.round;
+      if (typeof resetAllAbilitiesUsed === "function") {
+        resetAllAbilitiesUsed();
+      }
 
       addLog(`【ターン交代】次は【${newTurnInfo.activePlayerName}】の番です（${newTurnInfo.label}）`, { isRemote: true });
       renderAll();

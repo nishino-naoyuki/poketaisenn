@@ -118,6 +118,12 @@ function renderSetupBanner() {
     const btnMulligan = document.getElementById("btn-mulligan");
     const btnReady = document.getElementById("btn-setup-ready");
 
+    const btnReopenMulligan = document.getElementById("btn-reopen-mulligan");
+    if (btnReopenMulligan) {
+      const hasPendingMulligan = Array.isArray(state.pendingOppMulliganQueue) && state.pendingOppMulliganQueue.length > 0;
+      btnReopenMulligan.classList.toggle("hidden", !hasPendingMulligan);
+    }
+
     if (btnCoin) {
       const isHostOrOffline = (typeof P2P === "undefined" || !P2P.connected || P2P.role === "host");
       if (state.setupStep === "coin" && isHostOrOffline) {
@@ -513,7 +519,8 @@ function renderHand() {
 
     el.oncontextmenu = (e) => {
       e.preventDefault();
-      selectHandCardAndOpenMenu(idx);
+      e.stopPropagation();
+      showHandContextMenu(e, idx);
     };
 
     // ダブルクリック拡大表示（手札）
@@ -949,6 +956,7 @@ function renderPokemonCardHtml(pokemon, location, extraClass = "") {
       ${toolHtml}
       ${conditionFxHtml}
       ${conditionBadgesHtml}
+      ${pokemon.abilityUsed ? '<div class="ability-used-badge" title="このターン特性を使用しました">✨ 特性済</div>' : ''}
       <div class="card-top">
         <span class="name">${card.name}</span>
         ${card.hp ? `<span class="hp">HP${card.hp}</span>` : ''}
@@ -1281,5 +1289,115 @@ function updateSheetUI() {
     `;
   }
 }
+
+/**
+ * 手札カードのPC用右クリックコンテキストメニュー（見切れ対策＆種判定なしで配置可能）
+ */
+function showHandContextMenu(e, handIdx) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (e && e.stopPropagation) e.stopPropagation();
+
+  const card = state.myHand[handIdx];
+  if (!card) return;
+
+  // 選択状態の更新（該当カードを選択）
+  if (!state.selectedHandIndices.has(handIdx)) {
+    state.selectedHandIndices.clear();
+    state.selectedHandIndices.add(handIdx);
+    state.selectedHandIndex = handIdx;
+  }
+  const handEl = document.getElementById("hand");
+  if (handEl) {
+    handEl.querySelectorAll(".card").forEach((cEl, i) => {
+      cEl.classList.toggle("selected", state.selectedHandIndices.has(i));
+    });
+  }
+  updateSheetUI();
+
+  const ctx = document.getElementById("ctx");
+  if (!ctx) return;
+  ctx.classList.add("ctx-wide");
+
+  const isPokemon = card.type === "pokemon";
+  const isEnergy = card.type === "energy";
+  const isTrainer = card.type === "trainer" || card.type === "stadium";
+
+  // 付与先ボタン（エネルギーまたはポケモンのどうぐ）
+  let attachButtons = "";
+  if (state.myActive) {
+    attachButtons += `<button class="ctx-sub-target" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'active');">⚡/🎒 バトル場 (${escapeHtml(state.myActive.card.name)})</button>`;
+  }
+  state.myBench.forEach((b, bIdx) => {
+    if (b) {
+      attachButtons += `<button class="ctx-sub-target" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'bench_${bIdx}');">⚡/🎒 ベンチ${bIdx + 1} (${escapeHtml(b.card.name)})</button>`;
+    }
+  });
+
+  // 進化先ボタン（ポケモンの場合）
+  let evolveButtons = "";
+  if (isPokemon) {
+    if (state.myActive) {
+      evolveButtons += `<button class="ctx-sub-target" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'active');">✨ バトル場 (${escapeHtml(state.myActive.card.name)})</button>`;
+    }
+    state.myBench.forEach((b, bIdx) => {
+      if (b) {
+        evolveButtons += `<button class="ctx-sub-target" onclick="hideCtx(); attachHandCardToPokemon(${handIdx}, 'bench_${bIdx}');">✨ ベンチ${bIdx + 1} (${escapeHtml(b.card.name)})</button>`;
+      }
+    });
+  }
+
+  ctx.innerHTML = `
+    <div class="ctx-header-row">
+      <span class="ctx-title-text">${escapeHtml(card.name)} <small>(${escapeHtml(card.category || card.sub || '')})</small></span>
+      <button class="ctx-zoom-btn" onclick="hideCtx(); openCardZoomByUid('${card.uid}')">🔍 拡大</button>
+    </div>
+    <div class="divider"></div>
+    <div class="ctx-grid-2col">
+      <button class="ctx-span-2" style="background:#16a34a; color:#fff; font-weight:bold; font-size:13px; padding:7px 10px;" onclick="hideCtx(); playHandCardByIndex(${handIdx});">📢 使用する</button>
+      <button onclick="hideCtx(); placeHandCardToActive(${handIdx});">⚔️ バトル場に出す</button>
+      <button onclick="hideCtx(); placeHandCardToFirstEmptyBench(${handIdx});">🪑 ベンチに出す</button>
+      ${isTrainer ? `<button class="ctx-span-2" onclick="hideCtx(); placeHandCardToStadium(${handIdx});">🏟️ スタジアムとして場に出す</button>` : ''}
+    </div>
+    ${evolveButtons ? `
+      <div class="divider"></div>
+      <div style="font-size:11px; color:#cbd5e1; margin-bottom:4px; font-weight:bold;">✨ 重ねて進化させる対象:</div>
+      <div class="ctx-grid-2col">${evolveButtons}</div>
+    ` : ''}
+    ${(isEnergy || isTrainer) && attachButtons ? `
+      <div class="divider"></div>
+      <div style="font-size:11px; color:#cbd5e1; margin-bottom:4px; font-weight:bold;">⚡/🎒 ポケモンにつける対象:</div>
+      <div class="ctx-grid-2col">${attachButtons}</div>
+    ` : ''}
+    <div class="divider"></div>
+    <div class="ctx-grid-2col">
+      <button onclick="hideCtx(); trashHandCardByIndex(${handIdx});">🗑️ トラッシュ</button>
+      <button onclick="hideCtx(); lostHandCardByIndex(${handIdx});">🌌 ロストゾーン</button>
+      <button onclick="hideCtx(); moveHandCardToDeckTop(${handIdx});">🔄 山札の上</button>
+      <button onclick="hideCtx(); moveHandCardToDeckBottom(${handIdx});">⬇️ 山札の下</button>
+    </div>
+  `;
+
+  // 位置調整（画面端見切れ対策・下端オーバー時は上方向に反転展開）
+  ctx.style.visibility = "hidden";
+  ctx.classList.remove("hidden");
+  const menuW = ctx.offsetWidth || 280;
+  const menuH = ctx.offsetHeight || 280;
+  let posX = (e && e.clientX !== undefined) ? e.clientX + 10 : window.innerWidth / 2 - 140;
+  let posY = (e && e.clientY !== undefined) ? e.clientY + 10 : window.innerHeight - 300;
+
+  if (posX + menuW > window.innerWidth - 10) {
+    posX = Math.max(10, window.innerWidth - menuW - 10);
+  }
+  if (posY + menuH > window.innerHeight - 10) {
+    posY = Math.max(10, (e ? e.clientY : posY) - menuH - 8);
+  }
+
+  ctx.style.left = `${posX}px`;
+  ctx.style.top = `${posY}px`;
+  ctx.style.visibility = "visible";
+}
+
+window.showHandContextMenu = showHandContextMenu;
+
 
 

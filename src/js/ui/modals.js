@@ -247,15 +247,23 @@ function showLogModal() {
   showModal("対戦ログ / 試合出力・再現", bodyHtml, `<button class="btn" onclick="closeModal()">閉じる</button>`);
 }
 
-function showModal(title, body, foot) {
+function showModal(title, body, foot, options = {}) {
+  const modalEl = document.getElementById("modal");
   document.getElementById("modal-title").innerHTML = title;
   document.getElementById("modal-body").innerHTML = body;
   document.getElementById("modal-foot").innerHTML = foot;
-  document.getElementById("modal").classList.remove("hidden");
+  if (options && options.dismissible === false) {
+    modalEl.dataset.noBackdropClose = "true";
+  } else {
+    delete modalEl.dataset.noBackdropClose;
+  }
+  modalEl.classList.remove("hidden");
 }
 
 function closeModal() {
-  document.getElementById("modal").classList.add("hidden");
+  const modalEl = document.getElementById("modal");
+  delete modalEl.dataset.noBackdropClose;
+  modalEl.classList.add("hidden");
 }
 
 function showToast(msg) {

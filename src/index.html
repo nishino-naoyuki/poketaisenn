@@ -295,6 +295,7 @@
       <div class="top-menu">
         <span class="room">ROOM <b id="g-room"></b></span>
         <span id="g-conn-badge" class="conn-badge offline">⚪ オフライン</span>
+        <button class="btn" id="btn-undo" data-action="undo" title="直前の操作を1手順巻き戻します">↩️ 1手順巻き戻す</button>
         <button class="btn red" data-action="exit">退室</button>
       </div>
       <div id="opp-hand-cards" class="opp-hand-cards"></div>
@@ -395,6 +396,7 @@
           <span id="setup-order-status" class="setup-order-status">先攻・後攻を決定中...</span>
         </div>
         <div class="setup-actions">
+          <button id="btn-reopen-mulligan" class="btn red big hidden" onclick="showNextOpponentMulliganModal()" style="animation: pulse 1.5s infinite;">⚠️ 相手のマリガン確認待ち (開く)</button>
           <button id="btn-setup-coin" class="btn gold big hidden" data-action="setupCoinToss">🪙 コイントスを行う</button>
           <button id="btn-mulligan" class="btn red" data-action="mulligan" disabled title="手札にたねポケモンがいない場合のみ引き直せます">7枚引き直す (マリガン)</button>
           <button id="btn-setup-ready" class="btn green big" data-action="setupReady" disabled>対戦準備完了</button>

@@ -87,6 +87,10 @@ function placeHandCardToActive(handIdx) {
     return;
   }
 
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("バトル場へ配置");
+  }
+
   state.myHand.splice(handIdx, 1);
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
@@ -122,6 +126,10 @@ function placeHandCardToBenchIndex(handIdx, benchIdx) {
     return;
   }
 
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("ベンチへ配置");
+  }
+
   state.myHand.splice(handIdx, 1);
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
@@ -147,6 +155,9 @@ function placeHandCardToFirstEmptyBench(handIdx) {
 
 function placeHandCardToStadium(handIdx) {
   if (handIdx < 0 || handIdx >= state.myHand.length) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("スタジアム配置");
+  }
   const card = state.myHand.splice(handIdx, 1)[0];
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
@@ -177,6 +188,9 @@ function attachHandCardToPokemon(handIdx, location) {
 
   // 1. エネルギーカード → エネルギーとして付与
   if (card.type === "energy") {
+    if (typeof pushHistorySnapshot === "function") {
+      pushHistorySnapshot("エネルギー付与");
+    }
     state.myHand.splice(handIdx, 1);
     state.selectedHandIndices.clear();
     state.selectedHandIndex = -1;
@@ -208,6 +222,16 @@ function attachHandCardToPokemon(handIdx, location) {
   // 2. ポケモンカード → 重ねて進化として処理（進化時に特殊状態はすべて自動回復）
   if (card.type === "pokemon") {
     const prevName = dst.card.name;
+
+    // 進化確認ポップアップ
+    if (!confirm(`「${prevName}」を「${card.name}」に進化させますか？`)) {
+      return;
+    }
+
+    if (typeof pushHistorySnapshot === "function") {
+      pushHistorySnapshot("ポケモンの進化");
+    }
+
     const curedNames = (typeof getPokemonConditionNames === "function") ? getPokemonConditionNames(dst) : [];
     if (typeof clearPokemonConditions === "function") {
       clearPokemonConditions(dst);
@@ -242,12 +266,19 @@ function attachHandCardToPokemon(handIdx, location) {
       if (!confirm(`「${dst.card.name}」には既に「${dst.tool.name}」がついています。付け替えますか？（前のどうぐはトラッシュされます）`)) {
         return;
       }
+      if (typeof pushHistorySnapshot === "function") {
+        pushHistorySnapshot("どうぐ付け替え");
+      }
       const oldTool = dst.tool;
       state.myTrash.push(oldTool);
       addLog(`前のどうぐ「${oldTool.name}」をトラッシュしました`, {
         cards: [oldTool],
         badge: "🗑️ どうぐ破棄"
       });
+    } else {
+      if (typeof pushHistorySnapshot === "function") {
+        pushHistorySnapshot("どうぐ装備");
+      }
     }
     state.myHand.splice(handIdx, 1);
     state.selectedHandIndices.clear();
@@ -278,6 +309,9 @@ function attachHandCardToPokemon(handIdx, location) {
 
 function trashHandCardByIndex(handIdx) {
   if (handIdx < 0 || handIdx >= state.myHand.length) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("手札からトラッシュ");
+  }
   const card = state.myHand.splice(handIdx, 1)[0];
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
@@ -292,6 +326,9 @@ function trashHandCardByIndex(handIdx) {
 
 function lostHandCardByIndex(handIdx) {
   if (handIdx < 0 || handIdx >= state.myHand.length) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("手札からロストへ");
+  }
   const card = state.myHand.splice(handIdx, 1)[0];
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
@@ -306,6 +343,9 @@ function lostHandCardByIndex(handIdx) {
 
 function moveHandCardToDeckTop(handIdx) {
   if (handIdx < 0 || handIdx >= state.myHand.length) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("手札から山札の上へ");
+  }
   const card = state.myHand.splice(handIdx, 1)[0];
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
@@ -320,6 +360,9 @@ function moveHandCardToDeckTop(handIdx) {
 
 function moveHandCardToDeckBottom(handIdx) {
   if (handIdx < 0 || handIdx >= state.myHand.length) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("手札から山札の下へ");
+  }
   const card = state.myHand.splice(handIdx, 1)[0];
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
@@ -335,6 +378,9 @@ function moveHandCardToDeckBottom(handIdx) {
 function trashSelectedHandCards() {
   const indices = getSelectedHandIndices();
   if (indices.length === 0) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot(`選択手札(${indices.length}枚)をトラッシュ`);
+  }
   const names = [];
   const trashedCards = [];
   indices.forEach(idx => {
@@ -356,6 +402,9 @@ function trashSelectedHandCards() {
 function lostSelectedHandCards() {
   const indices = getSelectedHandIndices();
   if (indices.length === 0) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot(`選択手札(${indices.length}枚)をロストへ`);
+  }
   const names = [];
   const lostCards = [];
   indices.forEach(idx => {
@@ -377,6 +426,9 @@ function lostSelectedHandCards() {
 function moveSelectedHandCardsToDeckTop() {
   const indices = getSelectedHandIndices();
   if (indices.length === 0) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot(`選択手札(${indices.length}枚)を山札の上へ`);
+  }
   const cards = [];
   indices.forEach(idx => {
     cards.push(state.myHand.splice(idx, 1)[0]);
@@ -395,6 +447,9 @@ function moveSelectedHandCardsToDeckTop() {
 function moveSelectedHandCardsToDeckBottom() {
   const indices = getSelectedHandIndices();
   if (indices.length === 0) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot(`選択手札(${indices.length}枚)を山札の下へ`);
+  }
   const cards = [];
   indices.forEach(idx => {
     cards.push(state.myHand.splice(idx, 1)[0]);
@@ -415,6 +470,9 @@ function moveEnergyBetweenPokemon(srcLoc, energyIdx, dstLoc) {
   const dst = getPokemonByLocation(dstLoc);
   if (!src || !dst || src === dst) return;
   if (!src.energies || energyIdx < 0 || energyIdx >= src.energies.length) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("エネルギー付け替え");
+  }
   const energy = src.energies.splice(energyIdx, 1)[0];
   if (energy) {
     if (!dst.energies) dst.energies = [];
@@ -442,6 +500,9 @@ function moveEnergyBetweenPokemon(srcLoc, energyIdx, dstLoc) {
 function detachEnergyToTrash(loc, energyIdx) {
   const pk = getPokemonByLocation(loc);
   if (!pk || !pk.energies || energyIdx < 0 || energyIdx >= pk.energies.length) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("エネルギートラッシュ");
+  }
   const energy = pk.energies.splice(energyIdx, 1)[0];
   if (energy) {
     state.myTrash.push(energy);

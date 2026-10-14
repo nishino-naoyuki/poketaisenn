@@ -38,6 +38,9 @@ let state = {
   // テンポラリエリア
   tempCards: [],
 
+  // 操作履歴スタック（1手順巻き戻し用）
+  historyStack: [],
+
   // 使用カードエリア
   playCard: null,
   oppPlayCard: null,    // 相手が使用カードエリアに置いているカード
@@ -118,6 +121,7 @@ function resetOpponentCards() {
   state.oppPrizes = 0;
   state.oppPlayCard = null;
   state.oppExited = false;
+  state.historyStack = [];
 }
 
 window.resetOpponentCards = resetOpponentCards;

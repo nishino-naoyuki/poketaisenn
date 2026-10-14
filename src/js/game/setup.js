@@ -285,11 +285,11 @@ function showNextOpponentMulliganModal() {
     const safeCard = { ...c, uid: `opp_mulligan_${count}_${i}` };
     registerCard(safeCard);
     const hasImg = !!safeCard.imageUrl;
-    const imgStyle = hasImg ? `style="background-image: url('${safeCard.imageUrl}');"` : '';
+    const bgImgStyle = hasImg ? `background-image: url('${safeCard.imageUrl}');` : '';
     const basicBorder = isBasicThis ? 'box-shadow: 0 0 12px #ef4444; border: 2.5px solid #ef4444 !important;' : '';
     bodyHtml += `
       <div class="card ${safeCard.color || 'pokemon'} ${hasImg ? 'has-img' : ''}"
-           style="${imgStyle} ${basicBorder}"
+           style="${bgImgStyle} ${basicBorder}"
            ondblclick="event.stopPropagation(); window.openCardZoomByUid('${safeCard.uid}')"
            title="${isBasicThis ? '⚠️ たねポケモンです！' : 'ダブルクリックで拡大'}">
         <div class="card-top">
@@ -309,7 +309,7 @@ function showNextOpponentMulliganModal() {
     </div>
   `;
 
-  showModal(`🔍 相手のマリガン手札確認 (${oppName} - ${count}回目)`, bodyHtml, footHtml);
+  showModal(`🔍 相手のマリガン手札確認 (${oppName} - ${count}回目)`, bodyHtml, footHtml, { dismissible: false });
 }
 
 function ackOpponentMulligan() {

@@ -1,9 +1,110 @@
 /* 【ゲーム】山札・使用カード・ダメカン・ターン終了・一人回しスワップ */
 
+let _isUndoing = false;
+const MAX_HISTORY_STEPS = 15;
+
+/** 盤面操作スナップショットの保存（1手順巻き戻し用） */
+function pushHistorySnapshot(actionDesc = "") {
+  if (_isUndoing) return;
+  if (!Array.isArray(state.historyStack)) {
+    state.historyStack = [];
+  }
+  try {
+    const snap = {
+      actionDesc,
+      ts: Date.now(),
+      myDeck: JSON.parse(JSON.stringify(state.myDeck)),
+      myHand: JSON.parse(JSON.stringify(state.myHand)),
+      myPrizes: JSON.parse(JSON.stringify(state.myPrizes)),
+      myActive: JSON.parse(JSON.stringify(state.myActive)),
+      myBench: JSON.parse(JSON.stringify(state.myBench)),
+      myTrash: JSON.parse(JSON.stringify(state.myTrash)),
+      myLost: JSON.parse(JSON.stringify(state.myLost)),
+      tempCards: JSON.parse(JSON.stringify(state.tempCards)),
+      playCard: JSON.parse(JSON.stringify(state.playCard)),
+      stadium: JSON.parse(JSON.stringify(state.stadium)),
+      turn: state.turn,
+      turnStep: state.turnStep
+    };
+    state.historyStack.push(snap);
+    if (state.historyStack.length > MAX_HISTORY_STEPS) {
+      state.historyStack.shift();
+    }
+  } catch (err) {
+    console.warn("Failed to push history snapshot", err);
+  }
+}
+
+/** 1手順巻き戻す（Undo実行） */
+function undoAction() {
+  if (!Array.isArray(state.historyStack) || state.historyStack.length === 0) {
+    showToast("巻き戻せる履歴がありません");
+    return;
+  }
+  _isUndoing = true;
+  try {
+    const snap = state.historyStack.pop();
+    state.myDeck = snap.myDeck || [];
+    state.myHand = snap.myHand || [];
+    state.myPrizes = snap.myPrizes || [];
+    state.myActive = snap.myActive || null;
+    state.myBench = snap.myBench || [null, null, null, null, null, null, null, null];
+    state.myTrash = snap.myTrash || [];
+    state.myLost = snap.myLost || [];
+    state.tempCards = snap.tempCards || [];
+    state.playCard = snap.playCard || null;
+    state.stadium = snap.stadium || null;
+    if (snap.turnStep !== undefined) state.turnStep = snap.turnStep;
+    if (snap.turn !== undefined) state.turn = snap.turn;
+    state.selectedHandIndices.clear();
+    state.selectedHandIndex = -1;
+
+    // カードの再登録
+    const allCards = [
+      ...state.myDeck, ...state.myHand, ...state.myPrizes,
+      ...state.myTrash, ...state.myLost, ...state.tempCards
+    ];
+    if (state.myActive && state.myActive.card) allCards.push(state.myActive.card);
+    if (state.playCard) allCards.push(state.playCard);
+    allCards.forEach(c => { if (c) registerCard(c); });
+
+    const detailText = snap.actionDesc ? `（直前操作: ${snap.actionDesc}）` : "";
+    addLog(`直前の操作を1手順巻き戻しました${detailText}`, {
+      oppText: `相手（${state.myName}）が直前の操作を1手順巻き戻しました`,
+      badge: "↩️ 巻き戻し"
+    });
+    showToast("1手順巻き戻しました");
+
+    if (typeof P2P !== "undefined" && P2P.connected) {
+      P2P.syncNow();
+    }
+    renderAll();
+  } finally {
+    _isUndoing = false;
+  }
+}
+
+/** ターン終了時・交代時：全ポケモンの特性使用済みフラグを一括リセット */
+function resetAllAbilitiesUsed() {
+  if (state.myActive) state.myActive.abilityUsed = false;
+  if (Array.isArray(state.myBench)) {
+    state.myBench.forEach(b => { if (b) b.abilityUsed = false; });
+  }
+  if (state.oppActive) state.oppActive.abilityUsed = false;
+  if (Array.isArray(state.oppBench)) {
+    state.oppBench.forEach(b => { if (b) b.abilityUsed = false; });
+  }
+}
+
+window.pushHistorySnapshot = pushHistorySnapshot;
+window.undoAction = undoAction;
+window.resetAllAbilitiesUsed = resetAllAbilitiesUsed;
+
 function drawCardToTemp() {
   if (state.myDeck.length === 0) {
     return alert("山札がありません！");
   }
+  pushHistorySnapshot("ドロー");
   const card = state.myDeck.shift();
   state.tempCards.push(card);
   addLog(`山札からカードを1枚引きました（テンポラリエリアへ）`, {
@@ -16,6 +117,7 @@ function drawCardToTemp() {
 
 function moveTempToHand() {
   if (state.tempCards.length === 0) return;
+  pushHistorySnapshot("テンポラリから手札へ");
   const cards = state.tempCards.splice(0);
   cards.forEach(c => state.myHand.push(c));
   addLog(`テンポラリから手札に加えました（${cards.map(c=>c.name).join(", ")}）`, {
@@ -28,6 +130,7 @@ function moveTempToHand() {
 
 function moveTempToTop() {
   if (state.tempCards.length === 0) return;
+  pushHistorySnapshot("テンポラリから山札の上へ");
   const cards = state.tempCards.splice(0);
   cards.reverse().forEach(c => state.myDeck.unshift(c)); // 山札の上へ追加
   addLog(`テンポラリからカードを山札の上に置きました（${cards.map(c=>c.name).join(", ")}）`, {
@@ -40,6 +143,7 @@ function moveTempToTop() {
 
 function moveTempToBottom() {
   if (state.tempCards.length === 0) return;
+  pushHistorySnapshot("テンポラリから山札の下へ");
   const cards = state.tempCards.splice(0);
   cards.forEach(c => state.myDeck.push(c)); // ボトムへ追加
   addLog(`テンポラリからカードを山札の下へ送りました（${cards.map(c=>c.name).join(", ")}）`, {
@@ -52,6 +156,7 @@ function moveTempToBottom() {
 
 function moveTempToTrash() {
   if (state.tempCards.length === 0) return;
+  pushHistorySnapshot("テンポラリからトラッシュへ");
   const cards = state.tempCards.splice(0);
   cards.forEach(c => state.myTrash.push(c));
   addLog(`テンポラリからカードをトラッシュしました（${cards.map(c=>c.name).join(", ")}）`, {
@@ -64,6 +169,7 @@ function moveTempToTrash() {
 
 function trashDeckTop() {
   if (state.myDeck.length === 0) return alert("山札がありません");
+  pushHistorySnapshot("山札の上からトラッシュ");
   const card = state.myDeck.shift();
   state.myTrash.push(card);
   addLog(`山札の上から1枚トラッシュしました: ${card.name}`, {
@@ -75,6 +181,7 @@ function trashDeckTop() {
 }
 
 function shuffleMyDeck() {
+  pushHistorySnapshot("山札シャッフル");
   state.myDeck = shuffleArray(state.myDeck);
   addLog(`山札をシャッフルしました`, {
     badge: "🔀 シャッフル"
@@ -521,6 +628,7 @@ function playHandCardByIndex(idx) {
     return alert("使用カードエリアにカードがあります。先に前のカードを処理してください。");
   }
 
+  pushHistorySnapshot("カードを使用");
   const card = state.myHand.splice(idx, 1)[0];
   state.playCard = card;
   state.oppPlayCard = null;
@@ -553,6 +661,7 @@ function moveSelectedHandToPlayArea() {
 
 function movePlayCardToTrash() {
   if (!state.playCard) return;
+  pushHistorySnapshot("使用カードをトラッシュ");
   const card = state.playCard;
   state.myTrash.push(card);
   state.playCard = null;
@@ -566,6 +675,7 @@ function movePlayCardToTrash() {
 
 function movePlayCardToHand() {
   if (!state.playCard) return;
+  pushHistorySnapshot("使用カードを手札へ");
   const card = state.playCard;
   state.myHand.push(card);
   state.playCard = null;
@@ -579,6 +689,7 @@ function movePlayCardToHand() {
 
 function movePlayCardToDeckTop() {
   if (!state.playCard) return;
+  pushHistorySnapshot("使用カードを山札の上へ");
   const card = state.playCard;
   state.myDeck.unshift(card);
   state.playCard = null;
@@ -592,6 +703,7 @@ function movePlayCardToDeckTop() {
 
 function movePlayCardToDeckBottom() {
   if (!state.playCard) return;
+  pushHistorySnapshot("使用カードを山札の下へ");
   const card = state.playCard;
   state.myDeck.push(card);
   state.playCard = null;
@@ -884,43 +996,58 @@ function getFieldPokemonDisplayName(location, index) {
 }
 
 /**
- * 「特性を使う」実行処理（相手画面・ログ・ポップアップへ同名ナンバリング付きで通知）
+ * 「特性を使う」実行処理（相手画面・ログ・ポップアップへ同名ナンバリング付きで通知 ＆ トグル解除対応）
  */
 function usePokemonAbility(location, index) {
   hideCtx();
   const target = location === "active" ? state.myActive : state.myBench[index];
   if (!target || !target.card) return;
 
+  pushHistorySnapshot("特性の使用 / 切り替え");
+  target.abilityUsed = !target.abilityUsed;
+
   const displayName = getFieldPokemonDisplayName(location, index);
   const locId = location === "active" ? "active" : `bench_${index}`;
 
-  addLog(`「${displayName}」が特性を使うことを宣言しました`, {
-    oppText: `「${displayName}」が特性を使うことを宣言しました`,
-    cards: [target.card],
-    badge: "✨ 特性使用宣言"
-  });
-
-  showActionPopup(
-    state.myName,
-    `「${displayName}」が特性を使うことを宣言しました！`,
-    [target.card],
-    "✨ 特性使用宣言",
-    2600
-  );
-
-  showToast(`【特性宣言】${displayName} の特性を使用`);
-
-  if (typeof triggerBoardEffect === "function") {
-    triggerBoardEffect({
-      fxType: "attach",
-      location: locId,
-      attachType: "ability",
-      colorType: "special",
-      icon: "✨",
-      label: "特性"
+  if (target.abilityUsed) {
+    addLog(`「${displayName}」が特性を使うことを宣言しました`, {
+      oppText: `「${displayName}」が特性を使うことを宣言しました`,
+      cards: [target.card],
+      badge: "✨ 特性使用宣言"
     });
+
+    showActionPopup(
+      state.myName,
+      `「${displayName}」が特性を使うことを宣言しました！`,
+      [target.card],
+      "✨ 特性使用宣言",
+      2600
+    );
+
+    showToast(`【特性宣言】${displayName} の特性を使用`);
+
+    if (typeof triggerBoardEffect === "function") {
+      triggerBoardEffect({
+        fxType: "attach",
+        location: locId,
+        attachType: "ability",
+        colorType: "special",
+        icon: "✨",
+        label: "特性"
+      });
+    }
+  } else {
+    addLog(`「${displayName}」の特性使用済みマークを解除しました`, {
+      oppText: `「${displayName}」の特性使用済みマークが解除されました`,
+      cards: [target.card],
+      badge: "🔄 特性リセット"
+    });
+    showToast(`【特性解除】${displayName}`);
   }
 
+  if (typeof P2P !== "undefined" && P2P.connected) {
+    P2P.syncNow();
+  }
   renderAll();
 }
 
@@ -1046,34 +1173,60 @@ function showPokemonMenu(e, location, index, menuView = "main") {
       `;
     }
 
+    // ベンチポケモンの場合、一番押しやすい上部に「バトル場に出す / 交代」を優先配置
+    const benchPromoteBtnHtml = location === "bench"
+      ? (state.myActive
+          ? `<button class="ctx-span-2" style="background:#2563eb; color:#fff; font-weight:bold; padding:7px 10px; margin-bottom:3px; font-size:12.5px;" onclick="swapActiveBench(${index})">🔄 バトル場と交代</button>`
+          : `<button class="ctx-span-2" style="background:#16a34a; color:#fff; font-weight:bold; padding:7px 10px; margin-bottom:3px; font-size:12.5px;" onclick="swapActiveBench(${index})">⚔️ バトル場に出す</button>`)
+      : "";
+
+    const abilityBtnStyle = target.abilityUsed
+      ? "background:#475569; color:#cbd5e1; border:1px solid #64748b;"
+      : "";
+    const abilityBtnText = target.abilityUsed
+      ? "🔄 特性使用済み (クリックで解除)"
+      : "✨ 特性を使う";
+
     ctx.innerHTML = `
       <div class="ctx-header-row">
         <span class="ctx-title-text">${escapeHtml(displayName)} <small>(ダメカン: ${target.damage})</small></span>
         <button class="ctx-zoom-btn" onclick="openOwnPokemonZoom('${location}', ${index})" title="ダブルクリックでも拡大できます">🔍 詳細</button>
       </div>
       <div class="divider"></div>
-      <button class="ctx-btn-ability ctx-span-2" onclick="usePokemonAbility('${location}', ${index})">✨ 特性を使う</button>
+      ${benchPromoteBtnHtml}
+      <button class="ctx-btn-ability ctx-span-2" style="${abilityBtnStyle}" onclick="usePokemonAbility('${location}', ${index})">${abilityBtnText}</button>
       ${subLaunchersHtml}
       <div class="divider"></div>
       <div class="ctx-grid-2col">
         ${extraBtns}
-        ${location === "bench" ? (state.myActive ? `<button class="ctx-span-2" onclick="swapActiveBench(${index})">🔄 バトル場と交代</button>` : `<button class="ctx-span-2" style="background:#2563eb; color:#fff; font-weight:bold;" onclick="swapActiveBench(${index})">⚔️ バトル場に出す</button>`) : ''}
         <button onclick="removePokemonToTrash('${location}', ${index})">🗑️ トラッシュへ</button>
         <button onclick="removePokemonToHand('${location}', ${index})">🖐️ 手札に戻す</button>
       </div>
     `;
   }
 
-  // 位置の調整: 初回表示時（またはビュー遷移時でまだ座標未設定の場合）
+  // 位置の調整: 初回表示時（画面端見切れ対策・下端オーバー時は上方向に反転展開）
   if (e && e.clientX !== undefined && menuView === "main") {
-    const menuW = 280;
-    const menuH = location === "active" ? 220 : 190;
-    const posX = Math.min(e.clientX + 12, window.innerWidth - menuW);
-    const posY = Math.min(e.clientY + 12, window.innerHeight - menuH);
-    ctx.style.left = `${Math.max(8, posX)}px`;
-    ctx.style.top = `${Math.max(8, posY)}px`;
+    ctx.style.visibility = "hidden";
+    ctx.classList.remove("hidden");
+    const menuW = ctx.offsetWidth || 280;
+    const menuH = ctx.offsetHeight || 260;
+    let posX = e.clientX + 10;
+    let posY = e.clientY + 10;
+
+    if (posX + menuW > window.innerWidth - 10) {
+      posX = Math.max(10, window.innerWidth - menuW - 10);
+    }
+    if (posY + menuH > window.innerHeight - 10) {
+      posY = Math.max(10, e.clientY - menuH - 8);
+    }
+
+    ctx.style.left = `${posX}px`;
+    ctx.style.top = `${posY}px`;
+    ctx.style.visibility = "visible";
+  } else {
+    ctx.classList.remove("hidden");
   }
-  ctx.classList.remove("hidden");
 }
 
 // 特殊状態（どく・やけど・まひ・こんらん・ねむり）のトグル処理
@@ -1202,6 +1355,7 @@ function modifyDamage(location, index, delta) {
   hideCtx();
   const target = location === "active" ? state.myActive : state.myBench[index];
   if (!target) return;
+  pushHistorySnapshot("ダメカン変更");
   const prevDamage = target.damage || 0;
   if (delta === -999) {
     target.damage = 0;
@@ -1229,6 +1383,7 @@ function swapActiveBench(benchIndex) {
   const benchTarget = state.myBench[benchIndex];
   if (!benchTarget) return;
 
+  pushHistorySnapshot("バトル場とベンチの交代");
   const prevActive = state.myActive;
 
   // ポケカ公式ルール: バトル場からベンチに下がったポケモンの特殊状態はすべて自動回復する
@@ -1271,6 +1426,7 @@ function removePokemonToTrash(location, index) {
   const target = location === "active" ? state.myActive : state.myBench[index];
   if (!target) return;
 
+  pushHistorySnapshot("ポケモンをトラッシュへ");
   state.myTrash.push(target.card);
   if (target.tool) state.myTrash.push(target.tool);
   if (target.energies) target.energies.forEach(e => state.myTrash.push(e));
@@ -1291,6 +1447,7 @@ function removePokemonToHand(location, index) {
   const target = location === "active" ? state.myActive : state.myBench[index];
   if (!target) return;
 
+  pushHistorySnapshot("ポケモンを手札に戻す");
   state.myHand.push(target.card);
   if (target.tool) state.myTrash.push(target.tool);
   if (target.energies) target.energies.forEach(e => state.myTrash.push(e));
@@ -1548,6 +1705,9 @@ function endTurn() {
   state.turnStep = (state.turnStep || 1) + 1;
   const newTurnInfo = getTurnInfo(state.turnStep);
   state.turn = newTurnInfo.round;
+
+  // 特性使用済みフラグをリセット
+  resetAllAbilitiesUsed();
 
   addLog(`【ターン終了】${currentInfo.activePlayerName} がターンを終了しました（次は【${newTurnInfo.activePlayerName}】の番 / ${newTurnInfo.label}）`, {
     oppText: `【ターン終了】${currentInfo.activePlayerName} がターンを終了しました（次は【${newTurnInfo.activePlayerName}】の番 / ${newTurnInfo.label}）`,

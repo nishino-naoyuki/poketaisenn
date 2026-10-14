@@ -206,7 +206,8 @@ function createFieldPokemon(card, damage = 0, energies = [], tool = null, condit
       poison: !!(conditions && conditions.poison),
       burn: !!(conditions && conditions.burn),
       special: (conditions && conditions.special) || null // null | "paralyzed" | "confused" | "asleep"
-    }
+    },
+    abilityUsed: false
   };
 }
 
