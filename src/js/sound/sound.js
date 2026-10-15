@@ -739,8 +739,8 @@ const SoundEffects = (() => {
   const GCP_TTS_STORAGE_KEY = "pokeca_gcp_tts_settings";
   const DEFAULT_TTS_SETTINGS = {
     apiKey: BUILTIN_GCP_TTS_API_KEY,
-    voiceName: "ja-JP-Neural2-C", // 男性・熱血バトル声（誰が聴いても一発で違いが分かる高品質ボイス）
-    speakingRate: 1.10,
+    voiceName: "ja-JP-Chirp3-HD-Fenrir", // 最新次世代生成AI音声 (Chirp 3 HD: 超リアル・大迫力バトル声)
+    speakingRate: 1.0,
     pitch: 0.0,
     volumeGainDb: 2.0
   };
@@ -752,11 +752,11 @@ const SoundEffects = (() => {
       const saved = localStorage.getItem(GCP_TTS_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // 旧デフォルト（Neural2-B かつ pitch 2.0）が残っている場合は新デフォルトへ更新
-        if (parsed.voiceName === "ja-JP-Neural2-B" && (parsed.pitch === 2.0 || parsed.pitch === "2.0" || parsed.pitch === 2)) {
-          parsed.voiceName = "ja-JP-Neural2-C";
+        // 旧世代モデル（Neural2-B または Neural2-C）が残っている場合は最高品質の Chirp 3 HD へ自動更新
+        if (!parsed.voiceName || parsed.voiceName.startsWith("ja-JP-Neural2")) {
+          parsed.voiceName = "ja-JP-Chirp3-HD-Fenrir";
+          parsed.speakingRate = 1.0;
           parsed.pitch = 0.0;
-          parsed.speakingRate = 1.10;
         }
         settings = { ...DEFAULT_TTS_SETTINGS, ...parsed };
       }
@@ -795,20 +795,35 @@ const SoundEffects = (() => {
     const apiKey = (settings.apiKey || BUILTIN_GCP_TTS_API_KEY || "").trim();
     if (!apiKey) throw new Error("APIキーが設定されていません");
 
-    const voiceName = settings.voiceName || "ja-JP-Neural2-B";
-    const speakingRate = parseFloat(settings.speakingRate) || 1.15;
-    const pitch = parseFloat(settings.pitch) || 2.0;
+    const voiceName = settings.voiceName || "ja-JP-Chirp3-HD-Fenrir";
+    const isChirpModel = voiceName.includes("Chirp");
+    const speakingRate = parseFloat(settings.speakingRate) || 1.0;
+    const pitch = parseFloat(settings.pitch) || 0.0;
     const volumeGainDb = parseFloat(settings.volumeGainDb) || 2.0;
 
-    const cacheKey = `${text}__${voiceName}__${speakingRate}__${pitch}__${volumeGainDb}`;
+    const cacheKey = `${text}__${voiceName}__${isChirpModel ? 'chirp' : speakingRate + '_' + pitch}__${volumeGainDb}`;
     if (ttsAudioCache.has(cacheKey)) {
       console.info(`🎙️ [Google Cloud TTS] キャッシュから即時取得: 「${text}」 (${voiceName})`);
       return ttsAudioCache.get(cacheKey);
     }
 
-    console.info(`🎙️ [Google Cloud TTS] 音声合成リクエスト送信: 「${text}」 [Voice: ${voiceName}, Rate: ${speakingRate}, Pitch: ${pitch}]`);
+    console.info(`🎙️ [Google Cloud TTS] 音声合成リクエスト送信: 「${text}」 [Voice: ${voiceName}, isChirp: ${isChirpModel}]`);
 
     const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`;
+    
+    // Chirp 3 HD モデルは生成AIのため、余計なピッチ変調を入れず自然な最高音質(24kHz)で出力
+    const audioConfig = isChirpModel
+      ? {
+          audioEncoding: "MP3",
+          volumeGainDb: volumeGainDb
+        }
+      : {
+          audioEncoding: "MP3",
+          speakingRate: speakingRate,
+          pitch: pitch,
+          volumeGainDb: volumeGainDb
+        };
+
     const payload = {
       input: {
         text: text
@@ -817,12 +832,7 @@ const SoundEffects = (() => {
         languageCode: "ja-JP",
         name: voiceName
       },
-      audioConfig: {
-        audioEncoding: "MP3",
-        speakingRate: speakingRate,
-        pitch: pitch,
-        volumeGainDb: volumeGainDb
-      }
+      audioConfig: audioConfig
     };
 
     const res = await fetch(url, {

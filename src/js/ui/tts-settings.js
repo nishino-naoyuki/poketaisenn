@@ -15,8 +15,8 @@
       ? SoundEffects.getTtsSettings()
       : {
           apiKey: "",
-          voiceName: "ja-JP-Neural2-C",
-          speakingRate: 1.10,
+          voiceName: "ja-JP-Chirp3-HD-Fenrir",
+          speakingRate: 1.0,
           pitch: 0.0,
           volumeGainDb: 2.0
         };
@@ -29,8 +29,8 @@
     const sliderVol = document.getElementById("slider-tts-vol");
 
     if (inputKey) inputKey.value = settings.apiKey || "";
-    if (selectVoice) selectVoice.value = settings.voiceName || "ja-JP-Neural2-C";
-    if (sliderRate) sliderRate.value = settings.speakingRate || 1.10;
+    if (selectVoice) selectVoice.value = settings.voiceName || "ja-JP-Chirp3-HD-Fenrir";
+    if (sliderRate) sliderRate.value = settings.speakingRate || 1.0;
     if (sliderPitch) sliderPitch.value = settings.pitch !== undefined ? settings.pitch : 0.0;
     if (sliderVol) sliderVol.value = settings.volumeGainDb || 2.0;
 
