@@ -128,6 +128,9 @@
         <button class="mode-tab-btn" id="btn-mode-solo" data-action="switchLobbyMode" data-arg="solo">🃏 一人回し</button>
       </div>
       <div class="lobby-nav-actions">
+        <button type="button" class="lobby-panel-sound-btn" onclick="openSoundSettingsModal()" title="効果音の音量・サウンド設定を開く">
+          <span class="icon" id="lobby-sound-icon">🔊</span><span id="lobby-sound-text">音量: 80%</span>
+        </button>
         <button type="button" class="lobby-panel-tts-btn" onclick="openTtsSettingsModal()" title="技名読み上げ・音声合成（Google Cloud TTS）設定を開く">
           <span class="icon">🎙️</span>読み上げ設定
         </button>
@@ -359,6 +362,7 @@
         <span id="g-conn-badge" class="conn-badge offline">⚪ オフライン</span>
         <button class="btn green" id="btn-top-voice" onclick="VoiceChat.startCall()" title="P2Pボイス通話を開始">🎙️ 通話</button>
         <button class="btn blue btn-chat-trigger" id="btn-top-chat" onclick="openChatModal()" title="対戦チャットを開く" style="position:relative;">💬 チャット <span id="chat-badge" class="badge-unread hidden">0</span></button>
+        <button class="btn btn-sound-toggle" id="btn-top-sound" onclick="openSoundSettingsModal()" title="効果音の音量設定"><span class="sound-icon" id="top-sound-icon">🔊</span> <span class="sound-vol-label" id="top-sound-vol-label" style="font-size:11px;">80%</span></button>
         <button class="btn" id="btn-undo" data-action="undo" title="直前の操作を1手順巻き戻します">↩️ 戻す</button>
         <button class="btn red" data-action="exit">退室</button>
       </div>
@@ -394,7 +398,7 @@
 
       <div class="log-btn">
         <button class="btn blue" onclick="openChatModal()" title="対戦チャットを開く" style="position:relative;">💬 チャット <span id="chat-badge-log" class="badge-unread hidden">0</span></button>
-        <button class="btn btn-sound-toggle" onclick="SoundEffects.toggleMute()" title="サウンド: ON (クリックでOFF)">🔊</button>
+        <button class="btn btn-sound-toggle" onclick="openSoundSettingsModal()" title="効果音の音量設定"><span class="sound-icon">🔊</span> <span class="sound-vol-label" style="font-size:11px;">80%</span></button>
         <button class="btn" data-action="showLog">ログ</button>
         <button class="btn gold" data-action="coin">コイン</button>
         <button class="btn gold" data-action="declareVictory" title="勝利を宣言する">🏆 勝利宣言</button>
@@ -577,7 +581,7 @@
     <button class="btn gold" data-action="endTurn" data-close="1">ターン終了</button>
     <button class="btn blue" onclick="closeMenu(); openChatModal();" style="position:relative;">💬 チャット <span id="sp-chat-badge" class="badge-unread hidden">0</span></button>
     <button class="btn green" onclick="closeMenu(); VoiceChat.startCall();">🎙️ 通話</button>
-    <button class="btn btn-sound-toggle" onclick="SoundEffects.toggleMute()" title="サウンド: ON (クリックでOFF)">🔊 音声</button>
+    <button class="btn btn-sound-toggle" onclick="closeMenu(); openSoundSettingsModal();" title="効果音の音量設定"><span id="sp-sound-icon">🔊</span> 音量 (<span id="sp-sound-vol-label">80%</span>)</button>
     <button class="btn" data-action="coin" data-close="1">🪙 コイン</button>
     <button class="btn" id="btn-sp-undo" data-action="undo" data-close="1">↩️ 1手順戻す</button>
   </div>
@@ -763,6 +767,65 @@
   </div>
 </div>
 
+<!-- 効果音・サウンドボリューム設定ポップアップ -->
+<div id="sound-settings-modal" class="modal hidden" onclick="closeSoundSettingsModal(event)">
+  <div class="modal-panel sound-settings-panel" onclick="event.stopPropagation()">
+    <div class="modal-head" style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:bold; font-size:16px;">🔊 効果音・ボリューム設定</span>
+      <button type="button" class="btn" style="padding:2px 8px; font-size:14px;" onclick="closeSoundSettingsModal()">✕</button>
+    </div>
+    <div class="modal-body sound-settings-body">
+      <div class="sound-setting-desc">
+        カード使用・配置・打撃・気絶・コイントス・勝利ファンファーレ等の効果音音量を調整できます。
+      </div>
+
+      <!-- メイン音量スライダー -->
+      <div class="sound-slider-card">
+        <div class="sound-slider-header">
+          <span class="sound-slider-icon" id="sound-modal-icon">🔊</span>
+          <span class="sound-slider-title">マスター効果音音量</span>
+          <span class="sound-slider-val" id="sound-modal-val">80%</span>
+        </div>
+        <div class="sound-slider-track-wrap">
+          <span style="font-size:12px; color:#94a3b8; font-weight:bold;">0%</span>
+          <input type="range" id="sound-modal-slider" min="0" max="100" step="5" value="80" oninput="onSoundVolumeSliderChange(this.value)">
+          <span style="font-size:12px; color:#94a3b8; font-weight:bold;">100%</span>
+        </div>
+
+        <!-- クイック音量プリセットボタン -->
+        <div class="sound-preset-row">
+          <button type="button" class="btn sound-preset-btn" onclick="setSoundVolumePreset(0)">🔇 0% (消音)</button>
+          <button type="button" class="btn sound-preset-btn" onclick="setSoundVolumePreset(30)">🔉 30% (小)</button>
+          <button type="button" class="btn sound-preset-btn" onclick="setSoundVolumePreset(60)">🔊 60% (中)</button>
+          <button type="button" class="btn sound-preset-btn" onclick="setSoundVolumePreset(80)">🔊 80% (標準)</button>
+          <button type="button" class="btn sound-preset-btn" onclick="setSoundVolumePreset(100)">💥 100% (最大)</button>
+        </div>
+      </div>
+
+      <!-- ミュート切替チェックボックス -->
+      <div class="sound-option-card">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+          <input type="checkbox" id="sound-modal-mute-chk" style="width:18px; height:18px; accent-color:#3b82f6; cursor:pointer;" onchange="onSoundMuteCheckboxToggle(this.checked)">
+          <span style="font-weight:bold; font-size:13px; color:#e2e8f0;">🔇 効果音を一時的にミュート（消音）する</span>
+        </label>
+        <p style="font-size:11px; color:#94a3b8; margin:4px 0 0 28px;">
+          チェックを入れると音量設定を保持したまま音を消去します。
+        </p>
+      </div>
+
+      <!-- テスト試聴エリア -->
+      <div class="sound-test-area">
+        <button type="button" class="btn blue wide" onclick="runSoundTestPlay()" style="display:flex; align-items:center; justify-content:center; gap:8px; font-weight:bold; padding:10px;">
+          <span>🎵 効果音を試聴する（テスト再生）</span>
+        </button>
+      </div>
+    </div>
+    <div class="modal-foot" style="display:flex; justify-content:flex-end;">
+      <button type="button" class="btn green big" onclick="closeSoundSettingsModal()">OK（閉じる）</button>
+    </div>
+  </div>
+</div>
+
 <!-- 汎用モーダル（山札・トラッシュ・ロスト・ログ） -->
 <div id="modal" class="modal hidden">
   <div class="modal-panel">
@@ -873,6 +936,7 @@
 <script src="js/ui/render.js"></script>
 <script src="js/ui/modals.js"></script>
 <script src="js/ui/tts-settings.js"></script>
+<script src="js/ui/sound-settings.js"></script>
 <script src="js/ui/lobby.js"></script>
 <script src="js/ui/playmat.js"></script>
 <script src="js/ui/sleeve.js"></script>

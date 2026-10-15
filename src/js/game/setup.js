@@ -8,6 +8,7 @@ function hasBasicPokemon(cards) {
 function startBattleSetup() {
   document.getElementById("lobby").classList.add("hidden");
   document.getElementById("game").classList.remove("hidden");
+  if (typeof SoundEffects !== "undefined") SoundEffects.updateVolumeUI();
 
   // デッキ初期化（ユーザーが読み込んだデッキを使用）
   const sourceDeck = state.myLoadedDeck || SAMPLE_DECK;
@@ -77,6 +78,7 @@ function startSoloBattleSetup() {
 
   document.getElementById("lobby").classList.add("hidden");
   document.getElementById("game").classList.remove("hidden");
+  if (typeof SoundEffects !== "undefined") SoundEffects.updateVolumeUI();
 
   // デッキA（先攻）シャッフル＆初期化
   const deckSourceA = state.soloDeckA || SAMPLE_DECK;

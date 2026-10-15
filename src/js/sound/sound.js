@@ -9,8 +9,15 @@
 
 const SoundEffects = (() => {
   let audioCtx = null;
-  const STORAGE_KEY = "pokeca_sound_muted";
-  let isMuted = localStorage.getItem(STORAGE_KEY) === "true";
+  let masterGainNode = null;
+  const STORAGE_KEY_MUTED = "pokeca_sound_muted";
+  const STORAGE_KEY_VOL = "pokeca_sound_volume";
+
+  let isMuted = localStorage.getItem(STORAGE_KEY_MUTED) === "true";
+  let volumePercent = parseInt(localStorage.getItem(STORAGE_KEY_VOL) ?? "80", 10);
+  if (isNaN(volumePercent) || volumePercent < 0 || volumePercent > 100) {
+    volumePercent = 80;
+  }
 
   // 実音MP3のプリロード用プール
   const audioPool = {
@@ -18,11 +25,6 @@ const SoundEffects = (() => {
     card1: new Audio("audio/card1.mp3"),
     pushbutton: new Audio("audio/pushbutton.mp3")
   };
-
-  // 音量初期設定
-  audioPool.turnStart.volume = 0.8;
-  audioPool.card1.volume = 0.85;
-  audioPool.pushbutton.volume = 0.75;
 
   /** オーディオコンテキストの初期化（ブラウザの自動再生ポリシー対策） */
   function getAudioContext() {
@@ -38,9 +40,35 @@ const SoundEffects = (() => {
     return audioCtx;
   }
 
+  /** Web Audio API用マスターゲインノードを取得（全サウンドの音量・ミュートを一元制御） */
+  function getMasterGain(ctx) {
+    if (!ctx) return null;
+    if (!masterGainNode || masterGainNode.context !== ctx) {
+      masterGainNode = ctx.createGain();
+      const effGain = isMuted ? 0 : (volumePercent / 100);
+      masterGainNode.gain.setValueAtTime(effGain, ctx.currentTime);
+      masterGainNode.connect(ctx.destination);
+    }
+    return masterGainNode;
+  }
+
+  /** マスターゲインの更新 */
+  function applyMasterGain() {
+    if (audioCtx && masterGainNode) {
+      const effGain = isMuted ? 0 : (volumePercent / 100);
+      try {
+        masterGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        masterGainNode.gain.setValueAtTime(effGain, audioCtx.currentTime);
+      } catch (e) {
+        masterGainNode.gain.value = effGain;
+      }
+    }
+  }
+
   // 初回ユーザーインタラクション時にコンテキストとAudioをウォームアップ
   const warmUp = () => {
-    getAudioContext();
+    const ctx = getAudioContext();
+    if (ctx) getMasterGain(ctx);
     // プリロード
     audioPool.turnStart.load();
     audioPool.card1.load();
@@ -51,12 +79,13 @@ const SoundEffects = (() => {
   window.addEventListener("pointerdown", warmUp, { once: true });
   window.addEventListener("keydown", warmUp, { once: true });
 
-  /** 音声ファイル（MP3）のクローン再生（連続再生対応） */
-  function playAudioFile(audioObj, volume = 0.85) {
-    if (isMuted) return;
+  /** 音声ファイル（MP3）のクローン再生（連続再生＆音量連動対応） */
+  function playAudioFile(audioObj, baseVolume = 0.85) {
+    if (isMuted || volumePercent <= 0) return;
     try {
       const clone = audioObj.cloneNode();
-      clone.volume = volume;
+      const effVol = (volumePercent / 100) * baseVolume;
+      clone.volume = Math.max(0, Math.min(1, effVol));
       const p = clone.play();
       if (p && p.catch) {
         p.catch(() => {});
@@ -147,7 +176,7 @@ const SoundEffects = (() => {
     subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
 
     subOsc.connect(subGain);
-    subGain.connect(ctx.destination);
+    subGain.connect(getMasterGain(ctx));
     subOsc.start(now);
     subOsc.stop(now + 0.14);
 
@@ -167,7 +196,7 @@ const SoundEffects = (() => {
 
     noise.connect(filter);
     filter.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
+    noiseGain.connect(getMasterGain(ctx));
     noise.start(now);
     noise.stop(now + 0.1);
   }
@@ -193,7 +222,7 @@ const SoundEffects = (() => {
     boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
 
     boomOsc.connect(boomGain);
-    boomGain.connect(ctx.destination);
+    boomGain.connect(getMasterGain(ctx));
     boomOsc.start(now);
     boomOsc.stop(now + 0.4);
 
@@ -211,7 +240,7 @@ const SoundEffects = (() => {
 
     noise.connect(filter);
     filter.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
+    noiseGain.connect(getMasterGain(ctx));
     noise.start(now);
     noise.stop(now + 0.4);
 
@@ -237,7 +266,7 @@ const SoundEffects = (() => {
 
       osc.connect(f2);
       f2.connect(g);
-      g.connect(ctx.destination);
+      g.connect(getMasterGain(ctx));
       osc.start(now + note.d);
       osc.stop(now + note.d + 0.22);
     });
@@ -268,7 +297,7 @@ const SoundEffects = (() => {
           gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.07);
 
           osc.connect(gain);
-          gain.connect(ctx.destination);
+          gain.connect(getMasterGain(ctx));
           osc.start(now + delay);
           osc.stop(now + delay + 0.08);
         });
@@ -289,7 +318,7 @@ const SoundEffects = (() => {
 
         noise.connect(filter);
         filter.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(getMasterGain(ctx));
         noise.start(now);
         noise.stop(now + 0.28);
 
@@ -302,7 +331,7 @@ const SoundEffects = (() => {
           g.gain.setValueAtTime(0.2, now + d);
           g.gain.exponentialRampToValueAtTime(0.001, now + d + 0.02);
           osc.connect(g);
-          g.connect(ctx.destination);
+          g.connect(getMasterGain(ctx));
           osc.start(now + d);
           osc.stop(now + d + 0.03);
         });
@@ -326,7 +355,7 @@ const SoundEffects = (() => {
           gain.gain.exponentialRampToValueAtTime(0.001, now + note.d + 0.28);
 
           osc.connect(gain);
-          gain.connect(ctx.destination);
+          gain.connect(getMasterGain(ctx));
           osc.start(now + note.d);
           osc.stop(now + note.d + 0.3);
         });
@@ -358,7 +387,7 @@ const SoundEffects = (() => {
         lfoGain.connect(gain.gain);
         osc.connect(filter);
         filter.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(getMasterGain(ctx));
 
         lfo.start(now);
         osc.start(now);
@@ -386,7 +415,7 @@ const SoundEffects = (() => {
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(getMasterGain(ctx));
 
         lfo.start(now);
         osc.start(now);
@@ -420,7 +449,7 @@ const SoundEffects = (() => {
 
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     noise.start(now);
     noise.stop(now + 0.16);
@@ -453,7 +482,7 @@ const SoundEffects = (() => {
 
       noise.connect(filter);
       filter.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getMasterGain(ctx));
 
       noise.start(clickTime);
       noise.stop(clickTime + 0.04);
@@ -486,7 +515,7 @@ const SoundEffects = (() => {
 
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     noise.start(now);
     noise.stop(now + 0.1);
@@ -516,7 +545,7 @@ const SoundEffects = (() => {
 
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     noise.start(now);
     noise.stop(now + 0.12);
@@ -532,7 +561,7 @@ const SoundEffects = (() => {
     oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
 
     osc.connect(oscGain);
-    oscGain.connect(ctx.destination);
+    oscGain.connect(getMasterGain(ctx));
     osc.start(now + 0.02);
     osc.stop(now + 0.22);
   }
@@ -555,7 +584,7 @@ const SoundEffects = (() => {
       gain.gain.setValueAtTime(0.15 / (idx + 1), now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getMasterGain(ctx));
       osc.start(now);
       osc.stop(now + 0.5);
     });
@@ -574,7 +603,7 @@ const SoundEffects = (() => {
         gain.gain.setValueAtTime(0.18, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
         osc.connect(gain);
-        gain.connect(ctx2.destination);
+        gain.connect(getMasterGain(ctx2));
         osc.start(t);
         osc.stop(t + 0.15);
       });
@@ -629,7 +658,7 @@ const SoundEffects = (() => {
       osc1.connect(filter);
       osc2.connect(filter);
       filter.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getMasterGain(ctx));
 
       osc1.start(startTime);
       osc2.start(startTime);
@@ -666,7 +695,7 @@ const SoundEffects = (() => {
 
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getMasterGain(ctx));
 
     osc.start(now);
     osc.stop(now + 0.35);
@@ -685,7 +714,7 @@ const SoundEffects = (() => {
       bg.gain.setValueAtTime(0.5, t);
       bg.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
       boom.connect(bg);
-      bg.connect(ctx2.destination);
+      bg.connect(getMasterGain(ctx2));
       boom.start(t);
       boom.stop(t + 0.25);
     }, 240);
@@ -803,10 +832,11 @@ const SoundEffects = (() => {
       try {
         const audioUrl = await synthesizeGoogleTTS(textToSpeak, settings);
         const audio = new Audio(audioUrl);
-        audio.volume = 1.0;
+        const effVol = isMuted ? 0 : (volumePercent / 100);
+        audio.volume = Math.max(0, Math.min(1, 1.0 * effVol));
         // チャージSEの炸裂タイミング（約220ms後）に合わせて再生
         setTimeout(() => {
-          if (!isMuted) audio.play().catch(e => console.warn("Google TTS play error:", e));
+          if (!isMuted && audio.volume > 0) audio.play().catch(e => console.warn("Google TTS play error:", e));
         }, 220);
         return;
       } catch (err) {
@@ -829,7 +859,8 @@ const SoundEffects = (() => {
       utter.lang = "ja-JP";
       utter.rate = parseFloat(settings.speakingRate) || 1.15;
       utter.pitch = 1.25;
-      utter.volume = 1.0;
+      const effVol = isMuted ? 0 : (volumePercent / 100);
+      utter.volume = Math.max(0, Math.min(1, 1.0 * effVol));
 
       const voices = window.speechSynthesis.getVoices();
       const jaVoice = voices.find(v => 
@@ -876,38 +907,165 @@ const SoundEffects = (() => {
   }
 
   // =========================================================================
-  // ミュート・UI連動
+  // 音量・ミュート制御 ＆ UI全連動
   // =========================================================================
+
+  /** 現在の音量パーセント（0〜100）を取得 */
+  function getVolume() {
+    return volumePercent;
+  }
+
+  /**
+   * 音量パーセントを設定（0〜100）
+   * @param {number|string} val - 音量 (0〜100)
+   * @param {boolean} playTest - 変更時に確認用効果音を鳴らすか
+   */
+  function setVolume(val, playTest = false) {
+    let num = parseInt(val, 10);
+    if (isNaN(num)) num = 80;
+    num = Math.max(0, Math.min(100, num));
+
+    volumePercent = num;
+    localStorage.setItem(STORAGE_KEY_VOL, String(volumePercent));
+
+    if (volumePercent === 0) {
+      isMuted = true;
+      localStorage.setItem(STORAGE_KEY_MUTED, "true");
+    } else if (isMuted && volumePercent > 0) {
+      // スライダーを0より大きく動かしたら自動でミュート解除
+      isMuted = false;
+      localStorage.setItem(STORAGE_KEY_MUTED, "false");
+    }
+
+    applyMasterGain();
+    updateVolumeUI();
+
+    if (playTest && !isMuted && volumePercent > 0) {
+      playButtonClick();
+    }
+  }
 
   /** ミュート（消音）の切り替え */
   function toggleMute() {
     isMuted = !isMuted;
-    localStorage.setItem(STORAGE_KEY, isMuted ? "true" : "false");
-    updateMuteIcons();
+    if (!isMuted && volumePercent === 0) {
+      volumePercent = 80;
+      localStorage.setItem(STORAGE_KEY_VOL, "80");
+    }
+    localStorage.setItem(STORAGE_KEY_MUTED, isMuted ? "true" : "false");
+    applyMasterGain();
+    updateVolumeUI();
+
     if (typeof showToast === "function") {
-      showToast(isMuted ? "🔇 サウンドをOFFにしました" : "🔊 サウンドをONにしました");
+      showToast(isMuted ? "🔇 効果音を消音（ミュート）にしました" : `🔊 効果音をONにしました (${volumePercent}%)`);
     }
     return isMuted;
   }
 
-  /** UIのミュートアイコンを更新 */
-  function updateMuteIcons() {
+  /** 音量アイコンを取得（ミュート・音量に応じた適切なスピーカー絵文字） */
+  function getVolumeIcon() {
+    if (isMuted || volumePercent === 0) return "🔇";
+    if (volumePercent <= 35) return "🔉";
+    return "🔊";
+  }
+
+  /** 画面上のすべての音量・サウンド表示UIを一括更新 */
+  function updateVolumeUI() {
+    const icon = getVolumeIcon();
+    const volText = isMuted ? "消音" : `${volumePercent}%`;
+
+    // 1. ロビー画面の音量ボタン
+    const lobbySoundIcon = document.getElementById("lobby-sound-icon");
+    const lobbySoundText = document.getElementById("lobby-sound-text");
+    if (lobbySoundIcon) lobbySoundIcon.textContent = icon;
+    if (lobbySoundText) lobbySoundText.textContent = isMuted ? "消音中" : `音量: ${volumePercent}%`;
+
+    // 2. 対戦画面上部バーの音量ボタン
+    const topSoundIcon = document.getElementById("top-sound-icon");
+    const topSoundText = document.getElementById("top-sound-vol-label");
+    if (topSoundIcon) topSoundIcon.textContent = icon;
+    if (topSoundText) topSoundText.textContent = volText;
+
+    // 3. 対戦画面中央のアリーナ内サウンドボタン
     document.querySelectorAll(".btn-sound-toggle").forEach(btn => {
-      btn.innerHTML = isMuted ? "🔇" : "🔊";
-      btn.title = isMuted ? "サウンド: OFF (クリックでON)" : "サウンド: ON (クリックでOFF)";
+      const labelSpan = btn.querySelector(".sound-vol-label");
+      if (labelSpan) {
+        labelSpan.textContent = volText;
+      }
+      const iconSpan = btn.querySelector(".sound-icon");
+      if (iconSpan) {
+        iconSpan.textContent = icon;
+      } else if (!btn.querySelector("*")) {
+        // 子要素がないプレーンボタンの場合
+        btn.textContent = `${icon} ${volText}`;
+      }
+      btn.title = isMuted
+        ? "効果音: 消音中（クリックで音量設定を開く）"
+        : `効果音: ${volumePercent}%（クリックで音量設定を開く）`;
     });
+
+    // 4. スマホメニューの音量ボタン
+    const spSoundVolLabel = document.getElementById("sp-sound-vol-label");
+    const spSoundIcon = document.getElementById("sp-sound-icon");
+    if (spSoundVolLabel) spSoundVolLabel.textContent = volText;
+    if (spSoundIcon) spSoundIcon.textContent = icon;
+
+    // 5. サウンド設定モーダル内のUI（開いている場合）
+    const modalSlider = document.getElementById("sound-modal-slider");
+    const modalValLabel = document.getElementById("sound-modal-val");
+    const modalIcon = document.getElementById("sound-modal-icon");
+    const modalMuteChk = document.getElementById("sound-modal-mute-chk");
+
+    if (modalSlider && modalSlider.value != volumePercent) {
+      modalSlider.value = volumePercent;
+    }
+    if (modalValLabel) {
+      modalValLabel.textContent = `${volumePercent}%`;
+    }
+    if (modalIcon) {
+      modalIcon.textContent = icon;
+    }
+    if (modalMuteChk) {
+      modalMuteChk.checked = isMuted;
+    }
+  }
+
+  /** 音量テスト再生（試聴用） */
+  function playTestSound() {
+    if (isMuted || volumePercent <= 0) {
+      if (typeof showToast === "function") {
+        showToast("🔇 現在ミュート（消音）されています。音量を上げるかミュートを解除してください。");
+      }
+      return;
+    }
+    // カード使用音（カチッ！）と打撃音（ビシッ！）をリズミカルに再生
+    playCardUse();
+    setTimeout(() => {
+      playDamagePunch();
+    }, 180);
   }
 
   // グローバルクリックリスナー: UIボタンをクリックした際に自動で心地よいクリック音を再生
   window.addEventListener("click", (e) => {
     const clickable = e.target.closest("button, .btn, .tab, .mode-tab-btn, .ctx-cond-btn");
     if (clickable) {
-      // サウンドトグルボタン以外でクリック音を鳴らす
-      if (!clickable.classList.contains("btn-sound-toggle")) {
+      // サウンドトグルボタン・音量スライダー等以外でクリック音を鳴らす
+      if (!clickable.classList.contains("btn-sound-toggle") &&
+          !clickable.classList.contains("lobby-panel-sound-btn") &&
+          !clickable.closest("#sound-settings-modal")) {
         playButtonClick();
       }
     }
   }, { capture: true, passive: true });
+
+  // DOMContentLoaded 時に初期UI状態を反映
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", updateVolumeUI);
+    } else {
+      setTimeout(updateVolumeUI, 50);
+    }
+  }
 
   return {
     playTurnStart,
@@ -931,8 +1089,11 @@ const SoundEffects = (() => {
     resetTtsSettings,
     synthesizeGoogleTTS,
     testSpeak,
+    getVolume,
+    setVolume,
     toggleMute,
-    updateMuteIcons,
+    updateVolumeUI,
+    playTestSound,
     get isMuted() { return isMuted; }
   };
 })();
