@@ -108,7 +108,7 @@
             <span>⑥ 技宣言・チャット・通話</span>
             <span class="flow-step-arrow">→</span>
           </div>
-          <p class="flow-step-desc">⚔️技宣言カットイン、💬かわいい対戦チャット、🎙️完全無料P2Pボイス通話</p>
+          <p class="flow-step-desc">⚔️技宣言カットイン、💬かわいい対戦チャット、🎙️通話アプリ不要の無料ボイス通話</p>
         </a>
       </div>
     </section>
@@ -393,7 +393,7 @@
 
       <!-- 実際のサイド取得モーダル写真 -->
       <figure class="screen-figure" style="max-width:680px; margin:20px auto;">
-        <img src="img/media_1791964255734_1deac1b1.png" alt="実際のサイド取得画面（本ツール）" class="screen-img">
+        <img src="img/actual_prize_modal.png" alt="実際のサイド取得画面（本ツール）" class="screen-img">
         <figcaption class="screen-caption">▲ 実際のサイド取得画面（クリックでめくって手札に加える）</figcaption>
       </figure>
 
@@ -535,10 +535,10 @@
       </div>
 
       <div class="subsection">
-        <h3 class="subsection-title">3. 🎙️ P2Pボイスチャット（完全無料・超低遅延通話）</h3>
+        <h3 class="subsection-title">3. 🎙️ ボイス通話機能（通話アプリ不要・完全無料）</h3>
         <p>
-          WebRTCのP2P通信を活かし、<b>追加サーバー不要・完全無料</b>で相手と直接音声通話ができます。<br>
-          「🎙️ 通話」を押すと相手に呼び出しが届き、相手が受けると通話開始！画面上端に通話バー（波紋アニメーション・通話時間・ワンタップマイク消音・終了ボタン）が表示されます。<br>
+          Discordなどの外部アプリを開かなくても、<b>ブラウザだけでそのまま相手と直接音声で会話</b>ができます（利用料やアカウント登録は一切不要です）。<br>
+          「🎙️ 通話」ボタンを押すと相手に呼び出し音が届き、相手が受けると通話開始！画面上端に通話バー（波紋アニメーション・通話時間・ワンタップマイク消音・終了ボタン）が表示されます。<br>
           <span style="color:#d97706; font-size:12px; font-weight:bold;">※ ハウリング防止のためイヤホンのご使用を推奨します。</span>
         </p>
         <figure class="screen-figure" style="max-width:540px; margin:14px auto;">
@@ -589,7 +589,7 @@
 
       <div class="callout callout-note">
         <b>Q. 相手の画面に自分のカードの動きが反映されません。</b><br>
-        A. 画面左上の接続ランプが「🟢」になっているかご確認ください。もし「⚪ オフライン」や「🔴 切断」になっている場合は、ルーム番号を再確認して再度ロビーから接続し直してください。また、学校や企業のセキュリティWi-FiではWebRTC通信が制限される場合がありますので、家庭用Wi-Fiやスマートフォンのテザリング環境をお試しください。
+        A. 画面左上の接続ランプが「🟢」になっているかご確認ください。もし「⚪ オフライン」や「🔴 切断」になっている場合は、ルーム番号を再確認して再度ロビーから接続し直してください。また、学校や会社などの保護されたWi-Fi環境では通信がブロックされる場合がありますので、ご自宅のWi-Fiやスマートフォンのテザリング環境などをお試しください。
       </div>
 
       <div class="callout callout-note">
@@ -639,6 +639,11 @@
           </thead>
           <tbody>
             <tr>
+              <td><span class="version-badge">v17.6</span></td>
+              <td class="version-date">2026-10-15</td>
+              <td><b>🎬 操作WebM動画（全9種）の完全再撮影</b>（ゆったりした操作テンポ・仮想カーソル可視化・技宣言からダメカン乗せ・ターン終了までの完結フロー、相手カード手動呼出、エネルギー装着、手札全戻しダイアログ、気絶＆3Dサイドめくりまで全操作を最後まで丁寧に実演）、<b>📸 全実画面キャプチャの超高解像度化＆正確化</b>（Retina高解像度でぼやけを解消、ダメカン操作・トラッシュ・3Dサイド取得画面の正確な差し替え）、<b>🗣️ 専門用語の排除</b>（一般プレイヤーにわかりやすい安心・平易な表現へ統一）。</td>
+            </tr>
+            <tr>
               <td><span class="version-badge">v17.5</span></td>
               <td class="version-date">2026-10-15</td>
               <td><b>🎴 ユーザー指定実戦デッキコードによる全画像・全操作動画の完全生成</b>（デッキ1: ドラパルトex <code>kVVwkf-tGqhKW-VFkFbf</code> vs デッキ2: ヤドキング <code>MR22pX-Zvkpuz-My2Spy</code> の公式カードデータをAPIより取得・反映し、マニュアル内の全インゲーム静止画キャプチャおよび全9本の実画面操作WebM動画を刷新）。</td>
@@ -661,7 +666,7 @@
             <tr>
               <td><span class="version-badge">v17.1</span></td>
               <td class="version-date">2026-10-15</td>
-              <td><b>🎙️ P2Pボイスチャット機能</b>（WebRTC MediaStream & PeerJS Call APIによる完全サーバーレス音声通話・発信着信UI・通話バー・ワンタップミュート・退室時自動ストリーム解放）を追加。</td>
+              <td><b>🎙️ ボイス通話機能</b>（通話アプリ不要で直接会話できる無料音声通話・発信着信UI・画面上端通話バー・ワンタップミュート機能）を追加。</td>
             </tr>
             <tr>
               <td><span class="version-badge">v17.0</span></td>
@@ -726,7 +731,7 @@
             <tr>
               <td><span class="version-badge">v5.0</span></td>
               <td class="version-date">2026-10-09</td>
-              <td>`src/` モジュール分割、PeerJSによる実P2Pオンライン通信実装、CSV完全試合再現機能。</td>
+              <td>`src/` モジュール分割、オンライン対戦通信機能の実装、CSV試合再現機能。</td>
             </tr>
             <tr>
               <td><span class="version-badge">v1.0</span></td>
