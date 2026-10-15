@@ -1712,6 +1712,9 @@ function modifyDamage(location, index, delta, keepMenu = false) {
     badge: "💥 ダメカン変更"
   });
   renderAll();
+  if (actualDelta > 0 && window.SoundEffects) {
+    SoundEffects.playDamagePunch();
+  }
   if (actualDelta !== 0 && typeof triggerBoardEffect === "function") {
     triggerBoardEffect({
       fxType: "damage",
@@ -2258,6 +2261,11 @@ function playTurnChangeBanner(turnInfo, onComplete = null) {
   track.className = `turn-banner-track ${isMe ? 'is-me' : 'is-opp'}`;
   overlay.classList.remove("hidden");
   overlay.classList.add("clickable");
+
+  // ターン開始効果音（turnstart.mp3）を再生
+  if (window.SoundEffects) {
+    SoundEffects.playTurnStart();
+  }
 
   // アニメーションのリセットと再トリガー
   void track.offsetWidth;
@@ -4057,6 +4065,10 @@ function modifyOpponentDamage(location, index, delta, keepMenu = false) {
   });
 
   renderAll();
+
+  if (actualDelta > 0 && window.SoundEffects) {
+    SoundEffects.playDamagePunch();
+  }
 
   if (actualDelta !== 0 && typeof triggerBoardEffect === "function") {
     triggerBoardEffect({

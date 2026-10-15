@@ -95,6 +95,9 @@ function placeHandCardToActive(handIdx) {
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
   state.myActive = createFieldPokemon(card, 0, [], null);
+  if (window.SoundEffects) {
+    SoundEffects.playPokemonPlace();
+  }
   addLog(`「${card.name}」をバトル場に出しました`, {
     oppText: state.isSetupPhase
       ? `バトル場にポケモンを伏せて置きました`
@@ -135,6 +138,9 @@ function placeHandCardToBenchIndex(handIdx, benchIdx) {
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
   state.myBench[benchIdx] = createFieldPokemon(card, 0, [], null);
+  if (window.SoundEffects) {
+    SoundEffects.playPokemonPlace();
+  }
   addLog(`「${card.name}」をベンチに出しました`, {
     oppText: state.isSetupPhase
       ? `ベンチにポケモンを伏せて置きました`
@@ -204,6 +210,9 @@ function attachHandCardToPokemon(handIdx, location) {
     state.selectedHandIndex = -1;
     if (!dst.energies) dst.energies = [];
     dst.energies.push(card);
+    if (window.SoundEffects) {
+      SoundEffects.playAttach();
+    }
     const eInfo = getEnergyInfo(card);
     addLog(`「${dst.card.name}」に「${card.name}」をつけました`, {
       oppText: state.isSetupPhase
@@ -249,6 +258,9 @@ function attachHandCardToPokemon(handIdx, location) {
     state.myHand.splice(handIdx, 1);
     state.selectedHandIndices.clear();
     state.selectedHandIndex = -1;
+    if (window.SoundEffects) {
+      SoundEffects.playPokemonPlace();
+    }
     const cureSuffix = curedNames.length > 0 ? `（特殊状態【${curedNames.join("・")}】が回復しました）` : "";
     addLog(`「${prevName}」が「${card.name}」に進化しました！${cureSuffix}`, {
       cards: [card],
@@ -280,6 +292,9 @@ function attachHandCardToPokemon(handIdx, location) {
       }
       const oldTool = dst.tool;
       state.myTrash.push(oldTool);
+      if (window.SoundEffects) {
+        SoundEffects.playTrash();
+      }
       addLog(`前のどうぐ「${oldTool.name}」をトラッシュしました`, {
         cards: [oldTool],
         badge: "🗑️ どうぐ破棄"
@@ -293,6 +308,9 @@ function attachHandCardToPokemon(handIdx, location) {
     state.selectedHandIndices.clear();
     state.selectedHandIndex = -1;
     dst.tool = card;
+    if (window.SoundEffects) {
+      SoundEffects.playAttach();
+    }
     addLog(`「${dst.card.name}」に「${card.name}」をつけました`, {
       oppText: state.isSetupPhase
         ? `場のポケモンにどうぐ「${card.name}」をつけました`
@@ -325,6 +343,9 @@ function trashHandCardByIndex(handIdx) {
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
   state.myTrash.push(card);
+  if (window.SoundEffects) {
+    SoundEffects.playTrash();
+  }
   addLog(`手札から「${card.name}」をトラッシュしました`, {
     cards: [card],
     badge: "🗑️ 手札からトラッシュ"
@@ -400,6 +421,9 @@ function trashSelectedHandCards() {
   });
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
+  if (window.SoundEffects) {
+    SoundEffects.playTrash();
+  }
   addLog(`手札から${names.length}枚（${names.join(", ")}）をトラッシュしました`, {
     cards: trashedCards,
     badge: "🗑️ 手札からトラッシュ"
@@ -515,6 +539,9 @@ function detachEnergyToTrash(loc, energyIdx) {
   const energy = pk.energies.splice(energyIdx, 1)[0];
   if (energy) {
     state.myTrash.push(energy);
+    if (window.SoundEffects) {
+      SoundEffects.playTrash();
+    }
     addLog(`「${pk.card.name}」からエネルギー「${energy.name}」をトラッシュしました`, {
       cards: [energy],
       badge: "🗑️ エネルギートラッシュ"

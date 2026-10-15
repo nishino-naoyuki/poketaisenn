@@ -669,24 +669,40 @@ html, body {
 /* 相手手札 */
 .opp-hand {
   background: linear-gradient(180deg, #7a1218, #b3242b);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  padding: 0 calc(var(--u) * 1.2);
+  gap: calc(var(--u) * 1);
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+}
+
+.opp-hand-center {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: calc(var(--u) * 0.5);
-  overflow: hidden;
+  height: 100%;
   position: relative;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .opp-hand-cards {
   display: flex;
   justify-content: center;
   gap: calc(var(--u) * 0.4);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .opp-hand .back {
   width: calc(var(--u) * 8 * var(--card-r) * 1.4);
   height: calc(var(--u) * 8);
   transform: translateY(35%);
+  flex-shrink: 1;
+  min-width: calc(var(--u) * 2);
 }
 
 .opp-hand .count {
@@ -699,23 +715,28 @@ html, body {
   padding: 0 8px;
   font-weight: bold;
   font-size: calc(var(--fs) * 0.85);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .top-menu {
-  position: absolute;
-  left: calc(var(--u) * 1.5);
-  top: 50%;
-  transform: translateY(-50%);
+  position: static;
+  transform: none;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   font-size: var(--fs);
+  flex-shrink: 0;
+  z-index: 2;
+  white-space: nowrap;
 }
 
 .top-menu .room {
   background: rgba(0, 0, 0, 0.45);
   padding: 2px 8px;
   border-radius: 10px;
+  font-size: calc(var(--fs) * 0.9);
 }
 
 .conn-badge {

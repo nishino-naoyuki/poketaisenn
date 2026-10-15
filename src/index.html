@@ -348,17 +348,19 @@
   <div class="board">
 
     <!-- 相手の手札（上端から裏面が覗く） -->
-    <div class="opp-hand">
+    <div class="opp-hand" id="opp-hand">
       <div class="top-menu">
         <span class="room">ROOM <b id="g-room"></b></span>
         <span id="g-conn-badge" class="conn-badge offline">⚪ オフライン</span>
         <button class="btn green" id="btn-top-voice" onclick="VoiceChat.startCall()" title="P2Pボイス通話を開始">🎙️ 通話</button>
-        <button class="btn blue btn-chat-trigger" onclick="openChatModal()" title="対戦チャットを開く" style="position:relative;">💬 チャット <span id="chat-badge" class="badge-unread hidden">0</span></button>
-        <button class="btn" id="btn-undo" data-action="undo" title="直前の操作を1手順巻き戻します">↩️ 1手順巻き戻す</button>
+        <button class="btn blue btn-chat-trigger" id="btn-top-chat" onclick="openChatModal()" title="対戦チャットを開く" style="position:relative;">💬 チャット <span id="chat-badge" class="badge-unread hidden">0</span></button>
+        <button class="btn" id="btn-undo" data-action="undo" title="直前の操作を1手順巻き戻します">↩️ 戻す</button>
         <button class="btn red" data-action="exit">退室</button>
       </div>
-      <div id="opp-hand-cards" class="opp-hand-cards"></div>
-      <span class="count">相手の手札 <b id="opp-hand-count">0</b></span>
+      <div class="opp-hand-center">
+        <div id="opp-hand-cards" class="opp-hand-cards"></div>
+        <span class="count">相手の手札 <b id="opp-hand-count">0</b></span>
+      </div>
     </div>
 
     <!-- 相手エリア（自分側を180°回転した配置） -->

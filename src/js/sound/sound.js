@@ -1,16 +1,26 @@
 /**
  * sound.js
- * ポケカラボアリーナ (ポケアリ) 専用 Web Audio API 音響エンジン ＆ 音声合成システム
+ * ポケカラボアリーナ (ポケアリ) 専用 音響エンジン ＆ 音声合成システム
  * 
- * 外部音声ファイルの読み込み不要・完全オフライン動作・遅延ゼロ・超軽量。
- * プレイヤーの耳に心地よいリアルな紙・スリーブの摩擦音、カードプレイ打撃音、シャッフル音、
- * コイントス金属音、および技名自動読み上げボイス（Web Speech API）を提供します。
+ * - 実音MP3効果音（ターン開始、カードプレイ・配置・装着）
+ * - Web Audio API による物理打撃音（ダメカン殴打音、トラッシュ音、シャッフル音、ドロー音、サイドめくり音、コイントス音）
+ * - Web Speech API による熱血・感情豊かな技名自動読み上げボイス
  */
 
 const SoundEffects = (() => {
   let audioCtx = null;
   const STORAGE_KEY = "pokeca_sound_muted";
   let isMuted = localStorage.getItem(STORAGE_KEY) === "true";
+
+  // 実音MP3のプリロード用プール
+  const audioPool = {
+    turnStart: new Audio("audio/turnstart.mp3"),
+    card1: new Audio("audio/card1.mp3"),
+  };
+
+  // 音量初期設定
+  audioPool.turnStart.volume = 0.8;
+  audioPool.card1.volume = 0.85;
 
   /** オーディオコンテキストの初期化（ブラウザの自動再生ポリシー対策） */
   function getAudioContext() {
@@ -26,18 +36,34 @@ const SoundEffects = (() => {
     return audioCtx;
   }
 
-  // 初回ユーザーインタラクション時にコンテキストをウォームアップ
+  // 初回ユーザーインタラクション時にコンテキストとAudioをウォームアップ
   const warmUp = () => {
     getAudioContext();
+    // プリロード
+    audioPool.turnStart.load();
+    audioPool.card1.load();
     window.removeEventListener("pointerdown", warmUp);
     window.removeEventListener("keydown", warmUp);
   };
   window.addEventListener("pointerdown", warmUp, { once: true });
   window.addEventListener("keydown", warmUp, { once: true });
 
-  /**
-   * ノイズバッファの生成（紙の擦れ・スリーブの摩擦音用）
-   */
+  /** 音声ファイル（MP3）のクローン再生（連続再生対応） */
+  function playAudioFile(audioObj, volume = 0.85) {
+    if (isMuted) return;
+    try {
+      const clone = audioObj.cloneNode();
+      clone.volume = volume;
+      const p = clone.play();
+      if (p && p.catch) {
+        p.catch(() => {});
+      }
+    } catch (e) {
+      console.warn("Audio play error:", e);
+    }
+  }
+
+  /** ノイズバッファの生成 */
   function createNoiseBuffer(ctx, duration = 0.5) {
     const bufferSize = Math.floor(ctx.sampleRate * duration);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -48,54 +74,86 @@ const SoundEffects = (() => {
     return buffer;
   }
 
+  // =========================================================================
+  // 公開サウンドAPI
+  // =========================================================================
+
   /**
-   * 1. 🃏 カード使用音（マットに「パシッ！」とプレイする小気味よい打撃音）
+   * 1. ⚔️ ターンの始まりの「XXXのターン」のとき（turnstart.mp3）
+   */
+  function playTurnStart() {
+    playAudioFile(audioPool.turnStart, 0.8);
+  }
+
+  /**
+   * 2. 🃏 カードが使用エリアに行ったとき（card1.mp3）
    */
   function playCardUse() {
+    playAudioFile(audioPool.card1, 0.9);
+  }
+
+  /**
+   * 3. 🐾 ポケモンをベンチ・バトル場に出したとき（card1.mp3）
+   */
+  function playPokemonPlace() {
+    playAudioFile(audioPool.card1, 0.85);
+  }
+
+  /**
+   * 4. ⚡ ポケモンにエネルギーや道具を付けたとき（card1.mp3）
+   */
+  function playAttach() {
+    playAudioFile(audioPool.card1, 0.85);
+  }
+
+  /**
+   * 5. 💥 ダメカンを載せるとき（殴るようなビシッ！という重い打撃音）
+   */
+  function playDamagePunch() {
     if (isMuted) return;
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
 
-    // ① 机・マットに叩きつける低域の打音（コッ）
-    const osc = ctx.createOscillator();
-    const oscGain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(45, now + 0.06);
+    // ① 重いボディへの衝撃音（ドシッ！低域キック）
+    const kick = ctx.createOscillator();
+    const kickGain = ctx.createGain();
+    kick.type = "sine";
+    kick.frequency.setValueAtTime(240, now);
+    kick.frequency.exponentialRampToValueAtTime(38, now + 0.12);
 
-    oscGain.gain.setValueAtTime(0.4, now);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+    kickGain.gain.setValueAtTime(0.5, now);
+    kickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
 
-    osc.connect(oscGain);
-    oscGain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.08);
+    kick.connect(kickGain);
+    kickGain.connect(ctx.destination);
+    kick.start(now);
+    kick.stop(now + 0.15);
 
-    // ② スリーブがマットに当たる高域のスナップ音（パシッ）
+    // ② 鋭いパンチ打撃・拳のヒット音（ビシッ！高域クラッシュノイズ）
     const noise = ctx.createBufferSource();
     noise.buffer = createNoiseBuffer(ctx, 0.08);
 
     const filter = ctx.createBiquadFilter();
     filter.type = "bandpass";
-    filter.frequency.setValueAtTime(2200, now);
-    filter.Q.setValueAtTime(2.5, now);
+    filter.frequency.setValueAtTime(1600, now);
+    filter.Q.setValueAtTime(1.8, now);
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.35, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    noiseGain.gain.setValueAtTime(0.45, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
 
     noise.connect(filter);
     filter.connect(noiseGain);
     noiseGain.connect(ctx.destination);
 
     noise.start(now);
-    noise.stop(now + 0.06);
+    noise.stop(now + 0.08);
   }
 
   /**
-   * 2. 🗑️ トラッシュ送り音（「スッ…サッ」とカードが滑り込む軽快な摩擦音）
+   * 6. 🗑️ カードがトラッシュに行ったとき（手札トラッシュ・自動トラッシュ・山札トラッシュ）
    */
   function playTrash() {
     if (isMuted) return;
@@ -104,29 +162,29 @@ const SoundEffects = (() => {
 
     const now = ctx.currentTime;
     const noise = ctx.createBufferSource();
-    noise.buffer = createNoiseBuffer(ctx, 0.15);
+    noise.buffer = createNoiseBuffer(ctx, 0.14);
 
     const filter = ctx.createBiquadFilter();
     filter.type = "bandpass";
     filter.frequency.setValueAtTime(3200, now);
-    filter.frequency.exponentialRampToValueAtTime(1400, now + 0.12);
+    filter.frequency.exponentialRampToValueAtTime(1200, now + 0.11);
     filter.Q.setValueAtTime(1.8, now);
 
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.01, now);
-    gain.gain.linearRampToValueAtTime(0.25, now + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+    gain.gain.linearRampToValueAtTime(0.28, now + 0.025);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
 
     noise.connect(filter);
     filter.connect(gain);
     gain.connect(ctx.destination);
 
     noise.start(now);
-    noise.stop(now + 0.15);
+    noise.stop(now + 0.14);
   }
 
   /**
-   * 3. 🔀 山札シャッフル音（カード同士が「パラララッ…サササッ」と重なるリフル音）
+   * 7. 🔀 山札シャッフル音（「パラララッ…サササッ」）
    */
   function playShuffle() {
     if (isMuted) return;
@@ -134,7 +192,7 @@ const SoundEffects = (() => {
     if (!ctx) return;
 
     const baseTime = ctx.currentTime;
-    const clicks = 10; // カードが重なる回数
+    const clicks = 10;
 
     for (let i = 0; i < clicks; i++) {
       const clickTime = baseTime + i * 0.022 + (Math.random() * 0.008);
@@ -157,30 +215,10 @@ const SoundEffects = (() => {
       noise.start(clickTime);
       noise.stop(clickTime + 0.04);
     }
-
-    // 最後にサッとまとまる音
-    const finishTime = baseTime + clicks * 0.024;
-    const endNoise = ctx.createBufferSource();
-    endNoise.buffer = createNoiseBuffer(ctx, 0.09);
-
-    const endFilter = ctx.createBiquadFilter();
-    endFilter.type = "lowpass";
-    endFilter.frequency.setValueAtTime(1800, finishTime);
-
-    const endGain = ctx.createGain();
-    endGain.gain.setValueAtTime(0.2, finishTime);
-    endGain.gain.exponentialRampToValueAtTime(0.001, finishTime + 0.08);
-
-    endNoise.connect(endFilter);
-    endFilter.connect(endGain);
-    endGain.connect(ctx.destination);
-
-    endNoise.start(finishTime);
-    endNoise.stop(finishTime + 0.09);
   }
 
   /**
-   * 4. 🎴 山札ドロー音（トップドロー含む：「シュッ！」とスリーブが擦れて引かれる音）
+   * 8. 🎴 山札ドロー音（トップドロー含む：「シュッ！」）
    */
   function playDraw() {
     if (isMuted) return;
@@ -212,7 +250,7 @@ const SoundEffects = (() => {
   }
 
   /**
-   * 5. ✨ サイドカードめくり音（「ペラッ！✨」と3Dカードが回転してめくれる爽快音）
+   * 9. ✨ サイドカードめくり音（「ペラッ！✨」）
    */
   function playSideFlip() {
     if (isMuted) return;
@@ -220,8 +258,6 @@ const SoundEffects = (() => {
     if (!ctx) return;
 
     const now = ctx.currentTime;
-
-    // ① カードのめくれ摩擦音（フッ）
     const noise = ctx.createBufferSource();
     noise.buffer = createNoiseBuffer(ctx, 0.07);
 
@@ -240,8 +276,7 @@ const SoundEffects = (() => {
     noise.start(now);
     noise.stop(now + 0.07);
 
-    // ② キラッと輝く高音のチャイム（ド→ミ→ソの輝き）
-    const freq = [1046.5, 1318.5, 1567.9]; // C6, E6, G6
+    const freq = [1046.5, 1318.5, 1567.9];
     freq.forEach((f, idx) => {
       const osc = ctx.createOscillator();
       const oscGain = ctx.createGain();
@@ -249,20 +284,18 @@ const SoundEffects = (() => {
 
       osc.type = "sine";
       osc.frequency.setValueAtTime(f, toneTime);
-
       oscGain.gain.setValueAtTime(0.12, toneTime);
       oscGain.gain.exponentialRampToValueAtTime(0.001, toneTime + 0.18);
 
       osc.connect(oscGain);
       oscGain.connect(ctx.destination);
-
       osc.start(toneTime);
       osc.stop(toneTime + 0.2);
     });
   }
 
   /**
-   * 6. 🪙 コイントス音（「ピーンッ…チャリン！」という澄んだ金属音）
+   * 10. 🪙 コイントス音（「ピーンッ…チャリン！」）
    */
   function playCoinToss() {
     if (isMuted) return;
@@ -270,41 +303,33 @@ const SoundEffects = (() => {
     if (!ctx) return;
 
     const now = ctx.currentTime;
-
-    // ① 親指で弾く金属ベル音（ピーンッ！）
     const freqs = [2200, 3400, 4800];
     freqs.forEach((f, idx) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(f, now);
-
       gain.gain.setValueAtTime(0.15 / (idx + 1), now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.5);
     });
 
-    // ② 着地時のチャリン音（約1.05秒後）
     setTimeout(() => {
       if (isMuted) return;
       const ctx2 = getAudioContext();
       if (!ctx2) return;
       const t = ctx2.currentTime;
-
       [1800, 2600].forEach((f, idx) => {
         const osc = ctx2.createOscillator();
         const gain = ctx2.createGain();
         osc.type = "triangle";
         osc.frequency.setValueAtTime(f, t);
         osc.frequency.exponentialRampToValueAtTime(f * 0.7, t + 0.08);
-
         gain.gain.setValueAtTime(0.18, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-
         osc.connect(gain);
         gain.connect(ctx2.destination);
         osc.start(t);
@@ -314,7 +339,7 @@ const SoundEffects = (() => {
   }
 
   /**
-   * 7. ⚔️ 技宣言の「技名読み上げ」ボイス（Web Speech API）
+   * 11. ⚔️ 技宣言の「感情を込めた熱血読み上げ」ボイス（Web Speech API）
    */
   function speakAttackName(attackName) {
     if (isMuted) return;
@@ -325,16 +350,25 @@ const SoundEffects = (() => {
     if (!("speechSynthesis" in window)) return;
 
     try {
-      window.speechSynthesis.cancel(); // 既存の読み上げを停止して即時発声
-      const utter = new SpeechSynthesisUtterance(cleanName);
+      window.speechSynthesis.cancel();
+
+      // 感情と気迫を込めるため、アニメ風の力強いコールフレーズに演出！
+      // 例: 「ファントムダイブッ！！」「いけっ、〇〇！！」
+      const emotionalText = `いけっ！${cleanName}ッ！！`;
+
+      const utter = new SpeechSynthesisUtterance(emotionalText);
       utter.lang = "ja-JP";
-      utter.rate = 1.05; // わずかにテンポ良く
-      utter.pitch = 1.15; // 明るく聞き取りやすいピッチ
+      utter.rate = 1.12;  // 疾走感のあるスピード
+      utter.pitch = 1.25; // 気迫とエネルギーのある明るい高めのピッチ
       utter.volume = 1.0;
 
-      // 日本語の自然な音声（Google 日本語 または Kyoko等）を優先選択
       const voices = window.speechSynthesis.getVoices();
-      const jaVoice = voices.find(v => v.lang === "ja-JP" || v.lang === "ja_JP");
+      // 日本語の自然な音声（Google 日本語、Microsoft Keita / Nanami、Kyoko）を優先
+      const jaVoice = voices.find(v => 
+        (v.lang === "ja-JP" || v.lang === "ja_JP") && 
+        (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Keita") || v.name.includes("Nanami"))
+      ) || voices.find(v => v.lang === "ja-JP" || v.lang === "ja_JP");
+
       if (jaVoice) {
         utter.voice = jaVoice;
       }
@@ -345,9 +379,7 @@ const SoundEffects = (() => {
     }
   }
 
-  /**
-   * ミュート（消音）の切り替え
-   */
+  /** ミュート（消音）の切り替え */
   function toggleMute() {
     isMuted = !isMuted;
     localStorage.setItem(STORAGE_KEY, isMuted ? "true" : "false");
@@ -367,7 +399,11 @@ const SoundEffects = (() => {
   }
 
   return {
+    playTurnStart,
     playCardUse,
+    playPokemonPlace,
+    playAttach,
+    playDamagePunch,
     playTrash,
     playShuffle,
     playDraw,

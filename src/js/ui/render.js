@@ -92,6 +92,15 @@ function renderAll() {
 
   // 対戦画面ヘッダーでの接続・相手情報表示
   const connBadge = document.getElementById("g-conn-badge");
+  const btnVoice = document.getElementById("btn-top-voice");
+  const btnChat = document.querySelector(".btn-chat-trigger");
+  if (btnVoice) {
+    btnVoice.style.display = state.isSoloMode ? "none" : "";
+  }
+  if (btnChat) {
+    btnChat.style.display = state.isSoloMode ? "none" : "";
+  }
+
   if (connBadge) {
     if (state.oppExited) {
       connBadge.className = "conn-badge offline";
