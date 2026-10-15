@@ -4706,7 +4706,12 @@ function showAttackCutin(playerName, pokemonName, attackName) {
       <div class="attack-cutin-title">
         ${isSpecified ? `ワザ宣言！` : `ワザを使った！`}
       </div>
-      ${isSpecified ? `<div class="attack-cutin-name">『${escapeHtml(attackName)}』</div>` : ''}
+      ${isSpecified ? `
+        <div class="attack-cutin-name">『${escapeHtml(attackName)}』</div>
+        <div style="font-size:11px; color:#fde047; margin-top:5px; font-weight:bold; letter-spacing:0.5px; opacity:0.95; text-shadow:0 0 8px rgba(250,204,21,0.6);">
+          🎙️ Google Cloud AI Voice 読み上げ中
+        </div>
+      ` : ''}
       <div class="attack-cutin-tip">（タップでスキップ）</div>
     </div>
   `;

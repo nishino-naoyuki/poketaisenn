@@ -739,9 +739,9 @@ const SoundEffects = (() => {
   const GCP_TTS_STORAGE_KEY = "pokeca_gcp_tts_settings";
   const DEFAULT_TTS_SETTINGS = {
     apiKey: BUILTIN_GCP_TTS_API_KEY,
-    voiceName: "ja-JP-Neural2-B",
-    speakingRate: 1.15,
-    pitch: 2.0,
+    voiceName: "ja-JP-Neural2-C", // 男性・熱血バトル声（誰が聴いても一発で違いが分かる高品質ボイス）
+    speakingRate: 1.10,
+    pitch: 0.0,
     volumeGainDb: 2.0
   };
 
@@ -751,7 +751,14 @@ const SoundEffects = (() => {
     try {
       const saved = localStorage.getItem(GCP_TTS_STORAGE_KEY);
       if (saved) {
-        settings = { ...DEFAULT_TTS_SETTINGS, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        // 旧デフォルト（Neural2-B かつ pitch 2.0）が残っている場合は新デフォルトへ更新
+        if (parsed.voiceName === "ja-JP-Neural2-B" && (parsed.pitch === 2.0 || parsed.pitch === "2.0" || parsed.pitch === 2)) {
+          parsed.voiceName = "ja-JP-Neural2-C";
+          parsed.pitch = 0.0;
+          parsed.speakingRate = 1.10;
+        }
+        settings = { ...DEFAULT_TTS_SETTINGS, ...parsed };
       }
     } catch (e) {}
     // キーが未設定または空の場合は内蔵固定キーを必ず適用
@@ -868,8 +875,11 @@ const SoundEffects = (() => {
         // チャージSEの炸裂タイミング（約220ms後）に合わせて再生
         setTimeout(() => {
           if (!isMuted && audio.volume > 0) {
-            console.info(`🔊 [技読み上げ] Google Cloud TTS (${settings.voiceName || 'ja-JP-Neural2-B'}) で再生: 「${textToSpeak}」`);
-            audio.play().catch(e => console.warn("Google TTS play error:", e));
+            console.info(`🔊 [技読み上げ] Google Cloud TTS (${settings.voiceName || 'ja-JP-Neural2-C'}) で再生: 「${textToSpeak}」`);
+            audio.play().catch(e => {
+              console.warn("⚠️ Google TTS audio.play() 失敗、端末標準音声で再生します:", e);
+              playWebSpeechFallback(textToSpeak, settings);
+            });
           }
         }, 220);
         return;

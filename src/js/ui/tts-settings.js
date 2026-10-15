@@ -15,9 +15,9 @@
       ? SoundEffects.getTtsSettings()
       : {
           apiKey: "",
-          voiceName: "ja-JP-Neural2-B",
-          speakingRate: 1.15,
-          pitch: 2.0,
+          voiceName: "ja-JP-Neural2-C",
+          speakingRate: 1.10,
+          pitch: 0.0,
           volumeGainDb: 2.0
         };
 
@@ -29,9 +29,9 @@
     const sliderVol = document.getElementById("slider-tts-vol");
 
     if (inputKey) inputKey.value = settings.apiKey || "";
-    if (selectVoice) selectVoice.value = settings.voiceName || "ja-JP-Neural2-B";
-    if (sliderRate) sliderRate.value = settings.speakingRate || 1.15;
-    if (sliderPitch) sliderPitch.value = settings.pitch || 2.0;
+    if (selectVoice) selectVoice.value = settings.voiceName || "ja-JP-Neural2-C";
+    if (sliderRate) sliderRate.value = settings.speakingRate || 1.10;
+    if (sliderPitch) sliderPitch.value = settings.pitch !== undefined ? settings.pitch : 0.0;
     if (sliderVol) sliderVol.value = settings.volumeGainDb || 2.0;
 
     // スライダ値ラベル更新

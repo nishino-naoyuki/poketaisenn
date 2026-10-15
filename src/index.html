@@ -694,13 +694,11 @@
       <div class="tts-form-group">
         <label for="tts-voice-select" class="tts-label">🗣️ 声質（ボイスモデル）</label>
         <select id="tts-voice-select" class="tts-select">
-          <option value="ja-JP-Neural2-B">ja-JP-Neural2-B (男性・力強いバトル声) 【おすすめ】</option>
-          <option value="ja-JP-Neural2-C">ja-JP-Neural2-C (女性・ハキハキ元気声) 【おすすめ】</option>
-          <option value="ja-JP-Neural2-D">ja-JP-Neural2-D (男性・落ち着いた知性声)</option>
-          <option value="ja-JP-Wavenet-B">ja-JP-Wavenet-B (男性・WaveNet自然声)</option>
-          <option value="ja-JP-Wavenet-C">ja-JP-Wavenet-C (女性・WaveNet自然声)</option>
-          <option value="ja-JP-Standard-A">ja-JP-Standard-A (女性・スタンダード)</option>
-          <option value="ja-JP-Standard-B">ja-JP-Standard-B (男性・スタンダード)</option>
+          <option value="ja-JP-Neural2-C" selected>ja-JP-Neural2-C (男性・熱血バトル声) 【おすすめ・大人気】</option>
+          <option value="ja-JP-Neural2-D">ja-JP-Neural2-D (男性・重厚ダンディ声)</option>
+          <option value="ja-JP-Neural2-B">ja-JP-Neural2-B (女性・元気なバトル少女声)</option>
+          <option value="ja-JP-Wavenet-D">ja-JP-Wavenet-D (男性・クリア爽やか声)</option>
+          <option value="ja-JP-Wavenet-B">ja-JP-Wavenet-B (女性・クリアアナウンス声)</option>
         </select>
       </div>
 
@@ -710,18 +708,18 @@
         <div class="tts-slider-item">
           <div class="tts-slider-header">
             <span class="tts-slider-title">⚡ 話速（スピード）</span>
-            <span class="tts-slider-val" id="val-tts-rate">1.15x</span>
+            <span class="tts-slider-val" id="val-tts-rate">1.10x</span>
           </div>
-          <input type="range" id="slider-tts-rate" min="0.80" max="1.50" step="0.05" value="1.15" oninput="updateTtsSliderLabels()">
+          <input type="range" id="slider-tts-rate" min="0.80" max="1.50" step="0.05" value="1.10" oninput="updateTtsSliderLabels()">
         </div>
 
         <!-- ピッチ（声の高さ） -->
         <div class="tts-slider-item">
           <div class="tts-slider-header">
             <span class="tts-slider-title">🎵 ピッチ（声の高さ）</span>
-            <span class="tts-slider-val" id="val-tts-pitch">+2.0st</span>
+            <span class="tts-slider-val" id="val-tts-pitch">+0.0st</span>
           </div>
-          <input type="range" id="slider-tts-pitch" min="-6.0" max="8.0" step="0.5" value="2.0" oninput="updateTtsSliderLabels()">
+          <input type="range" id="slider-tts-pitch" min="-6.0" max="8.0" step="0.5" value="0.0" oninput="updateTtsSliderLabels()">
         </div>
 
         <!-- 音量ゲイン -->
@@ -914,19 +912,19 @@
 <script src="js/util.js"></script>
 <script src="js/data/playmats-default.js"></script>
 <script src="js/data/sleeves-default.js"></script>
-<script src="js/sound/sound.js?v=20261015_02"></script>
+<script src="js/sound/sound.js?v=20261015_03"></script>
 <script src="js/state.js"></script>
 <script src="js/game/hand-actions.js"></script>
-<script src="js/game/actions.js?v=20261015_02"></script>
+<script src="js/game/actions.js?v=20261015_03"></script>
 <script src="js/game/setup.js"></script>
 <script src="js/game/replay.js"></script>
 <script src="js/ui/marquee.js"></script>
 <script src="js/ui/touch-dnd.js"></script>
 <script src="js/ui/render.js"></script>
 <script src="js/ui/modals.js"></script>
-<script src="js/ui/tts-settings.js?v=20261015_02"></script>
-<script src="js/ui/sound-settings.js?v=20261015_02"></script>
-<script src="js/ui/lobby.js?v=20261015_02"></script>
+<script src="js/ui/tts-settings.js?v=20261015_03"></script>
+<script src="js/ui/sound-settings.js?v=20261015_03"></script>
+<script src="js/ui/lobby.js?v=20261015_03"></script>
 <script src="js/ui/playmat.js"></script>
 <script src="js/ui/sleeve.js"></script>
 <script src="js/net/p2p.js"></script>
