@@ -54,13 +54,18 @@ const SoundEffects = (() => {
 
   /** マスターゲインの更新 */
   function applyMasterGain() {
-    if (audioCtx && masterGainNode) {
-      const effGain = isMuted ? 0 : (volumePercent / 100);
-      try {
-        masterGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-        masterGainNode.gain.setValueAtTime(effGain, audioCtx.currentTime);
-      } catch (e) {
-        masterGainNode.gain.value = effGain;
+    const ctx = getAudioContext();
+    if (ctx) {
+      const node = getMasterGain(ctx);
+      if (node) {
+        const effGain = isMuted ? 0 : (volumePercent / 100);
+        try {
+          node.gain.cancelScheduledValues(0);
+          node.gain.setValueAtTime(effGain, ctx.currentTime);
+          node.gain.value = effGain;
+        } catch (e) {
+          node.gain.value = effGain;
+        }
       }
     }
   }
@@ -79,14 +84,15 @@ const SoundEffects = (() => {
   window.addEventListener("pointerdown", warmUp, { once: true });
   window.addEventListener("keydown", warmUp, { once: true });
 
-  /** 音声ファイル（MP3）のクローン再生（連続再生＆音量連動対応） */
+  /** 音声ファイル（MP3）の再生（連続再生＆音量連動対応） */
   function playAudioFile(audioObj, baseVolume = 0.85) {
     if (isMuted || volumePercent <= 0) return;
     try {
-      const clone = audioObj.cloneNode();
+      const src = (audioObj && audioObj.src) ? audioObj.src : "audio/card1.mp3";
+      const sound = new Audio(src);
       const effVol = (volumePercent / 100) * baseVolume;
-      clone.volume = Math.max(0, Math.min(1, effVol));
-      const p = clone.play();
+      sound.volume = Math.max(0, Math.min(1, effVol));
+      const p = sound.play();
       if (p && p.catch) {
         p.catch(() => {});
       }
@@ -1027,7 +1033,7 @@ const SoundEffects = (() => {
     const modalIcon = document.getElementById("sound-modal-icon");
     const modalMuteChk = document.getElementById("sound-modal-mute-chk");
 
-    if (modalSlider && modalSlider.value != volumePercent) {
+    if (modalSlider && document.activeElement !== modalSlider && modalSlider.value != volumePercent) {
       modalSlider.value = volumePercent;
     }
     if (modalValLabel) {

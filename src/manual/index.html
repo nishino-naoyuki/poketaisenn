@@ -57,6 +57,15 @@
       </div>
 
       <div class="flowchart-grid">
+        <a href="#sec-00" class="flow-step-card" style="border-left: 4px solid #0ea5e9;">
+          <span class="flow-step-badge" style="background:#0ea5e9;">STEP 0</span>
+          <div class="flow-step-title">
+            <span>⓪ 相手と接続する（入室手順）</span>
+            <span class="flow-step-arrow">→</span>
+          </div>
+          <p class="flow-step-desc">名前入力 → ルーム作成or4桁番号入力 → デッキ選択 → P2P接続で即対戦開始！</p>
+        </a>
+
         <a href="#sec-01" class="flow-step-card">
           <span class="flow-step-badge">STEP 1</span>
           <div class="flow-step-title">
@@ -112,6 +121,62 @@
         </a>
       </div>
     </section>
+
+    <!-- =====================================================
+         第0章：相手と接続する（オンライン対戦・ルーム入室手順）
+         ===================================================== -->
+    <article class="manual-chapter" id="sec-00">
+      <div class="chapter-number">CHAPTER 00</div>
+      <h2 class="chapter-title">🌐 相手と接続する（オンライン対戦・ルーム入室手順）</h2>
+
+      <p>
+        ポケカラボアリーナは、<b>WebRTC（P2P）直接暗号化通信</b>を採用しています。<br>
+        中継サーバーを介さず、あなたと対戦相手のブラウザ同士が直接つながるため、超高速かつ完全無料で安全に対戦を楽しめます。
+      </p>
+
+      <!-- 実際のロビー画面全体スクリーンショット -->
+      <figure class="screen-figure">
+        <img src="img/actual_lobby_pc.png" alt="実際のPC版ロビー画面（オンライン対戦セットアップ）" class="screen-img">
+        <figcaption class="screen-caption">▲ 実際のロビー画面（あなたの名前・ルーム作成／入室・公式デッキコード即時インポート・プレイマット＆スリーブ選択）</figcaption>
+      </figure>
+
+      <div class="subsection">
+        <h3 class="subsection-title">1. ホスト側（ルームを作る人）の手順</h3>
+        <ol style="margin-left:20px; line-height:1.75; font-size:13.5px;">
+          <li><b>あなたの名前</b>：対戦相手に表示されるニックネームを入力します。</li>
+          <li><b>ルームを作成</b>：青い「ルームを作成」ボタンをクリックします。</li>
+          <li><b>相手にルーム番号を伝える</b>：発行された<b>4桁のルーム番号</b>（例: <code>7249</code>）を対戦相手に教えます（「コピー」ボタンを押すと一発でクリップボードにコピーできます）。</li>
+          <li><b>デッキ・マット・スリーブを選ぶ</b>：公式デッキコードを入力するか、サンプルから好みのデッキを選択します。</li>
+          <li><b>対戦開始</b>：相手が入室するとボタンが「対戦を開始する」に点灯します。クリックすると即座に対戦盤面へ移行します！</li>
+        </ol>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">2. ゲスト側（ルームに入る人）の手順</h3>
+        <ol style="margin-left:20px; line-height:1.75; font-size:13.5px;">
+          <li><b>あなたの名前</b>：ニックネームを入力します。</li>
+          <li><b>「ルームに入る」タブを選択</b>：「ルーム」エリアの「ルームに入る」タブをクリックします。</li>
+          <li><b>4桁番号を入力して入室</b>：ホストから教えてもらった<b>4桁のルーム番号</b>を入力し、青い「ルームに入る」ボタンを押します。</li>
+          <li><b>デッキ・マット・スリーブを選ぶ</b>：自分のデッキを選択し、準備完了です。ホストが開始を押すと対戦盤面へ移動します！</li>
+        </ol>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">3. ポケカ公式デッキコードの即時読込（超便利！）</h3>
+        <p>
+          ポケモンカードゲーム公式「プレイヤーズクラブ / デッキ構築」で発行される<b>デッキコード（英数18文字・ハイフン付き、例: <code>kVVwkf-tGqhKW-VFkFbf</code>）</b>を入力枠に貼り付け、「読込」ボタンを押すだけで、<b>全60枚のカード公式画像とデータが瞬時にインポート</b>されます。<br>
+          ※ドラパルトexや悪リザードンexなどの人気実戦サンプルデッキも標準搭載されているため、コードがなくてもすぐに対戦できます。
+        </p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">4. 一人で練習したい場合（一人回しモード）</h3>
+        <p>
+          ロビー画面上部の<b>「🃏 一人回し」タブ</b>をクリックすると、相手を待たずに自分一人で先攻・後攻の2デッキを自由に操作して練習できます。<br>
+          デッキの展開力テストや新デッキの回し方の確認、対戦前のウォーミングアップに最適です。
+        </p>
+      </div>
+    </article>
 
     <!-- =====================================================
          第1章：ターンの流れ（基本サイクル）
@@ -666,7 +731,7 @@
             <tr>
               <td><span class="version-badge">Ver 1.0</span></td>
               <td class="version-date">2026-10-15</td>
-              <td><b>🎉 正式初版リリース</b>（ポケカラボアリーナ〈ポケアリ〉公式公開。WebRTCによるP2Pオンライン対戦＆一人回しシミュレーター、直感的な手動盤面操作、公式デッキコード即時インポート、無料P2Pボイス通話、対戦チャット、リアル効果音エンジン、Google Cloud TTSによる技名自動読み上げ、公式操作マニュアルを完備）。</td>
+              <td><b>🎉 正式初版リリース</b>（ポケカラボアリーナ〈ポケアリ〉公式公開。相手とのP2Pオンライン接続＆一人回しシミュレーター、直感的な手動盤面操作、公式デッキコード即時インポート、無料P2Pボイス通話、対戦チャット、リアル効果音エンジン、技名自動読み上げ、公式操作マニュアルを完備）。</td>
             </tr>
           </tbody>
         </table>

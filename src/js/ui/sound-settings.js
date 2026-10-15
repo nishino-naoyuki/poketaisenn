@@ -11,8 +11,13 @@
     const modal = document.getElementById("sound-settings-modal");
     if (!modal) return;
 
-    if (typeof SoundEffects !== "undefined" && SoundEffects.updateVolumeUI) {
-      SoundEffects.updateVolumeUI();
+    if (typeof SoundEffects !== "undefined") {
+      const vol = (typeof SoundEffects.getVolume === "function") ? SoundEffects.getVolume() : 80;
+      const slider = document.getElementById("sound-modal-slider");
+      if (slider) slider.value = vol;
+      if (typeof SoundEffects.updateVolumeUI === "function") {
+        SoundEffects.updateVolumeUI();
+      }
     }
 
     modal.classList.remove("hidden");
