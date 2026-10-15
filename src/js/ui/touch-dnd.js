@@ -394,13 +394,10 @@ function executeDropAction(dropTarget, dragType, dragData) {
     else if (dropTarget.type === "play-lost") movePlayCardToLost();
   } else if (dragType === "stadium") {
     if (dropTarget.type === "stadium-trash") {
-      if (state.stadium) {
-        const oldStadium = state.stadium;
-        state.myTrash.push(oldStadium);
-        addLog(`スタジアム「${oldStadium.name}」がトラッシュされました`, {
-          cards: [oldStadium],
-          badge: "🗑️ スタジアム破棄"
-        });
+      if (typeof trashStadium === "function") {
+        trashStadium();
+      } else if (state.stadium) {
+        state.myTrash.push(state.stadium);
         state.stadium = null;
         renderAll();
       }

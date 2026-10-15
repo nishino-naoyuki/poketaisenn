@@ -169,28 +169,22 @@ function placeHandCardToFirstEmptyBench(handIdx) {
 
 function placeHandCardToStadium(handIdx) {
   if (handIdx < 0 || handIdx >= state.myHand.length) return;
-  if (typeof pushHistorySnapshot === "function") {
-    pushHistorySnapshot("スタジアム配置");
-  }
   const card = state.myHand.splice(handIdx, 1)[0];
   state.selectedHandIndices.clear();
   state.selectedHandIndex = -1;
 
-  if (state.stadium) {
-    const oldStadium = state.stadium;
-    state.myTrash.push(oldStadium);
-    addLog(`前のスタジアム「${oldStadium.name}」がトラッシュされました`, {
-      cards: [oldStadium],
-      badge: "🗑️ スタジアム破棄"
+  if (typeof discardAndReplaceStadium === "function") {
+    discardAndReplaceStadium(card, "手札");
+  } else {
+    state.stadium = card;
+    state.stadiumTs = Date.now();
+    addLog(`手札からスタジアム「${card.name}」を場に出しました`, {
+      cards: [card],
+      badge: "🏟️ スタジアム配置"
     });
+    showToast(`スタジアム: ${card.name}`);
+    renderAll();
   }
-  state.stadium = card;
-  addLog(`手札からスタジアム「${card.name}」を場に出しました`, {
-    cards: [card],
-    badge: "🏟️ スタジアム配置"
-  });
-  showToast(`スタジアム: ${card.name}`);
-  renderAll();
 }
 
 function attachHandCardToPokemon(handIdx, location) {

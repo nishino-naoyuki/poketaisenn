@@ -1041,26 +1041,62 @@ function movePlayCardToDeckBottom() {
   renderAll();
 }
 
+/**
+ * スタジアムを場に出し、既存のスタジアムを持ち主側のトラッシュへ送る共通処理
+ * @param {Object} newCard - 新しく出すスタジアムカード
+ * @param {string} sourceLabel - 配置元の説明（"手札" または "使用枠" など）
+ */
+function discardAndReplaceStadium(newCard, sourceLabel = "手札") {
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("スタジアム配置");
+  }
+
+  // 1. 新カードの持ち主確定（一人回しの一時交代中なら相手側、それ以外は自分側）
+  const isOppOperating = !!(state.isSoloMode && state.isSoloTemporarySwap);
+  newCard.owner = isOppOperating ? "opp" : "me";
+
+  // 2. 既存スタジアムがあれば、その持ち主のトラッシュへ送る
+  if (state.stadium) {
+    const old = state.stadium;
+    const oldIsOpp = (old.owner === "opp") || (old.uid && String(old.uid).startsWith("opp:"));
+
+    if (oldIsOpp) {
+      state.oppTrash.push(old);
+      addLog(`前のスタジアム「${old.name}」が相手（持ち主）のトラッシュに送られました`, {
+        cards: [old],
+        badge: "🗑️ スタジアム破棄"
+      });
+    } else {
+      state.myTrash.push(old);
+      addLog(`前のスタジアム「${old.name}」が自分（持ち主）のトラッシュに送られました`, {
+        cards: [old],
+        badge: "🗑️ スタジアム破棄"
+      });
+    }
+    if (typeof SoundEffects !== "undefined") SoundEffects.playTrash();
+  }
+
+  // 3. 新スタジアムを配置
+  state.stadium = newCard;
+  state.stadiumTs = Date.now();
+
+  addLog(`${sourceLabel}からスタジアム「${newCard.name}」を場に出しました`, {
+    cards: [newCard],
+    badge: "🏟️ スタジアム配置"
+  });
+  showToast(`スタジアム: ${newCard.name}`);
+
+  if (typeof SoundEffects !== "undefined") SoundEffects.playPokemonPlace();
+
+  renderAll();
+}
+
 function movePlayCardToStadium() {
   if (!state.playCard) return;
   cancelAutoTrashTimer();
   const card = state.playCard;
-  if (state.stadium) {
-    const oldStadium = state.stadium;
-    state.myTrash.push(oldStadium);
-    addLog(`スタジアム「${oldStadium.name}」がトラッシュされました`, {
-      cards: [oldStadium],
-      badge: "🗑️ スタジアム破棄"
-    });
-  }
-  state.stadium = card;
   state.playCard = null;
-  addLog(`スタジアム「${card.name}」を場に出しました`, {
-    cards: [card],
-    badge: "🏟️ スタジアム配置"
-  });
-  showToast(`スタジアム: ${card.name}`);
-  renderAll();
+  discardAndReplaceStadium(card, "使用枠");
 }
 
 function movePlayCardToLost() {
@@ -1281,13 +1317,28 @@ function showStadiumMenu(e) {
 function trashStadium() {
   hideCtx();
   if (!state.stadium) return;
+  if (typeof pushHistorySnapshot === "function") {
+    pushHistorySnapshot("スタジアム破棄");
+  }
   const oldStadium = state.stadium;
-  state.myTrash.push(oldStadium);
+  const oldIsOpp = (oldStadium.owner === "opp") || (oldStadium.uid && String(oldStadium.uid).startsWith("opp:"));
+
+  if (oldIsOpp) {
+    state.oppTrash.push(oldStadium);
+    addLog(`スタジアム「${oldStadium.name}」が相手（持ち主）のトラッシュに送られました`, {
+      cards: [oldStadium],
+      badge: "🗑️ スタジアム破棄"
+    });
+  } else {
+    state.myTrash.push(oldStadium);
+    addLog(`スタジアム「${oldStadium.name}」が自分（持ち主）のトラッシュに送られました`, {
+      cards: [oldStadium],
+      badge: "🗑️ スタジアム破棄"
+    });
+  }
   state.stadium = null;
-  addLog(`スタジアム「${oldStadium.name}」がトラッシュされました`, {
-    cards: [oldStadium],
-    badge: "🗑️ スタジアム破棄"
-  });
+  state.stadiumTs = Date.now();
+  if (typeof SoundEffects !== "undefined") SoundEffects.playTrash();
   showToast(`スタジアム破棄: ${oldStadium.name}`);
   renderAll();
 }
@@ -1590,6 +1641,7 @@ function togglePokemonCondition(condType) {
 
   if (condType === "poison") {
     cond.poison = !cond.poison;
+    if (cond.poison && typeof SoundEffects !== "undefined") SoundEffects.playCondition("poison");
     const msg = cond.poison
       ? `バトル場の「${name}」が【☠️どく】状態になりました`
       : `バトル場の「${name}」の【☠️どく】が回復しました`;
@@ -1600,6 +1652,7 @@ function togglePokemonCondition(condType) {
     showToast(msg);
   } else if (condType === "burn") {
     cond.burn = !cond.burn;
+    if (cond.burn && typeof SoundEffects !== "undefined") SoundEffects.playCondition("burn");
     const msg = cond.burn
       ? `バトル場の「${name}」が【🔥やけど】状態になりました`
       : `バトル場の「${name}」の【🔥やけど】が回復しました`;
@@ -1622,6 +1675,7 @@ function togglePokemonCondition(condType) {
     } else {
       const prevSpecial = cond.special;
       cond.special = condType;
+      if (typeof SoundEffects !== "undefined") SoundEffects.playCondition(condType);
       const overwriteNote = prevSpecial ? `（※【${specialLabels[prevSpecial]}】から上書き）` : "";
       const msg = `バトル場の「${name}」が【${icon}${label}】状態になりました${overwriteNote}`;
       addLog(msg, {
@@ -1897,6 +1951,8 @@ function knockoutPokemon(location, index) {
   pushHistorySnapshot("ポケモンを気絶させる");
   const pokemonName = target.card.name;
 
+  if (typeof SoundEffects !== "undefined") SoundEffects.playKnockout();
+
   state.myTrash.push(target.card);
   if (target.tool) state.myTrash.push(target.tool);
   if (target.energies) target.energies.forEach(e => state.myTrash.push(e));
@@ -1938,6 +1994,8 @@ function knockoutOpponentPokemon(location, index) {
   if (!target) return;
 
   const pokemonName = target.card.name;
+
+  if (typeof SoundEffects !== "undefined") SoundEffects.playKnockout();
 
   state.oppTrash.push(target.card);
   if (target.tool) state.oppTrash.push(target.tool);
@@ -3605,6 +3663,8 @@ function playGrandVictoryEffect(winnerName, reasonText = "すべてのサイド�
   const descEl = document.getElementById("victory-winner-desc");
   if (!overlay) return;
 
+  if (typeof SoundEffects !== "undefined") SoundEffects.playVictoryFanfare();
+
   const isMeWinner = (winnerName === state.myName);
 
   if (titleEl) {
@@ -4135,7 +4195,9 @@ function toggleOpponentCondition(condType) {
     badge: "🧪 特殊状態"
   });
 
-  renderAll();
+  if (newStatus && typeof SoundEffects !== "undefined") {
+    SoundEffects.playCondition(condType);
+  }
 
   if (newStatus && typeof triggerBoardEffect === "function") {
     triggerBoardEffect({
@@ -4454,6 +4516,7 @@ function handleOpponentRemoteAction(msg) {
       if (typeof P2P !== "undefined") P2P.syncNow();
     }
   } else if (msg.action === "knockout_by_opponent") {
+    if (typeof SoundEffects !== "undefined") SoundEffects.playKnockout();
     const target = msg.location === "active" ? state.myActive : state.myBench[msg.index];
     if (target) {
       state.myTrash.push(target.card);
@@ -4470,6 +4533,7 @@ function handleOpponentRemoteAction(msg) {
     renderAll();
     showPrizeWaitOverlay(state.oppName || "相手プレイヤー");
   } else if (msg.action === "knockout_self_grant_prize") {
+    if (typeof SoundEffects !== "undefined") SoundEffects.playKnockout();
     const target = msg.location === "active" ? state.oppActive : state.oppBench[msg.index];
     if (target) {
       state.oppTrash.push(target.card);

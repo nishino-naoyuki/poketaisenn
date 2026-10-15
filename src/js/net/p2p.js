@@ -1225,7 +1225,19 @@ const P2P = {
     state.oppPlayCard = s.playCard ? pre(s.playCard) : null;
 
     if ((s.stadiumTs | 0) > (state.stadiumTs | 0)) {
-      state.stadium = s.stadium ? pre(s.stadium) : null;
+      if (state.stadium) {
+        const old = state.stadium;
+        const oldIsMine = (!old.owner || old.owner === "me") && (!old.uid || !String(old.uid).startsWith("opp:"));
+        if (oldIsMine) {
+          state.myTrash.push(old);
+          addLog(`相手がスタジアムを出したため、自分のスタジアム「${old.name}」がトラッシュされました`, {
+            cards: [old],
+            badge: "🗑️ スタジアム破棄"
+          });
+          if (typeof SoundEffects !== "undefined") SoundEffects.playTrash();
+        }
+      }
+      state.stadium = s.stadium ? { ...pre(s.stadium), owner: "opp" } : null;
       state.stadiumTs = s.stadiumTs;
       this._lastStadiumUid = state.stadium ? state.stadium.uid : null;
     }

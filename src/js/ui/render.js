@@ -918,22 +918,10 @@ function renderStadium() {
     const rawData = e.dataTransfer.getData("text/plain");
     if (rawData === "playCard" && state.playCard) {
       const card = state.playCard;
-      if (state.stadium) {
-        const oldStadium = state.stadium;
-        state.myTrash.push(oldStadium);
-        addLog(`前のスタジアム「${oldStadium.name}」がトラッシュされました`, {
-          cards: [oldStadium],
-          badge: "🗑️ スタジアム破棄"
-        });
-      }
-      state.stadium = card;
       state.playCard = null;
-      addLog(`スタジアム「${card.name}」を場に出しました`, {
-        cards: [card],
-        badge: "🏟️ スタジアム配置"
-      });
-      showToast(`スタジアム: ${card.name}`);
-      renderAll();
+      if (typeof discardAndReplaceStadium === "function") {
+        discardAndReplaceStadium(card, "使用枠");
+      }
       return;
     }
 
@@ -943,25 +931,12 @@ function renderStadium() {
       handIdx = parseInt(rawData, 10);
     }
     if (handIdx >= 0 && handIdx < state.myHand.length) {
-      const card = state.myHand[handIdx];
-      if (state.stadium) {
-        const oldStadium = state.stadium;
-        state.myTrash.push(oldStadium);
-        addLog(`前のスタジアム「${oldStadium.name}」がトラッシュされました`, {
-          cards: [oldStadium],
-          badge: "🗑️ スタジアム破棄"
-        });
-      }
-      state.myHand.splice(handIdx, 1);
+      const card = state.myHand.splice(handIdx, 1)[0];
       state.selectedHandIndices.clear();
       state.draggedHandIndex = -1;
-      state.stadium = card;
-      addLog(`手札からスタジアム「${card.name}」を場に出しました`, {
-        cards: [card],
-        badge: "🏟️ スタジアム配置"
-      });
-      showToast(`スタジアム: ${card.name}`);
-      renderAll();
+      if (typeof discardAndReplaceStadium === "function") {
+        discardAndReplaceStadium(card, "手札");
+      }
       return;
     }
   };
