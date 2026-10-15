@@ -127,9 +127,14 @@
         <button class="mode-tab-btn active" id="btn-mode-online" data-action="switchLobbyMode" data-arg="online">🌐 オンライン対戦</button>
         <button class="mode-tab-btn" id="btn-mode-solo" data-action="switchLobbyMode" data-arg="solo">🃏 一人回し</button>
       </div>
-      <a href="manual/index.html" target="_blank" rel="noopener" class="lobby-panel-manual-btn" title="公式操作マニュアルを別タブで開く">
-        <span class="icon">📖</span>マニュアル<span class="arrow">↗</span>
-      </a>
+      <div class="lobby-nav-actions">
+        <button type="button" class="lobby-panel-tts-btn" onclick="openTtsSettingsModal()" title="技名読み上げ・音声合成（Google Cloud TTS）設定を開く">
+          <span class="icon">🎙️</span>読み上げ設定
+        </button>
+        <a href="manual/index.html" target="_blank" rel="noopener" class="lobby-panel-manual-btn" title="公式操作マニュアルを別タブで開く">
+          <span class="icon">📖</span>マニュアル<span class="arrow">↗</span>
+        </a>
+      </div>
     </div>
 
     <!-- ================= モード1: オンライン対戦 ================= -->
@@ -660,6 +665,104 @@
   </div>
 </div>
 
+<!-- 技名読み上げ設定ポップアップ（Google Cloud TTS） -->
+<div id="tts-settings-modal" class="modal hidden" onclick="closeTtsSettingsModal(event)">
+  <div class="modal-panel tts-settings-panel" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:18px;">🎙️</span>
+        <span style="font-weight:bold; font-size:15px; color:#f8fafc;">技名読み上げ設定（Google Cloud TTS）</span>
+      </div>
+      <button class="btn" style="padding:2px 8px; font-size:12px;" onclick="closeTtsSettingsModal()">✕</button>
+    </div>
+    <div class="modal-body tts-settings-body">
+      <div class="tts-setting-desc">
+        技宣言時に入力された技名に「！！」を付加して自動読み上げます。<br>
+        Google Cloud Text-to-Speech APIキーを設定すると、Neural2等の高音質AIボイスで迫真の読み上げが可能です。
+      </div>
+
+      <!-- APIキー入力 -->
+      <div class="tts-form-group">
+        <label for="tts-api-key" class="tts-label">
+          <span>🔑 Google Cloud TTS API キー</span>
+          <span class="tts-badge-optional">任意</span>
+        </label>
+        <div class="tts-input-password-wrap">
+          <input type="password" id="tts-api-key" placeholder="AIzaSy... (未入力時は端末標準音声)" autocomplete="off">
+          <button type="button" class="btn" id="btn-toggle-key-visibility" onclick="toggleTtsKeyVisibility()" title="キーの表示切替">👁️</button>
+        </div>
+        <small class="tts-help-text">
+          ※APIキーはお使いのブラウザ内（LocalStorage）にのみ安全に保存されます。<br>
+          ※未設定の場合は、ブラウザ標準の音声合成（Web Speech API）で読み上げます。
+        </small>
+      </div>
+
+      <!-- 声質（ボイス）選択 -->
+      <div class="tts-form-group">
+        <label for="tts-voice-select" class="tts-label">🗣️ 声質（ボイスモデル）</label>
+        <select id="tts-voice-select" class="tts-select">
+          <option value="ja-JP-Neural2-B">ja-JP-Neural2-B (男性・力強いバトル声) 【おすすめ】</option>
+          <option value="ja-JP-Neural2-C">ja-JP-Neural2-C (女性・ハキハキ元気声) 【おすすめ】</option>
+          <option value="ja-JP-Neural2-D">ja-JP-Neural2-D (男性・落ち着いた知性声)</option>
+          <option value="ja-JP-Wavenet-B">ja-JP-Wavenet-B (男性・WaveNet自然声)</option>
+          <option value="ja-JP-Wavenet-C">ja-JP-Wavenet-C (女性・WaveNet自然声)</option>
+          <option value="ja-JP-Standard-A">ja-JP-Standard-A (女性・スタンダード)</option>
+          <option value="ja-JP-Standard-B">ja-JP-Standard-B (男性・スタンダード)</option>
+        </select>
+      </div>
+
+      <!-- スライダー群（話速・ピッチ・音量） -->
+      <div class="tts-sliders-grid">
+        <!-- 話速（スピード） -->
+        <div class="tts-slider-item">
+          <div class="tts-slider-header">
+            <span class="tts-slider-title">⚡ 話速（スピード）</span>
+            <span class="tts-slider-val" id="val-tts-rate">1.15x</span>
+          </div>
+          <input type="range" id="slider-tts-rate" min="0.80" max="1.50" step="0.05" value="1.15" oninput="updateTtsSliderLabels()">
+        </div>
+
+        <!-- ピッチ（声の高さ） -->
+        <div class="tts-slider-item">
+          <div class="tts-slider-header">
+            <span class="tts-slider-title">🎵 ピッチ（声の高さ）</span>
+            <span class="tts-slider-val" id="val-tts-pitch">+2.0st</span>
+          </div>
+          <input type="range" id="slider-tts-pitch" min="-6.0" max="8.0" step="0.5" value="2.0" oninput="updateTtsSliderLabels()">
+        </div>
+
+        <!-- 音量ゲイン -->
+        <div class="tts-slider-item">
+          <div class="tts-slider-header">
+            <span class="tts-slider-title">🔊 音量ゲイン</span>
+            <span class="tts-slider-val" id="val-tts-vol">+2.0dB</span>
+          </div>
+          <input type="range" id="slider-tts-vol" min="-6.0" max="6.0" step="0.5" value="2.0" oninput="updateTtsSliderLabels()">
+        </div>
+      </div>
+
+      <!-- テスト発声エリア -->
+      <div class="tts-test-area">
+        <label class="tts-label">🔊 テスト発声（試聴）</label>
+        <div class="tts-test-row">
+          <input type="text" id="tts-test-text" value="ファントムダイブ" placeholder="技名を入力" autocomplete="off">
+          <button type="button" class="btn blue" id="btn-tts-test" onclick="runTtsTestSpeak()">
+            ▶ テスト再生
+          </button>
+        </div>
+        <div id="tts-test-status" class="tts-test-status">末尾に「！！」を付加して発声します</div>
+      </div>
+    </div>
+    <div class="modal-foot" style="display:flex; justify-content:space-between;">
+      <button type="button" class="btn" onclick="resetTtsSettingsToDefault()">初期値に戻す</button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn" onclick="closeTtsSettingsModal()">キャンセル</button>
+        <button type="button" class="btn green" onclick="saveTtsSettingsFromModal()">設定を保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 汎用モーダル（山札・トラッシュ・ロスト・ログ） -->
 <div id="modal" class="modal hidden">
   <div class="modal-panel">
@@ -769,6 +872,7 @@
 <script src="js/ui/touch-dnd.js"></script>
 <script src="js/ui/render.js"></script>
 <script src="js/ui/modals.js"></script>
+<script src="js/ui/tts-settings.js"></script>
 <script src="js/ui/lobby.js"></script>
 <script src="js/ui/playmat.js"></script>
 <script src="js/ui/sleeve.js"></script>

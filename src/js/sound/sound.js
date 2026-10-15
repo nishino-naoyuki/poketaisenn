@@ -692,43 +692,146 @@ const SoundEffects = (() => {
   }
 
   // =========================================================================
-  // 超熱血・感情豊かな技名自動読み上げボイス（Web Speech API）
+  // Google Cloud Text-to-Speech 連携 ＆ 技名読み上げ設定
   // =========================================================================
 
+  const GCP_TTS_STORAGE_KEY = "pokeca_gcp_tts_settings";
+  const DEFAULT_TTS_SETTINGS = {
+    apiKey: "",
+    voiceName: "ja-JP-Neural2-B",
+    speakingRate: 1.15,
+    pitch: 2.0,
+    volumeGainDb: 2.0
+  };
+
+  /** 設定の取得 */
+  function getTtsSettings() {
+    try {
+      const saved = localStorage.getItem(GCP_TTS_STORAGE_KEY);
+      if (saved) {
+        return { ...DEFAULT_TTS_SETTINGS, ...JSON.parse(saved) };
+      }
+    } catch (e) {}
+    return { ...DEFAULT_TTS_SETTINGS };
+  }
+
+  /** 設定の保存 */
+  function saveTtsSettings(newSettings) {
+    const current = getTtsSettings();
+    const updated = { ...current, ...newSettings };
+    localStorage.setItem(GCP_TTS_STORAGE_KEY, JSON.stringify(updated));
+    return updated;
+  }
+
+  /** 設定のリセット */
+  function resetTtsSettings() {
+    localStorage.removeItem(GCP_TTS_STORAGE_KEY);
+    return { ...DEFAULT_TTS_SETTINGS };
+  }
+
+  // 生成済み音声のインメモリキャッシュ
+  const ttsAudioCache = new Map();
+
   /**
-   * 16. ⚔️ 技宣言の「魂を込めた熱血アニメボイス」
+   * Google Cloud Text-to-Speech API を呼び出して MP3 Base64 を取得
    */
-  function speakAttackName(attackName) {
+  async function synthesizeGoogleTTS(text, settings) {
+    const apiKey = (settings.apiKey || "").trim();
+    if (!apiKey) throw new Error("APIキーが設定されていません");
+
+    const cacheKey = `${text}__${settings.voiceName}__${settings.speakingRate}__${settings.pitch}__${settings.volumeGainDb}`;
+    if (ttsAudioCache.has(cacheKey)) {
+      return ttsAudioCache.get(cacheKey);
+    }
+
+    const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`;
+    const payload = {
+      input: {
+        text: text
+      },
+      voice: {
+        languageCode: "ja-JP",
+        name: settings.voiceName || "ja-JP-Neural2-B"
+      },
+      audioConfig: {
+        audioEncoding: "MP3",
+        speakingRate: parseFloat(settings.speakingRate) || 1.15,
+        pitch: parseFloat(settings.pitch) || 2.0,
+        volumeGainDb: parseFloat(settings.volumeGainDb) || 2.0
+      }
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (!data.audioContent) throw new Error("音声データが返されませんでした");
+
+    const dataUrl = "data:audio/mp3;base64," + data.audioContent;
+    ttsAudioCache.set(cacheKey, dataUrl);
+    return dataUrl;
+  }
+
+  /**
+   * 16. ⚔️ 技名自動読み上げボイス（Google Cloud TTS 優先 ＆ Web Speech フォールバック）
+   * 仕様: 読み上げるテキストは技名で、末尾に「！！」を付与
+   */
+  async function speakAttackName(attackName) {
     if (isMuted) return;
     if (!attackName || typeof attackName !== "string") return;
     const cleanName = attackName.trim();
     if (!cleanName) return;
 
-    // 先行して必殺技チャージ＆炸裂SEを鳴らす！
+    // 仕様: 技名の最後に「！！」を付加
+    const textToSpeak = `${cleanName}！！`;
+
+    // 必殺技チャージ＆炸裂SEを先行再生
     playChargeAttackSE();
 
-    if (!("speechSynthesis" in window)) return;
+    const settings = getTtsSettings();
 
+    // Google Cloud TTS APIキーが設定されている場合は優先再生
+    if (settings.apiKey && settings.apiKey.trim()) {
+      try {
+        const audioUrl = await synthesizeGoogleTTS(textToSpeak, settings);
+        const audio = new Audio(audioUrl);
+        audio.volume = 1.0;
+        // チャージSEの炸裂タイミング（約220ms後）に合わせて再生
+        setTimeout(() => {
+          if (!isMuted) audio.play().catch(e => console.warn("Google TTS play error:", e));
+        }, 220);
+        return;
+      } catch (err) {
+        console.warn("Google Cloud TTS 呼び出しに失敗したため、端末標準音声でフォールバックします:", err);
+      }
+    }
+
+    // APIキー未設定またはエラー時は Web Speech API で再生
+    playWebSpeechFallback(textToSpeak, settings);
+  }
+
+  /**
+   * Web Speech API によるフォールバック発声
+   */
+  function playWebSpeechFallback(text, settings) {
+    if (!("speechSynthesis" in window)) return;
     try {
       window.speechSynthesis.cancel();
-
-      // 感情と気迫を最高潮にするアニメ風の叫びフレーズバリエーション！
-      const phrases = [
-        `いけぇぇッ！！${cleanName}ーーーーッ！！！`,
-        `喰らえッ！${cleanName}ッッ！！！`,
-        `決めろッ！渾身の${cleanName}ーーーーッ！！！`,
-        `全力の一撃ィッ！！${cleanName}ッッ！！！`
-      ];
-      const selectedPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-
-      const utter = new SpeechSynthesisUtterance(selectedPhrase);
+      const utter = new SpeechSynthesisUtterance(text);
       utter.lang = "ja-JP";
-      utter.rate = 1.15;  // 疾走感と迫力のある熱血スピード
-      utter.pitch = 1.30; // 気迫とエネルギーに満ちた高揚ピッチ
+      utter.rate = parseFloat(settings.speakingRate) || 1.15;
+      utter.pitch = 1.25;
       utter.volume = 1.0;
 
       const voices = window.speechSynthesis.getVoices();
-      // 日本語の表現力豊かなボイス（Google 日本語、Microsoft Natural、Keita、Nanami、Ichiro）を最優先
       const jaVoice = voices.find(v => 
         (v.lang === "ja-JP" || v.lang === "ja_JP") && 
         (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Keita") || v.name.includes("Nanami") || v.name.includes("Ichiro"))
@@ -738,14 +841,37 @@ const SoundEffects = (() => {
         utter.voice = jaVoice;
       }
 
-      // チャージSEの炸裂タイミング（約220ms後）に合わせて発声を開始
       setTimeout(() => {
-        if (!isMuted) {
-          window.speechSynthesis.speak(utter);
-        }
+        if (!isMuted) window.speechSynthesis.speak(utter);
       }, 220);
     } catch (e) {
       console.warn("SpeechSynthesis error:", e);
+    }
+  }
+
+  /**
+   * テスト再生用（ポップアップから呼び出し）
+   */
+  async function testSpeak(sampleText, customSettings = null) {
+    const settings = customSettings || getTtsSettings();
+    const cleanName = (sampleText && sampleText.trim()) || "ファントムダイブ";
+    const textToSpeak = `${cleanName}！！`;
+
+    if (settings.apiKey && settings.apiKey.trim()) {
+      try {
+        const audioUrl = await synthesizeGoogleTTS(textToSpeak, settings);
+        const audio = new Audio(audioUrl);
+        audio.volume = 1.0;
+        await audio.play();
+        return { success: true, engine: "Google Cloud TTS" };
+      } catch (err) {
+        console.warn("Test Google TTS failed, testing with Web Speech:", err);
+        playWebSpeechFallback(textToSpeak, settings);
+        return { success: false, engine: "Web Speech API (Fallback)", error: err.message };
+      }
+    } else {
+      playWebSpeechFallback(textToSpeak, settings);
+      return { success: true, engine: "Web Speech API (端末標準)" };
     }
   }
 
@@ -800,6 +926,11 @@ const SoundEffects = (() => {
     playVictoryFanfare,
     playChargeAttackSE,
     speakAttackName,
+    getTtsSettings,
+    saveTtsSettings,
+    resetTtsSettings,
+    synthesizeGoogleTTS,
+    testSpeak,
     toggleMute,
     updateMuteIcons,
     get isMuted() { return isMuted; }

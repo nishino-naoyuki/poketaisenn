@@ -367,6 +367,45 @@ html, body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+.lobby-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ロビーパネル内の読み上げ設定ボタン */
+.lobby-panel-tts-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.lobby-panel-tts-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+  background: linear-gradient(135deg, #6d28d9, #9333ea);
+}
+
+.lobby-panel-tts-btn .icon {
+  font-size: 13px;
+}
+
 /* ロビーパネル内の操作マニュアルボタン（案C） */
 .lobby-panel-manual-btn {
   display: inline-flex;
@@ -406,11 +445,16 @@ html, body {
 @media (max-width: 480px) {
   .lobby-top-nav-row {
     gap: 6px;
+    flex-wrap: wrap;
+  }
+  .lobby-nav-actions {
+    gap: 4px;
   }
   .mode-tab-btn {
     padding: 7px 6px;
     font-size: 11px;
   }
+  .lobby-panel-tts-btn,
   .lobby-panel-manual-btn {
     padding: 7px 8px;
     font-size: 11px;
@@ -6026,4 +6070,217 @@ body.menu-open .sp-sheet {
   0% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 5px #f472b6); }
   100% { transform: scale(1.2) translateY(-6px); filter: drop-shadow(0 0 20px #ec4899); }
 }
+
+/* =============================================================================
+ * 技名読み上げ設定モーダル（Google Cloud TTS）
+ * ============================================================================= */
+.tts-settings-panel {
+  max-width: 520px;
+  width: 92vw;
+  background: #0f172a;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.65), 0 0 20px rgba(139, 92, 246, 0.2);
+  border-radius: 14px;
+}
+
+.tts-settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.tts-setting-desc {
+  background: rgba(30, 41, 59, 0.6);
+  border-left: 3px solid #8b5cf6;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.tts-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tts-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  font-weight: bold;
+  color: #e2e8f0;
+}
+
+.tts-badge-optional {
+  background: #334155;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: normal;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.tts-input-password-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tts-input-password-wrap input {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.tts-input-password-wrap input:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+}
+
+.tts-input-password-wrap button {
+  padding: 8px 12px;
+  font-size: 13px;
+  background: #334155;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  color: #f1f5f9;
+}
+
+.tts-help-text {
+  font-size: 10.5px;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.tts-select {
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #f8fafc;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  outline: none;
+  cursor: pointer;
+}
+
+.tts-select:focus {
+  border-color: #8b5cf6;
+}
+
+.tts-sliders-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.tts-slider-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tts-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+}
+
+.tts-slider-title {
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.tts-slider-val {
+  color: #a78bfa;
+  font-weight: bold;
+  font-family: monospace;
+}
+
+.tts-slider-item input[type="range"] {
+  width: 100%;
+  accent-color: #8b5cf6;
+  cursor: pointer;
+}
+
+.tts-test-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px dashed rgba(139, 92, 246, 0.4);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.tts-test-row {
+  display: flex;
+  gap: 8px;
+}
+
+.tts-test-row input {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #f8fafc;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  outline: none;
+}
+
+.tts-test-row input:focus {
+  border-color: #8b5cf6;
+}
+
+.tts-test-row button {
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 7px 14px;
+}
+
+.tts-test-status {
+  font-size: 11px;
+  color: #94a3b8;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.tts-test-status.active {
+  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.tts-test-status.success {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.12);
+  font-weight: bold;
+}
+
+.tts-test-status.warn {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.tts-test-status.error {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.12);
+}
+
 
