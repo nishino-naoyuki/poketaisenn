@@ -129,12 +129,13 @@ html, body {
 }
 
 .lobby-top-logo-img {
-  height: 46px;
+  height: 52px;
   width: auto;
-  max-width: 340px;
+  max-width: 440px;
   object-fit: contain;
   display: block;
-  border-radius: 6px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .lobby-manual-link-btn {
