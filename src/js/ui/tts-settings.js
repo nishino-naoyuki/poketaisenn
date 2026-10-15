@@ -141,12 +141,15 @@
       if (typeof SoundEffects !== "undefined" && SoundEffects.testSpeak) {
         const res = await SoundEffects.testSpeak(sampleText, currentSettings);
         if (statusEl) {
-          if (res.success) {
+          if (res.success && res.engine === "Google Cloud TTS") {
             statusEl.className = "tts-test-status success";
-            statusEl.textContent = `✅ 再生成功: 「${sampleText}！！」`;
+            statusEl.textContent = `✅ [Google Cloud TTS: ${res.voiceName || 'Neural2'}] 再生成功: 「${sampleText}！！」`;
+          } else if (res.engine && res.engine.includes("フォールバック")) {
+            statusEl.className = "tts-test-status error";
+            statusEl.textContent = `⚠️ [端末標準音声へフォールバック] 再生: 「${sampleText}！！」 (${res.error || 'エラー'})`;
           } else {
             statusEl.className = "tts-test-status success";
-            statusEl.textContent = `✅ 再生成功: 「${sampleText}！！」`;
+            statusEl.textContent = `✅ [端末標準音声] 再生成功: 「${sampleText}！！」`;
           }
         }
       }
@@ -171,7 +174,7 @@
     }
 
     if (typeof showToast === "function") {
-      showToast(settings.apiKey ? "🎙️ Google Cloud TTS 設定を保存しました" : "🎙️ 音声設定（端末標準）を保存しました");
+      showToast("🎙️ Google Cloud TTS 設定を保存しました");
     }
 
     window.closeTtsSettingsModal();

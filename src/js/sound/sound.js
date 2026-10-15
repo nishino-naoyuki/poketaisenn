@@ -754,8 +754,8 @@ const SoundEffects = (() => {
         settings = { ...DEFAULT_TTS_SETTINGS, ...JSON.parse(saved) };
       }
     } catch (e) {}
-    // キーが未設定の場合は内蔵固定キーを補填
-    if (!settings.apiKey && BUILTIN_GCP_TTS_API_KEY) {
+    // キーが未設定または空の場合は内蔵固定キーを必ず適用
+    if ((!settings.apiKey || !settings.apiKey.trim()) && BUILTIN_GCP_TTS_API_KEY) {
       settings.apiKey = BUILTIN_GCP_TTS_API_KEY;
     }
     return settings;
@@ -765,6 +765,9 @@ const SoundEffects = (() => {
   function saveTtsSettings(newSettings) {
     const current = getTtsSettings();
     const updated = { ...current, ...newSettings };
+    if ((!updated.apiKey || !updated.apiKey.trim()) && BUILTIN_GCP_TTS_API_KEY) {
+      updated.apiKey = BUILTIN_GCP_TTS_API_KEY;
+    }
     localStorage.setItem(GCP_TTS_STORAGE_KEY, JSON.stringify(updated));
     return updated;
   }
@@ -782,13 +785,21 @@ const SoundEffects = (() => {
    * Google Cloud Text-to-Speech API を呼び出して MP3 Base64 を取得
    */
   async function synthesizeGoogleTTS(text, settings) {
-    const apiKey = (settings.apiKey || "").trim();
+    const apiKey = (settings.apiKey || BUILTIN_GCP_TTS_API_KEY || "").trim();
     if (!apiKey) throw new Error("APIキーが設定されていません");
 
-    const cacheKey = `${text}__${settings.voiceName}__${settings.speakingRate}__${settings.pitch}__${settings.volumeGainDb}`;
+    const voiceName = settings.voiceName || "ja-JP-Neural2-B";
+    const speakingRate = parseFloat(settings.speakingRate) || 1.15;
+    const pitch = parseFloat(settings.pitch) || 2.0;
+    const volumeGainDb = parseFloat(settings.volumeGainDb) || 2.0;
+
+    const cacheKey = `${text}__${voiceName}__${speakingRate}__${pitch}__${volumeGainDb}`;
     if (ttsAudioCache.has(cacheKey)) {
+      console.info(`🎙️ [Google Cloud TTS] キャッシュから即時取得: 「${text}」 (${voiceName})`);
       return ttsAudioCache.get(cacheKey);
     }
+
+    console.info(`🎙️ [Google Cloud TTS] 音声合成リクエスト送信: 「${text}」 [Voice: ${voiceName}, Rate: ${speakingRate}, Pitch: ${pitch}]`);
 
     const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`;
     const payload = {
@@ -797,13 +808,13 @@ const SoundEffects = (() => {
       },
       voice: {
         languageCode: "ja-JP",
-        name: settings.voiceName || "ja-JP-Neural2-B"
+        name: voiceName
       },
       audioConfig: {
         audioEncoding: "MP3",
-        speakingRate: parseFloat(settings.speakingRate) || 1.15,
-        pitch: parseFloat(settings.pitch) || 2.0,
-        volumeGainDb: parseFloat(settings.volumeGainDb) || 2.0
+        speakingRate: speakingRate,
+        pitch: pitch,
+        volumeGainDb: volumeGainDb
       }
     };
 
@@ -815,7 +826,9 @@ const SoundEffects = (() => {
 
     if (!res.ok) {
       const errJson = await res.json().catch(() => ({}));
-      throw new Error(errJson.error?.message || `HTTP ${res.status}`);
+      const errMsg = errJson.error?.message || `HTTP ${res.status}`;
+      console.error(`❌ [Google Cloud TTS] APIエラー (HTTP ${res.status}):`, errMsg);
+      throw new Error(errMsg);
     }
 
     const data = await res.json();
@@ -823,6 +836,7 @@ const SoundEffects = (() => {
 
     const dataUrl = "data:audio/mp3;base64," + data.audioContent;
     ttsAudioCache.set(cacheKey, dataUrl);
+    console.info(`✅ [Google Cloud TTS] 合成完了 (Base64データ取得成功: 約${Math.round(dataUrl.length / 1024)}KB)`);
     return dataUrl;
   }
 
@@ -853,15 +867,19 @@ const SoundEffects = (() => {
         audio.volume = Math.max(0, Math.min(1, 1.0 * effVol));
         // チャージSEの炸裂タイミング（約220ms後）に合わせて再生
         setTimeout(() => {
-          if (!isMuted && audio.volume > 0) audio.play().catch(e => console.warn("Google TTS play error:", e));
+          if (!isMuted && audio.volume > 0) {
+            console.info(`🔊 [技読み上げ] Google Cloud TTS (${settings.voiceName || 'ja-JP-Neural2-B'}) で再生: 「${textToSpeak}」`);
+            audio.play().catch(e => console.warn("Google TTS play error:", e));
+          }
         }, 220);
         return;
       } catch (err) {
-        console.warn("Google Cloud TTS 呼び出しに失敗したため、端末標準音声でフォールバックします:", err);
+        console.warn("⚠️ Google Cloud TTS 呼び出しに失敗したため、端末標準音声でフォールバックします:", err);
       }
     }
 
     // APIキー未設定またはエラー時は Web Speech API で再生
+    console.info(`🔊 [技読み上げ] 端末標準音声 (Web Speech API) で再生: 「${textToSpeak}」`);
     playWebSpeechFallback(textToSpeak, settings);
   }
 
@@ -898,7 +916,7 @@ const SoundEffects = (() => {
   }
 
   /**
-   * テスト再生用（ポップアップから呼び出し）
+   * テスト再生用（ポップアップ呼び出し）
    */
   async function testSpeak(sampleText, customSettings = null) {
     const settings = customSettings || getTtsSettings();
@@ -911,15 +929,26 @@ const SoundEffects = (() => {
         const audio = new Audio(audioUrl);
         audio.volume = 1.0;
         await audio.play();
-        return { success: true, engine: "Google Cloud TTS" };
+        return { 
+          success: true, 
+          engine: "Google Cloud TTS", 
+          voiceName: settings.voiceName || "ja-JP-Neural2-B" 
+        };
       } catch (err) {
         console.warn("Test Google TTS failed, testing with Web Speech:", err);
         playWebSpeechFallback(textToSpeak, settings);
-        return { success: false, engine: "Web Speech API (Fallback)", error: err.message };
+        return { 
+          success: false, 
+          engine: "Web Speech API (フォールバック)", 
+          error: err.message 
+        };
       }
     } else {
       playWebSpeechFallback(textToSpeak, settings);
-      return { success: true, engine: "Web Speech API (端末標準)" };
+      return { 
+        success: true, 
+        engine: "Web Speech API (端末標準)" 
+      };
     }
   }
 
