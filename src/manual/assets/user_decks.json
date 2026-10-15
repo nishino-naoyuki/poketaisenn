@@ -1,0 +1,610 @@
+{
+  "deck1Code": "kVVwkf-tGqhKW-VFkFbf",
+  "deck1Name": "ドラパルトex / バシャーモex デッキ",
+  "deck1Cards": [
+    {
+      "name": "ドラメシヤ",
+      "url": "https://funamushi.net/card_img/048654_P_DORAMESHIYA.jpg",
+      "id": "00"
+    },
+    {
+      "name": "ドラメシヤ",
+      "url": "https://funamushi.net/card_img/048654_P_DORAMESHIYA.jpg",
+      "id": "01"
+    },
+    {
+      "name": "ドラメシヤ",
+      "url": "https://funamushi.net/card_img/048654_P_DORAMESHIYA.jpg",
+      "id": "02"
+    },
+    {
+      "name": "ドラメシヤ",
+      "url": "https://funamushi.net/card_img/048654_P_DORAMESHIYA.jpg",
+      "id": "03"
+    },
+    {
+      "name": "ドロンチ",
+      "url": "https://funamushi.net/card_img/048655_P_DORONCHI.jpg",
+      "id": "04"
+    },
+    {
+      "name": "ドロンチ",
+      "url": "https://funamushi.net/card_img/048655_P_DORONCHI.jpg",
+      "id": "05"
+    },
+    {
+      "name": "ドロンチ",
+      "url": "https://funamushi.net/card_img/048655_P_DORONCHI.jpg",
+      "id": "06"
+    },
+    {
+      "name": "ドロンチ",
+      "url": "https://funamushi.net/card_img/048655_P_DORONCHI.jpg",
+      "id": "07"
+    },
+    {
+      "name": "ドラパルトex",
+      "url": "https://funamushi.net/card_img/049264_P_DORAPARUTOEX.jpg",
+      "id": "08"
+    },
+    {
+      "name": "ドラパルトex",
+      "url": "https://funamushi.net/card_img/049264_P_DORAPARUTOEX.jpg",
+      "id": "09"
+    },
+    {
+      "name": "アチャモ",
+      "url": "https://funamushi.net/card_img/047411_P_ACHIXYAMO.jpg",
+      "id": 10
+    },
+    {
+      "name": "アチャモ",
+      "url": "https://funamushi.net/card_img/047411_P_ACHIXYAMO.jpg",
+      "id": 11
+    },
+    {
+      "name": "ワカシャモ",
+      "url": "https://funamushi.net/card_img/047412_P_WAKASHIXYAMO.jpg",
+      "id": 12
+    },
+    {
+      "name": "バシャーモex",
+      "url": "https://funamushi.net/card_img/046470_P_BASHIXYAMOEX.jpg",
+      "id": 13
+    },
+    {
+      "name": "バシャーモex",
+      "url": "https://funamushi.net/card_img/046470_P_BASHIXYAMOEX.jpg",
+      "id": 14
+    },
+    {
+      "name": "リーリエのピッピex",
+      "url": "https://funamushi.net/card_img/049521_P_RIRIENOPIPPIEX.jpg",
+      "id": 15
+    },
+    {
+      "name": "キチキギスex",
+      "url": "https://funamushi.net/card_img/049205_P_KICHIKIGISUEX.jpg",
+      "id": 16
+    },
+    {
+      "name": "ニャースex",
+      "url": "https://funamushi.net/card_img/049694_P_NIXYASUEX.jpg",
+      "id": 17
+    },
+    {
+      "name": "スボミー",
+      "url": "https://funamushi.net/card_img/048533_P_SUBOMI.jpg",
+      "id": 18
+    },
+    {
+      "name": "ファイヤー",
+      "url": "https://funamushi.net/card_img/048354_P_FUAIYA.jpg",
+      "id": 19
+    },
+    {
+      "name": "マシマシラ",
+      "url": "https://funamushi.net/card_img/049074_P_MASHIMASHIRA.jpg",
+      "id": 20
+    },
+    {
+      "name": "マシマシラ",
+      "url": "https://funamushi.net/card_img/049074_P_MASHIMASHIRA.jpg",
+      "id": 21
+    },
+    {
+      "name": "シェイミ",
+      "url": "https://funamushi.net/card_img/048534_P_SHIEIMI.jpg",
+      "id": 22
+    },
+    {
+      "name": "なかよしポフィン",
+      "url": "https://funamushi.net/card_img/048294_T_NAKAYOSHIPOFUIN.jpg",
+      "id": 23
+    },
+    {
+      "name": "なかよしポフィン",
+      "url": "https://funamushi.net/card_img/048294_T_NAKAYOSHIPOFUIN.jpg",
+      "id": 24
+    },
+    {
+      "name": "なかよしポフィン",
+      "url": "https://funamushi.net/card_img/048294_T_NAKAYOSHIPOFUIN.jpg",
+      "id": 25
+    },
+    {
+      "name": "なかよしポフィン",
+      "url": "https://funamushi.net/card_img/048294_T_NAKAYOSHIPOFUIN.jpg",
+      "id": 26
+    },
+    {
+      "name": "ポケパッド",
+      "url": "https://funamushi.net/card_img/050444_T_POKEPADDO.jpg",
+      "id": 27
+    },
+    {
+      "name": "ポケパッド",
+      "url": "https://funamushi.net/card_img/050444_T_POKEPADDO.jpg",
+      "id": 28
+    },
+    {
+      "name": "ポケパッド",
+      "url": "https://funamushi.net/card_img/050444_T_POKEPADDO.jpg",
+      "id": 29
+    },
+    {
+      "name": "ハイパーボール",
+      "url": "https://funamushi.net/card_img/036400_T_HAIPABORU.jpg",
+      "id": 30
+    },
+    {
+      "name": "ハイパーボール",
+      "url": "https://funamushi.net/card_img/036400_T_HAIPABORU.jpg",
+      "id": 31
+    },
+    {
+      "name": "ハイパーボール",
+      "url": "https://funamushi.net/card_img/036400_T_HAIPABORU.jpg",
+      "id": 32
+    },
+    {
+      "name": "夜のタンカ",
+      "url": "https://funamushi.net/card_img/048681_T_YORUNOTANKA.jpg",
+      "id": 33
+    },
+    {
+      "name": "夜のタンカ",
+      "url": "https://funamushi.net/card_img/048681_T_YORUNOTANKA.jpg",
+      "id": 34
+    },
+    {
+      "name": "ふしぎなアメ",
+      "url": "https://funamushi.net/card_img/036444_T_FUSHIGINAAME.jpg",
+      "id": 35
+    },
+    {
+      "name": "ふしぎなアメ",
+      "url": "https://funamushi.net/card_img/036444_T_FUSHIGINAAME.jpg",
+      "id": 36
+    },
+    {
+      "name": "ふしぎなアメ",
+      "url": "https://funamushi.net/card_img/036444_T_FUSHIGINAAME.jpg",
+      "id": 37
+    },
+    {
+      "name": "アンフェアスタンプ(ACE SPEC)",
+      "url": "https://funamushi.net/card_img/049349_T_ANFUEASUTANPU.jpg",
+      "id": 38
+    },
+    {
+      "name": "ヒカリ",
+      "url": "https://funamushi.net/card_img/048417_T_HIKARI.jpg",
+      "id": 39
+    },
+    {
+      "name": "アカマツ",
+      "url": "https://funamushi.net/card_img/046824_T_AKAMATSU.jpg",
+      "id": 40
+    },
+    {
+      "name": "アカマツ",
+      "url": "https://funamushi.net/card_img/046824_T_AKAMATSU.jpg",
+      "id": 41
+    },
+    {
+      "name": "ジャッジマン",
+      "url": "https://funamushi.net/card_img/036456_T_JAJJIMAN.jpg",
+      "id": 42
+    },
+    {
+      "name": "リーリエの決心",
+      "url": "https://funamushi.net/card_img/049445_T_RIRIENOKESSHIN.jpg",
+      "id": 43
+    },
+    {
+      "name": "リーリエの決心",
+      "url": "https://funamushi.net/card_img/049445_T_RIRIENOKESSHIN.jpg",
+      "id": 44
+    },
+    {
+      "name": "リーリエの決心",
+      "url": "https://funamushi.net/card_img/049445_T_RIRIENOKESSHIN.jpg",
+      "id": 45
+    },
+    {
+      "name": "リーリエの決心",
+      "url": "https://funamushi.net/card_img/049445_T_RIRIENOKESSHIN.jpg",
+      "id": 46
+    },
+    {
+      "name": "ボスの指令",
+      "url": "https://funamushi.net/card_img/040139_T_BOSUNOSHIREISAKAKI.jpg",
+      "id": 47
+    },
+    {
+      "name": "ボスの指令",
+      "url": "https://funamushi.net/card_img/040139_T_BOSUNOSHIREISAKAKI.jpg",
+      "id": 48
+    },
+    {
+      "name": "ボスの指令",
+      "url": "https://funamushi.net/card_img/040139_T_BOSUNOSHIREISAKAKI.jpg",
+      "id": 49
+    },
+    {
+      "name": "ロケット団の監視塔",
+      "url": "https://funamushi.net/card_img/048711_T_ROKETTODANNOKANSHITOU.jpg",
+      "id": 50
+    },
+    {
+      "name": "ジャミングタワー",
+      "url": "https://funamushi.net/card_img/047214_T_JIXYAMINGUTAWA.jpg",
+      "id": 51
+    },
+    {
+      "name": "基本超エネルギー",
+      "url": "https://funamushi.net/card_img/045654_E_KIHONCHIXYOUENERUGI.jpg",
+      "id": 52
+    },
+    {
+      "name": "基本超エネルギー",
+      "url": "https://funamushi.net/card_img/045654_E_KIHONCHIXYOUENERUGI.jpg",
+      "id": 53
+    },
+    {
+      "name": "基本超エネルギー",
+      "url": "https://funamushi.net/card_img/045654_E_KIHONCHIXYOUENERUGI.jpg",
+      "id": 54
+    },
+    {
+      "name": "基本炎エネルギー",
+      "url": "https://funamushi.net/card_img/045651_E_KIHONHONOOENERUGI.jpg",
+      "id": 55
+    },
+    {
+      "name": "基本炎エネルギー",
+      "url": "https://funamushi.net/card_img/045651_E_KIHONHONOOENERUGI.jpg",
+      "id": 56
+    },
+    {
+      "name": "基本炎エネルギー",
+      "url": "https://funamushi.net/card_img/045651_E_KIHONHONOOENERUGI.jpg",
+      "id": 57
+    },
+    {
+      "name": "基本悪エネルギー",
+      "url": "https://funamushi.net/card_img/045656_E_KIHONAKUENERUGI.jpg",
+      "id": 58
+    },
+    {
+      "name": "基本悪エネルギー",
+      "url": "https://funamushi.net/card_img/045656_E_KIHONAKUENERUGI.jpg",
+      "id": 59
+    }
+  ],
+  "deck2Code": "MR22pX-Zvkpuz-My2Spy",
+  "deck2Name": "ヤドキング / メガガルーラex デッキ",
+  "deck2Cards": [
+    {
+      "name": "ヤドキング",
+      "url": "https://funamushi.net/card_img/045978_P_YADOKINGU.jpg",
+      "id": "00"
+    },
+    {
+      "name": "ヤドキング",
+      "url": "https://funamushi.net/card_img/045978_P_YADOKINGU.jpg",
+      "id": "01"
+    },
+    {
+      "name": "ヤドキング",
+      "url": "https://funamushi.net/card_img/045978_P_YADOKINGU.jpg",
+      "id": "02"
+    },
+    {
+      "name": "ヤドン",
+      "url": "https://funamushi.net/card_img/045977_P_YADON.jpg",
+      "id": "03"
+    },
+    {
+      "name": "ヤドン",
+      "url": "https://funamushi.net/card_img/045977_P_YADON.jpg",
+      "id": "04"
+    },
+    {
+      "name": "ヤドン",
+      "url": "https://funamushi.net/card_img/045977_P_YADON.jpg",
+      "id": "05"
+    },
+    {
+      "name": "ヤドン",
+      "url": "https://funamushi.net/card_img/045977_P_YADON.jpg",
+      "id": "06"
+    },
+    {
+      "name": "メガガルーラex",
+      "url": "https://funamushi.net/card_img/048475_P_MGARURAEX.jpg",
+      "id": "07"
+    },
+    {
+      "name": "メガガルーラex",
+      "url": "https://funamushi.net/card_img/048475_P_MGARURAEX.jpg",
+      "id": "08"
+    },
+    {
+      "name": "メガガルーラex",
+      "url": "https://funamushi.net/card_img/048475_P_MGARURAEX.jpg",
+      "id": "09"
+    },
+    {
+      "name": "ムチュール",
+      "url": "https://funamushi.net/card_img/046247_P_MUCHIXYURU.jpg",
+      "id": 10
+    },
+    {
+      "name": "アンノーン",
+      "url": "https://funamushi.net/card_img/050672_P_ANNON.jpg",
+      "id": 11
+    },
+    {
+      "name": "パーモット",
+      "url": "https://funamushi.net/card_img/048374_P_PAMOTTO.jpg",
+      "id": 12
+    },
+    {
+      "name": "メタグロス",
+      "url": "https://funamushi.net/card_img/050143_P_METAGUROSU.jpg",
+      "id": 13
+    },
+    {
+      "name": "メタグロス",
+      "url": "https://funamushi.net/card_img/050143_P_METAGUROSU.jpg",
+      "id": 14
+    },
+    {
+      "name": "キュレム",
+      "url": "https://funamushi.net/card_img/045922_P_KIXYUREMU.jpg",
+      "id": 15
+    },
+    {
+      "name": "キュレム",
+      "url": "https://funamushi.net/card_img/045922_P_KIXYUREMU.jpg",
+      "id": 16
+    },
+    {
+      "name": "ラティアスex",
+      "url": "https://funamushi.net/card_img/046324_P_RATEIASUEX.jpg",
+      "id": 17
+    },
+    {
+      "name": "ラティアスex",
+      "url": "https://funamushi.net/card_img/046324_P_RATEIASUEX.jpg",
+      "id": 18
+    },
+    {
+      "name": "リーリエのピッピex",
+      "url": "https://funamushi.net/card_img/047246_P_RIRIENOPIPPIEX.jpg",
+      "id": 19
+    },
+    {
+      "name": "キチキギスex",
+      "url": "https://funamushi.net/card_img/046066_P_KICHIKIGISUEX.jpg",
+      "id": 20
+    },
+    {
+      "name": "ニャースex",
+      "url": "https://funamushi.net/card_img/050081_P_NIXYASUEX.jpg",
+      "id": 21
+    },
+    {
+      "name": "プライムキャッチャー(ACE SPEC)",
+      "url": "https://funamushi.net/card_img/045279_T_PURAIMUKIXYATCHIXYA.jpg",
+      "id": 22
+    },
+    {
+      "name": "夜のタンカ",
+      "url": "https://funamushi.net/card_img/048440_T_YORUNOTANKA.jpg",
+      "id": 23
+    },
+    {
+      "name": "ハイパーボール",
+      "url": "https://funamushi.net/card_img/049976_T_HAIPABORU.jpg",
+      "id": 24
+    },
+    {
+      "name": "ハイパーボール",
+      "url": "https://funamushi.net/card_img/049976_T_HAIPABORU.jpg",
+      "id": 25
+    },
+    {
+      "name": "ハイパーボール",
+      "url": "https://funamushi.net/card_img/049976_T_HAIPABORU.jpg",
+      "id": 26
+    },
+    {
+      "name": "ハイパーボール",
+      "url": "https://funamushi.net/card_img/049976_T_HAIPABORU.jpg",
+      "id": 27
+    },
+    {
+      "name": "せいなるはい",
+      "url": "https://funamushi.net/card_img/050069_T_SEINARUHAI.jpg",
+      "id": 28
+    },
+    {
+      "name": "ポケパッド",
+      "url": "https://funamushi.net/card_img/050070_T_POKEPADDO.jpg",
+      "id": 29
+    },
+    {
+      "name": "ポケパッド",
+      "url": "https://funamushi.net/card_img/050070_T_POKEPADDO.jpg",
+      "id": 30
+    },
+    {
+      "name": "ポケパッド",
+      "url": "https://funamushi.net/card_img/050070_T_POKEPADDO.jpg",
+      "id": 31
+    },
+    {
+      "name": "ポケパッド",
+      "url": "https://funamushi.net/card_img/050070_T_POKEPADDO.jpg",
+      "id": 32
+    },
+    {
+      "name": "ワンダーパッチ",
+      "url": "https://funamushi.net/card_img/050071_T_WANDAPATCHI.jpg",
+      "id": 33
+    },
+    {
+      "name": "ワンダーパッチ",
+      "url": "https://funamushi.net/card_img/050071_T_WANDAPATCHI.jpg",
+      "id": 34
+    },
+    {
+      "name": "ワンダーパッチ",
+      "url": "https://funamushi.net/card_img/050071_T_WANDAPATCHI.jpg",
+      "id": 35
+    },
+    {
+      "name": "スペシャルレッドカード",
+      "url": "https://funamushi.net/card_img/050205_T_SUPESHIXYARUREDDOKADO.jpg",
+      "id": 36
+    },
+    {
+      "name": "暗号マニアの解読",
+      "url": "https://funamushi.net/card_img/045562_T_ANGOUMANIANOKAIDOKU.jpg",
+      "id": 37
+    },
+    {
+      "name": "暗号マニアの解読",
+      "url": "https://funamushi.net/card_img/045562_T_ANGOUMANIANOKAIDOKU.jpg",
+      "id": 38
+    },
+    {
+      "name": "暗号マニアの解読",
+      "url": "https://funamushi.net/card_img/045562_T_ANGOUMANIANOKAIDOKU.jpg",
+      "id": 39
+    },
+    {
+      "name": "暗号マニアの解読",
+      "url": "https://funamushi.net/card_img/045562_T_ANGOUMANIANOKAIDOKU.jpg",
+      "id": 40
+    },
+    {
+      "name": "リーリエの決心",
+      "url": "https://funamushi.net/card_img/048443_T_RIRIENOKESSHIN.jpg",
+      "id": 41
+    },
+    {
+      "name": "リーリエの決心",
+      "url": "https://funamushi.net/card_img/048443_T_RIRIENOKESSHIN.jpg",
+      "id": 42
+    },
+    {
+      "name": "リーリエの決心",
+      "url": "https://funamushi.net/card_img/048443_T_RIRIENOKESSHIN.jpg",
+      "id": 43
+    },
+    {
+      "name": "リーリエの決心",
+      "url": "https://funamushi.net/card_img/048443_T_RIRIENOKESSHIN.jpg",
+      "id": 44
+    },
+    {
+      "name": "サーファー",
+      "url": "https://funamushi.net/card_img/050009_T_SAFUA.jpg",
+      "id": 45
+    },
+    {
+      "name": "夜のアカデミー",
+      "url": "https://funamushi.net/card_img/045939_T_YORUNOAKADEMI.jpg",
+      "id": 46
+    },
+    {
+      "name": "夜のアカデミー",
+      "url": "https://funamushi.net/card_img/045939_T_YORUNOAKADEMI.jpg",
+      "id": 47
+    },
+    {
+      "name": "夜のアカデミー",
+      "url": "https://funamushi.net/card_img/045939_T_YORUNOAKADEMI.jpg",
+      "id": 48
+    },
+    {
+      "name": "夜のアカデミー",
+      "url": "https://funamushi.net/card_img/045939_T_YORUNOAKADEMI.jpg",
+      "id": 49
+    },
+    {
+      "name": "テレパス超エネルギー",
+      "url": "https://funamushi.net/card_img/049712_E_TEREPASUCHIXYOUENERUGI.jpg",
+      "id": 50
+    },
+    {
+      "name": "テレパス超エネルギー",
+      "url": "https://funamushi.net/card_img/049712_E_TEREPASUCHIXYOUENERUGI.jpg",
+      "id": 51
+    },
+    {
+      "name": "テレパス超エネルギー",
+      "url": "https://funamushi.net/card_img/049712_E_TEREPASUCHIXYOUENERUGI.jpg",
+      "id": 52
+    },
+    {
+      "name": "テレパス超エネルギー",
+      "url": "https://funamushi.net/card_img/049712_E_TEREPASUCHIXYOUENERUGI.jpg",
+      "id": 53
+    },
+    {
+      "name": "ブーメランエネルギー",
+      "url": "https://funamushi.net/card_img/045639_E_BUMERANENERUGI.jpg",
+      "id": 54
+    },
+    {
+      "name": "ブーメランエネルギー",
+      "url": "https://funamushi.net/card_img/045639_E_BUMERANENERUGI.jpg",
+      "id": 55
+    },
+    {
+      "name": "基本超エネルギー",
+      "url": "https://funamushi.net/card_img/042948_E_KIHONCHIXYOUENERUGI.jpg",
+      "id": 56
+    },
+    {
+      "name": "基本超エネルギー",
+      "url": "https://funamushi.net/card_img/042948_E_KIHONCHIXYOUENERUGI.jpg",
+      "id": 57
+    },
+    {
+      "name": "基本超エネルギー",
+      "url": "https://funamushi.net/card_img/042948_E_KIHONCHIXYOUENERUGI.jpg",
+      "id": 58
+    },
+    {
+      "name": "基本超エネルギー",
+      "url": "https://funamushi.net/card_img/042948_E_KIHONCHIXYOUENERUGI.jpg",
+      "id": 59
+    }
+  ]
+}
