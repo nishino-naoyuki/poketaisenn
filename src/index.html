@@ -387,6 +387,7 @@
 
       <div class="log-btn">
         <button class="btn blue" onclick="openChatModal()" title="対戦チャットを開く" style="position:relative;">💬 チャット <span id="chat-badge-log" class="badge-unread hidden">0</span></button>
+        <button class="btn btn-sound-toggle" onclick="SoundEffects.toggleMute()" title="サウンド: ON (クリックでOFF)">🔊</button>
         <button class="btn" data-action="showLog">ログ</button>
         <button class="btn gold" data-action="coin">コイン</button>
         <button class="btn gold" data-action="declareVictory" title="勝利を宣言する">🏆 勝利宣言</button>
@@ -569,6 +570,7 @@
     <button class="btn gold" data-action="endTurn" data-close="1">ターン終了</button>
     <button class="btn blue" onclick="closeMenu(); openChatModal();" style="position:relative;">💬 チャット <span id="sp-chat-badge" class="badge-unread hidden">0</span></button>
     <button class="btn green" onclick="closeMenu(); VoiceChat.startCall();">🎙️ 通話</button>
+    <button class="btn btn-sound-toggle" onclick="SoundEffects.toggleMute()" title="サウンド: ON (クリックでOFF)">🔊 音声</button>
     <button class="btn" data-action="coin" data-close="1">🪙 コイン</button>
     <button class="btn" id="btn-sp-undo" data-action="undo" data-close="1">↩️ 1手順戻す</button>
   </div>
@@ -755,6 +757,7 @@
 <script src="js/util.js"></script>
 <script src="js/data/playmats-default.js"></script>
 <script src="js/data/sleeves-default.js"></script>
+<script src="js/sound/sound.js"></script>
 <script src="js/state.js"></script>
 <script src="js/game/hand-actions.js"></script>
 <script src="js/game/actions.js"></script>

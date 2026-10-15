@@ -111,6 +111,9 @@ function drawCardToTemp() {
   pushHistorySnapshot("ドロー");
   const card = state.myDeck.shift();
   state.tempCards.push(card);
+  if (window.SoundEffects) {
+    SoundEffects.playDraw();
+  }
   addLog(`山札からカードを1枚引きました（テンポラリエリアへ）`, {
     oppText: `山札からカードを1枚引きました`,
     badge: "🎴 ドロー"
@@ -210,6 +213,9 @@ function moveTempToTrash() {
   const cards = extractTempCards();
   if (cards.length === 0) return;
   cards.forEach(c => state.myTrash.push(c));
+  if (window.SoundEffects) {
+    SoundEffects.playTrash();
+  }
   const desc = isSelectedOnly ? `（選択した${cards.length}枚: ${cards.map(c=>c.name).join(", ")}）` : `（${cards.map(c=>c.name).join(", ")}）`;
   addLog(`テンポラリからカードをトラッシュしました${desc}`, {
     cards: cards,
@@ -224,6 +230,9 @@ function trashDeckTop() {
   pushHistorySnapshot("山札の上からトラッシュ");
   const card = state.myDeck.shift();
   state.myTrash.push(card);
+  if (window.SoundEffects) {
+    SoundEffects.playTrash();
+  }
   addLog(`山札の上から1枚トラッシュしました: ${card.name}`, {
     cards: [card],
     badge: "🗑️ 山札からトラッシュ"
@@ -235,6 +244,9 @@ function trashDeckTop() {
 function shuffleMyDeck() {
   pushHistorySnapshot("山札シャッフル");
   state.myDeck = shuffleArray(state.myDeck);
+  if (window.SoundEffects) {
+    SoundEffects.playShuffle();
+  }
   addLog(`山札をシャッフルしました`, {
     badge: "🔀 シャッフル"
   });
@@ -725,6 +737,9 @@ function showActionPopup(playerName, actionText, cards = [], badge = "📢 プ�
 
 function showCardUsePopup(playerName, card) {
   if (!card) return;
+  if (window.SoundEffects) {
+    SoundEffects.playCardUse();
+  }
   showActionPopup(
     playerName,
     `「${card.name || "カード"}」を使用しました！`,
@@ -778,6 +793,10 @@ function playHandCardByIndex(idx) {
   addLog(msg, { suppressSync: true });
   showToast(`【使用】${card.name}`);
   showCardUsePopup(state.myName, card);
+
+  if (window.SoundEffects) {
+    SoundEffects.playCardUse();
+  }
 
   if (typeof P2P !== "undefined" && P2P.connected) {
     P2P.send({
@@ -933,6 +952,9 @@ function executeDramaticAutoTrash(card) {
       }
       state.myTrash.push(card);
       state.playCard = null;
+      if (window.SoundEffects) {
+        SoundEffects.playTrash();
+      }
       addLog(`【自動トラッシュ】使用した「${card.name}」をトラッシュへ送りました`, {
         cards: [card],
         badge: "🗑️ 自動トラッシュ"
@@ -963,6 +985,9 @@ function movePlayCardToTrash() {
   const card = state.playCard;
   state.myTrash.push(card);
   state.playCard = null;
+  if (window.SoundEffects) {
+    SoundEffects.playTrash();
+  }
   addLog(`使用した「${card.name}」をトラッシュへ送りました`, {
     cards: [card],
     badge: "🗑️ 使用カードをトラッシュ"
@@ -2012,6 +2037,10 @@ function pickPrizeCard(idx, card, inner) {
 
   inner.classList.add("flipped");
   inner.onclick = null;
+
+  if (window.SoundEffects) {
+    SoundEffects.playSideFlip();
+  }
 
   const stamp = document.createElement("div");
   stamp.className = "prize-picked-stamp";
@@ -3103,6 +3132,9 @@ function playLocalBoardEffect(opts = {}, isOpponent = false) {
 
 /** 6. 🃏 山札からカードを引くスライド・ドローエフェクト */
 function playDeckDrawEffect(isOpponent = false, onComplete = null) {
+  if (window.SoundEffects) {
+    SoundEffects.playDraw();
+  }
   const layer = ensureFxLayer();
   const deckEl = isOpponent
     ? document.getElementById("opp-deck")
@@ -3148,6 +3180,11 @@ function playCoinTossEffect(isHeads, playerName = "", onComplete = null) {
   const prevCoin = layer.querySelector(".fx-coin-backdrop");
   if (prevCoin) prevCoin.remove();
 
+  // コイントス効果音を再生
+  if (window.SoundEffects) {
+    SoundEffects.playCoinToss();
+  }
+
   const backdrop = document.createElement("div");
   backdrop.className = "fx-coin-backdrop";
 
@@ -3155,22 +3192,70 @@ function playCoinTossEffect(isHeads, playerName = "", onComplete = null) {
   const resultTitle = isHeads ? "🌟 表（オモテ）◎" : "🌀 裏（ウラ）✕";
   const subTitle = playerName ? `${escapeHtml(playerName)} のコイントス` : "コイントス";
 
+  // 表: キラキラ笑顔ピカチュウ（ウインク）
+  const svgFront = `
+    <svg viewBox="0 0 100 100" class="coin-svg-art" aria-label="ピカチュウ（オモテ）">
+      <circle cx="50" cy="50" r="47" fill="none" stroke="#fef08a" stroke-width="2" stroke-dasharray="2.5,3"/>
+      <!-- 耳 -->
+      <polygon points="28,34 12,6 36,20" fill="#facc15"/>
+      <polygon points="12,6 20,13 17,19 12,6" fill="#1e293b"/>
+      <polygon points="72,34 88,6 64,20" fill="#facc15"/>
+      <polygon points="88,6 80,13 83,19 88,6" fill="#1e293b"/>
+      <!-- 顔 -->
+      <circle cx="50" cy="52" r="30" fill="#facc15"/>
+      <!-- ほっぺ -->
+      <circle cx="27" cy="57" r="7" fill="#ef4444"/>
+      <circle cx="73" cy="57" r="7" fill="#ef4444"/>
+      <!-- 目（左目パッチリ、右目ウインク） -->
+      <circle cx="37" cy="46" r="4.5" fill="#1e293b"/>
+      <circle cx="38.5" cy="44" r="1.8" fill="#ffffff"/>
+      <path d="M59,47 Q64,41 69,47" fill="none" stroke="#1e293b" stroke-width="3" stroke-linecap="round"/>
+      <!-- 鼻・口 -->
+      <polygon points="50,52 48.5,50.5 51.5,50.5" fill="#1e293b"/>
+      <path d="M43,55 Q50,60 50,57 Q50,60 57,55" fill="none" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- キラキラ星 -->
+      <polygon points="50,14 52,20 58,22 52,24 50,30 48,24 42,22 48,20" fill="#ffffff" opacity="0.95"/>
+    </svg>
+  `;
+
+  // 裏: すやすや眠るピカチュウ ＆ モンスターボール
+  const svgBack = `
+    <svg viewBox="0 0 100 100" class="coin-svg-art" aria-label="ピカチュウ（ウラ）">
+      <circle cx="50" cy="50" r="47" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="2.5,3"/>
+      <!-- 垂れ耳 -->
+      <polygon points="28,36 10,18 32,24" fill="#cbd5e1"/>
+      <polygon points="10,18 17,21 15,26 10,18" fill="#475569"/>
+      <polygon points="72,36 90,18 68,24" fill="#cbd5e1"/>
+      <polygon points="90,18 83,21 85,26 90,18" fill="#475569"/>
+      <!-- 顔 -->
+      <circle cx="50" cy="52" r="30" fill="#e2e8f0"/>
+      <!-- ほっぺ（ほんのりピンク） -->
+      <circle cx="27" cy="57" r="6.5" fill="#f472b6" opacity="0.85"/>
+      <circle cx="73" cy="57" r="6.5" fill="#f472b6" opacity="0.85"/>
+      <!-- 閉じため（すやすや） -->
+      <path d="M33,48 Q38,53 43,48" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M57,48 Q62,53 67,48" fill="none" stroke="#334155" stroke-width="2.6" stroke-linecap="round"/>
+      <!-- 鼻・口 -->
+      <polygon points="50,52 48.5,50.5 51.5,50.5" fill="#334155"/>
+      <path d="M46,56 Q50,59 54,56" fill="none" stroke="#334155" stroke-width="2" stroke-linecap="round"/>
+      <!-- zzz 睡眠マーク -->
+      <text x="64" y="26" font-size="12" font-weight="900" fill="#38bdf8" font-family="sans-serif">z</text>
+      <text x="74" y="17" font-size="15" font-weight="900" fill="#38bdf8" font-family="sans-serif">Z</text>
+    </svg>
+  `;
+
   backdrop.innerHTML = `
     <div class="fx-coin-stage">
       <div class="fx-coin-thrower">${subTitle}</div>
       <div class="fx-coin-3d-wrap ${finalClass}">
         <div class="fx-coin-3d">
           <div class="fx-coin-face front">
-            <div class="coin-inner-ring">
-              <span class="coin-symbol">⚡</span>
-              <span class="coin-label">オモテ</span>
-            </div>
+            ${svgFront}
+            <div class="coin-sub-label">★ HEADS ★</div>
           </div>
           <div class="fx-coin-face back">
-            <div class="coin-inner-ring tails">
-              <span class="coin-symbol">🔴</span>
-              <span class="coin-label">ウラ</span>
-            </div>
+            ${svgBack}
+            <div class="coin-sub-label">★ TAILS ★</div>
           </div>
         </div>
         <div class="fx-coin-shadow"></div>
@@ -4552,6 +4637,11 @@ function showAttackCutin(playerName, pokemonName, attackName) {
 
   cutin.classList.remove("hidden");
   cutin.classList.add("show");
+
+  // 技名自動読み上げボイス（音声合成）
+  if (isSpecified && window.SoundEffects) {
+    SoundEffects.speakAttackName(attackName);
+  }
 
   // 効果音・バイブレーション
   if (navigator.vibrate) {
