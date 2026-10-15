@@ -616,3 +616,113 @@ body {
     font-size: 14px;
   }
 }
+
+/* ==========================================================================
+   🌐 STEP 0: 接続手順対比カード ＆ 自作マット・スリーブ紹介スタイル
+   ========================================================================== */
+.connect-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 22px 0;
+}
+@media (max-width: 768px) {
+  .connect-compare-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.connect-card {
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.connect-card-host {
+  border-color: #3b82f6;
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 80px);
+}
+
+.connect-card-guest {
+  border-color: #10b981;
+  background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 80px);
+}
+
+.connect-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+}
+
+.connect-card-host .connect-card-header {
+  color: #1d4ed8;
+}
+
+.connect-card-guest .connect-card-header {
+  color: #047857;
+}
+
+.connect-step-list {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.8;
+  font-size: 13.5px;
+  color: var(--text-dark);
+}
+
+.connect-step-list li {
+  margin-bottom: 10px;
+}
+
+.connect-ui-mock {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  margin: 12px 0 6px 0;
+  border: 1px solid #334155;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  line-height: 1.6;
+}
+
+.connect-ui-mock-badge {
+  display: inline-block;
+  background: #3b82f6;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.custom-mat-card {
+  background: linear-gradient(135deg, #fdf4ff 0%, #faf5ff 100%);
+  border: 2px solid #d8b4fe;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin: 24px 0;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.1);
+}
+
+.custom-mat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #7e22ce;
+  margin-bottom: 12px;
+}
+

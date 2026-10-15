@@ -63,7 +63,7 @@
             <span>⓪ 相手と接続する（入室手順）</span>
             <span class="flow-step-arrow">→</span>
           </div>
-          <p class="flow-step-desc">名前入力 → ルーム作成or4桁番号入力 → デッキ選択 → P2P接続で即対戦開始！</p>
+          <p class="flow-step-desc">【ホストvsゲスト対比】名前入力 → 4桁番号で合流 → 自作マット＆スリーブ設定 → 即対戦開始！</p>
         </a>
 
         <a href="#sec-01" class="flow-step-card">
@@ -130,50 +130,160 @@
       <h2 class="chapter-title">🌐 相手と接続する（オンライン対戦・ルーム入室手順）</h2>
 
       <p>
-        ポケカラボアリーナは、<b>WebRTC（P2P）直接暗号化通信</b>を採用しています。<br>
-        中継サーバーを介さず、あなたと対戦相手のブラウザ同士が直接つながるため、超高速かつ完全無料で安全に対戦を楽しめます。
+        ポケカラボアリーナは、<b>アプリのインストールや会員登録が一切不要</b>です。URLを開くだけで、ブラウザ上で即座にポケモンカードのオンライン対戦を始められます。<br>
+        通信には最新の<b>WebRTC（P2P）直接暗号化通信</b>を採用しており、中継サーバーを介さず2人のブラウザ同士が直接つながるため、操作のズレがない<b>超高速・リアルタイム同期</b>を完全無料で実現しています。
       </p>
 
       <!-- 実際のロビー画面全体スクリーンショット -->
       <figure class="screen-figure">
         <img src="img/actual_lobby_pc.png" alt="実際のPC版ロビー画面（オンライン対戦セットアップ）" class="screen-img">
-        <figcaption class="screen-caption">▲ 実際のロビー画面（あなたの名前・ルーム作成／入室・公式デッキコード即時インポート・プレイマット＆スリーブ選択）</figcaption>
+        <figcaption class="screen-caption">▲ 実際のロビー画面（あなたの名前・ルーム作成／入室・公式デッキコード即時インポート・プレイマット＆スリーブ選択・効果音＆読み上げ設定）</figcaption>
       </figure>
 
+      <!-- ホスト側 vs ゲスト側 画面対比カード -->
       <div class="subsection">
-        <h3 class="subsection-title">1. ホスト側（ルームを作る人）の手順</h3>
-        <ol style="margin-left:20px; line-height:1.75; font-size:13.5px;">
-          <li><b>あなたの名前</b>：対戦相手に表示されるニックネームを入力します。</li>
-          <li><b>ルームを作成</b>：青い「ルームを作成」ボタンをクリックします。</li>
-          <li><b>相手にルーム番号を伝える</b>：発行された<b>4桁のルーム番号</b>（例: <code>7249</code>）を対戦相手に教えます（「コピー」ボタンを押すと一発でクリップボードにコピーできます）。</li>
-          <li><b>デッキ・マット・スリーブを選ぶ</b>：公式デッキコードを入力するか、サンプルから好みのデッキを選択します。</li>
-          <li><b>対戦開始</b>：相手が入室するとボタンが「対戦を開始する」に点灯します。クリックすると即座に対戦盤面へ移行します！</li>
-        </ol>
-      </div>
-
-      <div class="subsection">
-        <h3 class="subsection-title">2. ゲスト側（ルームに入る人）の手順</h3>
-        <ol style="margin-left:20px; line-height:1.75; font-size:13.5px;">
-          <li><b>あなたの名前</b>：ニックネームを入力します。</li>
-          <li><b>「ルームに入る」タブを選択</b>：「ルーム」エリアの「ルームに入る」タブをクリックします。</li>
-          <li><b>4桁番号を入力して入室</b>：ホストから教えてもらった<b>4桁のルーム番号</b>を入力し、青い「ルームに入る」ボタンを押します。</li>
-          <li><b>デッキ・マット・スリーブを選ぶ</b>：自分のデッキを選択し、準備完了です。ホストが開始を押すと対戦盤面へ移動します！</li>
-        </ol>
-      </div>
-
-      <div class="subsection">
-        <h3 class="subsection-title">3. ポケカ公式デッキコードの即時読込（超便利！）</h3>
+        <h3 class="subsection-title">1. 【画面対比】ホスト側（部屋を作る） vs ゲスト側（部屋に入る）</h3>
         <p>
-          ポケモンカードゲーム公式「プレイヤーズクラブ / デッキ構築」で発行される<b>デッキコード（英数18文字・ハイフン付き、例: <code>kVVwkf-tGqhKW-VFkFbf</code>）</b>を入力枠に貼り付け、「読込」ボタンを押すだけで、<b>全60枚のカード公式画像とデータが瞬時にインポート</b>されます。<br>
-          ※ドラパルトexや悪リザードンexなどの人気実戦サンプルデッキも標準搭載されているため、コードがなくてもすぐに対戦できます。
+          オンライン対戦は、一方が<b>「ホスト（部屋を作る人）」</b>となり、もう一方が<b>「ゲスト（部屋に入る人）」</b>となって合流します。<br>
+          以下の手順どおりに進めるだけで、10秒で接続が完了します！
+        </p>
+
+        <div class="connect-compare-grid">
+          <!-- 左：ホスト側 -->
+          <div class="connect-card connect-card-host">
+            <div class="connect-card-header">
+              <span>👑 ホスト側（ルームを作る人）</span>
+              <span style="font-size:12px; background:#2563eb; color:#fff; padding:2px 8px; border-radius:4px;">先攻側</span>
+            </div>
+
+            <ol class="connect-step-list">
+              <li>
+                <b>あなたの名前を入力</b><br>
+                対戦相手に表示されるニックネームを入力します。
+              </li>
+              <li>
+                <b>「ルームを作成」ボタンをクリック</b><br>
+                「ルーム」枠内の青い「ルームを作成」を押すと、ランダムな<b>4桁のルーム番号</b>が即座に発行されます。
+                <div class="connect-ui-mock">
+                  <span class="connect-ui-mock-badge">発行画面プレビュー</span><br>
+                  ルーム番号 <b style="font-size:16px; color:#60a5fa; letter-spacing:1px;">7249</b> 
+                  <button type="button" style="background:#3b82f6; color:#fff; border:none; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-left:6px;">コピー</button>
+                </div>
+              </li>
+              <li>
+                <b>相手に4桁番号を伝える</b><br>
+                「コピー」ボタンを押して、LINEやDiscord、SNSのDMなどで対戦相手に4桁の番号を伝えます。
+              </li>
+              <li>
+                <b>デッキ・マット・スリーブを選ぶ</b><br>
+                公式デッキコードの入力やサンプルデッキ選択、お気に入りのプレイマット・スリーブを選びます。
+              </li>
+              <li>
+                <b>「対戦を開始する」を押して対戦スタート！</b><br>
+                ゲストが入室すると、画面下部の金色のボタンが「対戦を開始する」に点灯します。クリックすると即座に対戦盤面へ移動します！
+              </li>
+            </ol>
+          </div>
+
+          <!-- 右：ゲスト側 -->
+          <div class="connect-card connect-card-guest">
+            <div class="connect-card-header">
+              <span>🤝 ゲスト側（ルームに入る人）</span>
+              <span style="font-size:12px; background:#059669; color:#fff; padding:2px 8px; border-radius:4px;">後攻側</span>
+            </div>
+
+            <ol class="connect-step-list">
+              <li>
+                <b>あなたの名前を入力</b><br>
+                対戦相手に表示されるニックネームを入力します。
+              </li>
+              <li>
+                <b>「ルームに入る」タブをクリック</b><br>
+                「ルーム」枠の上部にある「ルームに入る」タブを選びます。
+                <div class="connect-ui-mock">
+                  <span class="connect-ui-mock-badge" style="background:#059669;">入室画面プレビュー</span><br>
+                  <div style="display:flex; gap:6px; margin-top:4px;">
+                    <span style="background:#334155; padding:4px 8px; border-radius:4px; font-size:12px; color:#94a3b8;">7249 (4桁入力)</span>
+                    <span style="background:#059669; color:#fff; padding:4px 10px; border-radius:4px; font-size:12px; font-weight:bold;">ルームに入る</span>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <b>ホストから教えてもらった4桁番号を入力</b><br>
+                送られてきた4桁の番号（例: <code>7249</code>）を入力し、緑色の「ルームに入る」ボタンを押します。
+              </li>
+              <li>
+                <b>デッキ・マット・スリーブを選ぶ</b><br>
+                自分のデッキ・お気に入りのプレイマット・スリーブを選んで準備完了です。
+              </li>
+              <li>
+                <b>ホストが開始すると自動で対戦盤面へ！</b><br>
+                ホストが開始ボタンを押すと、2人の画面が同時にリアルタイム対戦盤面へ移行します！
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="callout callout-tip" style="margin-top:14px;">
+          <b>💡 通信トラブル時のヒント</b><br>
+          万が一「相手の接続待ち...」から進まない場合は、お互いにブラウザをリロード（再読み込み）して新しいルーム番号を発行してみてください。企業内ネットワークや特殊なVPN環境下でP2Pが制限されている場合は、通常のモバイル回線やご自宅のWi-Fiからアクセスをお試しください。
+        </div>
+      </div>
+
+      <!-- 🎨 オリジナル画像（自作プレイマット＆自作スリーブ）の登録 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2. 🎨 【大人気機能】自作プレイマット ＆ 自作スリーブを登録しよう！</h3>
+        <p>
+          ポケカラボアリーナでは、標準搭載されている公式風マットやスリーブだけでなく、<b>あなたが持っているオリジナル画像（写真・イラスト・推しポケモンのファンアートなど）をアップロードして自分専用のマットやスリーブとして自由に使えます！</b>
+        </p>
+
+        <div class="custom-mat-card">
+          <div class="custom-mat-header">
+            <span>✨ 「＋ 自作マット登録」「＋ 自作スリーブ登録」でカスタマイズ自由自在</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div style="background:#ffffff; border:1px solid #e9d5ff; border-radius:8px; padding:14px;">
+              <h4 style="margin:0 0 8px 0; color:#7e22ce; font-size:14px; font-weight:800;">🖼️ 自作プレイマット（背景全面）</h4>
+              <p style="font-size:12.5px; line-height:1.7; color:#475569; margin:0;">
+                「4 あなたのプレイマット選択」にある<b>「＋ 自作マット登録」ボタン</b>をクリックし、お使いのスマホやPCから好きな画像（PNG/JPG/WEBP）を選ぶだけ！<br>
+                対戦画面の<b>自分側フィールド（画面下半分）全面</b>に、美しい高画質背景として敷かれます。
+              </p>
+            </div>
+
+            <div style="background:#ffffff; border:1px solid #e9d5ff; border-radius:8px; padding:14px;">
+              <h4 style="margin:0 0 8px 0; color:#7e22ce; font-size:14px; font-weight:800;">🎴 自作スリーブ（カード裏面）</h4>
+              <p style="font-size:12.5px; line-height:1.7; color:#475569; margin:0;">
+                「5 あなたのスリーブ選択」にある<b>「＋ 自作スリーブ登録」ボタン</b>から画像を登録すると、自分の山札・サイドカードだけでなく、<b>相手から見える手札の裏面</b>としても対戦相手の画面にリアルタイム表示されます！自慢の推しスリーブを対戦相手に見せびらかせます。
+              </p>
+            </div>
+          </div>
+
+          <div class="callout callout-note" style="margin-top:14px; background:#ffffff;">
+            <b>💾 ブラウザ自動保存（再登録不要）</b><br>
+            登録したオリジナル画像はブラウザ内（LocalStorage）に自動保存されます。一度登録しておけば、次回以降も登録一覧に残り続けるため、選ぶだけですぐに対戦で使えます！
+          </div>
+        </div>
+      </div>
+
+      <!-- 🎴 公式デッキコードの即時読込 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3. 🎴 ポケカ公式デッキコードの即時読込（超便利機能！）</h3>
+        <p>
+          ポケモンカードゲーム公式「プレイヤーズクラブ / デッキ構築」で発行される<b>デッキコード（英数18文字・ハイフン付き、例: <code>kVVwkf-tGqhKW-VFkFbf</code>）</b>を入力枠に貼り付け、「読込」ボタンを押すだけで、<b>全60枚のカード公式高解像度画像とデータが一瞬でインポート</b>されます！<br>
+          面倒なカード1枚ずつの登録作業は一切不要です。
+        </p>
+        <p style="font-size:12.5px; color:#64748b; margin-top:4px;">
+          ※「ドラパルトex」「悪リザードンex」「カメックスex」「ミライドンex」「フシギバナex」などの現環境人気サンプルデッキも最初から内蔵されているため、デッキコードが手元になくてもワンクリックですぐに対戦を始められます。
         </p>
       </div>
 
+      <!-- 🃏 一人回しモードの案内 -->
       <div class="subsection">
-        <h3 class="subsection-title">4. 一人で練習したい場合（一人回しモード）</h3>
+        <h3 class="subsection-title">4. 🃏 一人で回したい場合（一人回しシミュレーター）</h3>
         <p>
-          ロビー画面上部の<b>「🃏 一人回し」タブ</b>をクリックすると、相手を待たずに自分一人で先攻・後攻の2デッキを自由に操作して練習できます。<br>
-          デッキの展開力テストや新デッキの回し方の確認、対戦前のウォーミングアップに最適です。
+          対戦相手がいない時や、新しく組んだデッキの初動展開・事故率テスト、技の手順確認をしたい時は、ロビー画面上部にある<b>「🃏 一人回し」タブ</b>を選んでください。<br>
+          先攻（デッキA）と後攻（デッキB）の2つのデッキを自分一人で手動操作し、本番と全く同じ盤面演出・効果音エンジン・ダメージ計算でじっくり練習できます。
         </p>
       </div>
     </article>
