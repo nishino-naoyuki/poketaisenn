@@ -7,6 +7,7 @@
   --card-r: 0.716;              /* カード縦横比 (63x88mm) */
   --bench-h: calc(var(--u) * 14);
   --active-h: calc(var(--u) * 17);
+  --active-w: calc(var(--active-h) * var(--card-r));
   --pile-h: calc(var(--u) * 12);
   --prize-h: calc(var(--u) * 6.3);
   --hand-h: calc(var(--u) * 20);
@@ -2155,6 +2156,7 @@ body.menu-open .sp-sheet {
   :root {
     --bench-h: min(7.6vh, 15vw);
     --active-h: min(11.2vh, 23.5vw);
+    --active-w: calc(var(--active-h) * var(--card-r));
     --pile-h: min(7.2vh, 14.5vw);
     --prize-h: min(4.8vh, 9.6vw);
     --hand-h: min(14.5vh, 29vw);
@@ -5276,13 +5278,14 @@ body.menu-open .sp-sheet {
    ============================================================================= */
 .btn-declare-attack {
   position: absolute;
-  top: calc(50% + var(--u) * 0.8 + var(--active-h) * 0.28);
+  top: calc(50% + var(--u) * 0.6 + var(--active-h) * 0.5);
   left: calc(50% + var(--active-w) * 0.5 + 10px);
-  z-index: 18;
+  transform: translateY(-50%);
+  z-index: 25;
   white-space: nowrap;
   font-weight: 800;
-  padding: 6px 14px;
-  font-size: 13px;
+  padding: 6px 12px;
+  font-size: 12.5px;
   border-radius: 9999px;
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
   color: #ffffff;
@@ -5296,21 +5299,22 @@ body.menu-open .sp-sheet {
   user-select: none;
 }
 .btn-declare-attack:hover {
-  transform: translateY(-2px) scale(1.04);
+  transform: translateY(-50%) scale(1.06);
   box-shadow: 0 6px 18px rgba(220, 38, 38, 0.6), 0 0 16px rgba(239, 68, 68, 0.5);
   filter: brightness(1.1);
 }
 .btn-declare-attack:active {
-  transform: translateY(1px) scale(0.97);
+  transform: translateY(-50%) scale(0.96);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) {
   .btn-declare-attack {
-    left: auto;
-    right: 8px;
-    top: calc(50% + 20px);
-    padding: 5px 10px;
+    top: calc(50% + 0.4vh + var(--active-h) * 0.5);
+    left: calc(50% + var(--active-w) * 0.5 + 6px);
+    transform: translateY(-50%);
+    padding: 4px 8px;
     font-size: 11px;
+    gap: 3px;
   }
 }
 
