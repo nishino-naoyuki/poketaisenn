@@ -4587,6 +4587,10 @@ function openChatModal() {
   modal.classList.remove("hidden");
   renderChatMessages();
 
+  if (window.VoiceChat) {
+    VoiceChat.updateChatVoiceButton();
+  }
+
   setTimeout(() => {
     const input = document.getElementById("cute-chat-input");
     if (input) input.focus();
@@ -4612,7 +4616,12 @@ function createCuteChatModalElement() {
           <span class="cute-chat-icon">💬</span>
           <span>ポケチャット♪</span>
         </div>
-        <button class="cute-chat-close-btn" onclick="closeChatModal()" title="閉じる">✕</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="cute-chat-voice-btn" id="cute-chat-voice-btn" onclick="VoiceChat.startCall()" title="ボイス通話を開始">
+            <span>🎙️ 通話</span>
+          </button>
+          <button class="cute-chat-close-btn" onclick="closeChatModal()" title="閉じる">✕</button>
+        </div>
       </div>
 
       <!-- かわいい定型文クイックチップ -->

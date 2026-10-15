@@ -5796,3 +5796,168 @@ body.menu-open .sp-sheet {
   color: #f472b6;
   font-weight: bold;
 }
+
+/* =============================================================================
+   P2Pボイスチャット UI & 通話コントロールバー
+   ============================================================================= */
+.cute-chat-voice-btn {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 9999px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.cute-chat-voice-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+.cute-chat-voice-btn.active {
+  background: #ef4444;
+  border-color: #fca5a5;
+  animation: badgePulse 1.5s infinite ease-in-out;
+}
+
+/* 画面上端に固定の通話コントロールバー */
+.voice-call-bar {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50px);
+  z-index: 99996;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
+  border: 2px solid #22c55e;
+  border-radius: 9999px;
+  box-shadow: 0 8px 30px rgba(34, 197, 94, 0.35), 0 4px 15px rgba(0, 0, 0, 0.4);
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 90vw;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.voice-call-bar.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.voice-call-bar.hidden {
+  display: none !important;
+}
+
+.voice-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.voice-pulse-avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.voice-pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border: 2px solid #4ade80;
+  border-radius: 50%;
+  animation: voiceWavePulse 1.8s infinite ease-out;
+}
+@keyframes voiceWavePulse {
+  0% { transform: scale(0.9); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.voice-info {
+  display: flex;
+  flex-direction: column;
+}
+.voice-peer-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #4ade80;
+  letter-spacing: 0.03em;
+}
+.voice-timer {
+  font-size: 11px;
+  font-weight: bold;
+  color: #cbd5e1;
+  font-family: ui-monospace, monospace;
+}
+
+.voice-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.voice-btn {
+  border: none;
+  border-radius: 9999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.voice-btn:active {
+  transform: scale(0.94);
+}
+.voice-mute-btn {
+  background: #334155;
+  color: #f8fafc;
+  border: 1px solid #475569;
+}
+.voice-mute-btn:hover {
+  background: #475569;
+}
+.voice-mute-btn.muted {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #f87171;
+}
+.voice-end-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+.voice-end-btn:hover {
+  filter: brightness(1.1);
+  transform: scale(1.04);
+}
+
+/* 発信・着信ポップアップ用アニメーション */
+.voice-calling-anim {
+  display: inline-block;
+  animation: callingWiggle 1.2s infinite ease-in-out;
+}
+@keyframes callingWiggle {
+  0%, 100% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(-15deg) scale(1.1); }
+  75% { transform: rotate(15deg) scale(1.1); }
+}
+
+.voice-incoming-anim {
+  display: inline-block;
+  animation: incomingBounce 0.8s infinite alternate ease-in-out;
+}
+@keyframes incomingBounce {
+  0% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 5px #f472b6); }
+  100% { transform: scale(1.2) translateY(-6px); filter: drop-shadow(0 0 20px #ec4899); }
+}
+

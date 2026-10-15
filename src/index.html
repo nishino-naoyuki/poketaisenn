@@ -352,6 +352,7 @@
       <div class="top-menu">
         <span class="room">ROOM <b id="g-room"></b></span>
         <span id="g-conn-badge" class="conn-badge offline">⚪ オフライン</span>
+        <button class="btn green" id="btn-top-voice" onclick="VoiceChat.startCall()" title="P2Pボイス通話を開始">🎙️ 通話</button>
         <button class="btn blue btn-chat-trigger" onclick="openChatModal()" title="対戦チャットを開く" style="position:relative;">💬 チャット <span id="chat-badge" class="badge-unread hidden">0</span></button>
         <button class="btn" id="btn-undo" data-action="undo" title="直前の操作を1手順巻き戻します">↩️ 1手順巻き戻す</button>
         <button class="btn red" data-action="exit">退室</button>
@@ -567,6 +568,7 @@
     <button class="btn red" onclick="closeMenu(); openAttackModal();">⚔️ 技宣言</button>
     <button class="btn gold" data-action="endTurn" data-close="1">ターン終了</button>
     <button class="btn blue" onclick="closeMenu(); openChatModal();" style="position:relative;">💬 チャット <span id="sp-chat-badge" class="badge-unread hidden">0</span></button>
+    <button class="btn green" onclick="closeMenu(); VoiceChat.startCall();">🎙️ 通話</button>
     <button class="btn" data-action="coin" data-close="1">🪙 コイン</button>
     <button class="btn" id="btn-sp-undo" data-action="undo" data-close="1">↩️ 1手順戻す</button>
   </div>
@@ -766,6 +768,7 @@
 <script src="js/ui/playmat.js"></script>
 <script src="js/ui/sleeve.js"></script>
 <script src="js/net/p2p.js"></script>
+<script src="js/net/voice.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

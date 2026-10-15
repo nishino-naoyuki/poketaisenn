@@ -126,7 +126,20 @@ let state = {
 
   // 対戦チャット機能
   chatMessages: [],
-  chatUnreadCount: 0
+  chatUnreadCount: 0,
+
+  // P2Pボイスチャット機能
+  voiceCall: {
+    active: false,
+    status: "idle", // "idle" | "calling" | "incoming" | "connected"
+    isMuted: false,
+    localStream: null,
+    remoteStream: null,
+    mediaConnection: null,
+    callerName: "",
+    durationTimer: null,
+    durationSec: 0
+  }
 };
 
 /** 通信対戦開始時: ダミーBOTデータ（フシギバナex等）を完全に破棄して初期化 */

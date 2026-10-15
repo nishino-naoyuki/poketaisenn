@@ -184,6 +184,9 @@ const P2P = {
   _destroy() {
     this._clearTimeoutTimer();
     this._closingIntentionally = true;
+    if (window.VoiceChat) {
+      VoiceChat.resetVoiceCallState();
+    }
     try { if (this.conn) this.conn.close(); } catch (e) {}
     try { if (this.peer) this.peer.destroy(); } catch (e) {}
     this.peer = null;
@@ -312,6 +315,12 @@ const P2P = {
       this._bind(incomingConn);
     });
 
+    this.peer.on("call", (incomingCall) => {
+      if (window.VoiceChat) {
+        VoiceChat.handlePeerIncomingCall(incomingCall);
+      }
+    });
+
     this.peer.on("disconnected", () => {
       if (!this.connected && !this._closingIntentionally) {
         this._setState(P2P_STATES.CONNECTION_FAILED, "PeerJS Cloudとの接続が切断されました");
@@ -391,6 +400,12 @@ const P2P = {
         reliable: true
       });
       this._bind(conn);
+    });
+
+    this.peer.on("call", (incomingCall) => {
+      if (window.VoiceChat) {
+        VoiceChat.handlePeerIncomingCall(incomingCall);
+      }
     });
 
     this.peer.on("disconnected", () => {
@@ -799,6 +814,50 @@ const P2P = {
     if (msg.t === "chat_message") {
       if (typeof handleIncomingChatMessage === "function") {
         handleIncomingChatMessage(msg);
+      }
+      return;
+    }
+
+    // ---- P2Pボイス通話電文 ----
+    if (msg.t === "voice_call_request") {
+      if (window.VoiceChat) {
+        VoiceChat.handleIncomingCallRequest(msg.callerName);
+      }
+      return;
+    }
+
+    if (msg.t === "voice_call_accept") {
+      if (window.VoiceChat) {
+        VoiceChat.handleCallAccepted();
+      }
+      return;
+    }
+
+    if (msg.t === "voice_call_reject") {
+      if (typeof closeModal === "function") closeModal();
+      if (typeof showToast === "function") {
+        showToast(msg.reason === "busy" ? "⚠️ 相手は通話中のため接続できませんでした" : "📞 相手が通話リクエストに応答しませんでした");
+      }
+      if (window.VoiceChat) {
+        VoiceChat.resetVoiceCallState();
+      }
+      return;
+    }
+
+    if (msg.t === "voice_call_cancel") {
+      if (typeof closeModal === "function") closeModal();
+      if (typeof showToast === "function") {
+        showToast("📞 相手が通話の呼び出しをキャンセルしました");
+      }
+      if (window.VoiceChat) {
+        VoiceChat.resetVoiceCallState();
+      }
+      return;
+    }
+
+    if (msg.t === "voice_call_end") {
+      if (window.VoiceChat) {
+        VoiceChat.endCall(false);
       }
       return;
     }

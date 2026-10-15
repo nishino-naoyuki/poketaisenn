@@ -378,6 +378,9 @@ const actions = {
   exit: () => {
     if (confirm("対戦を終了してロビーに戻りますか？")) {
       window._isExitingToLobby = true;
+      if (window.VoiceChat) {
+        VoiceChat.endCall(false);
+      }
       if (typeof P2P !== "undefined" && P2P.connected) {
         try {
           P2P.send({
@@ -407,12 +410,15 @@ const actions = {
   },
   closeMenu: () => closeMenu(),
 
-  // 技宣言 ＆ チャット
+  // 技宣言 ＆ チャット ＆ ボイス通話
   declareAttack: () => {
     if (typeof openAttackModal === "function") openAttackModal();
   },
   openChat: () => {
     if (typeof openChatModal === "function") openChatModal();
+  },
+  startVoiceCall: () => {
+    if (window.VoiceChat) VoiceChat.startCall();
   },
 
   // 山札アクション
