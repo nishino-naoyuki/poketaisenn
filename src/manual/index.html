@@ -131,13 +131,13 @@
 
       <p>
         ポケカラボアリーナは、<b>アプリのインストールや会員登録が一切不要</b>です。URLを開くだけで、ブラウザ上で即座にポケモンカードのオンライン対戦を始められます。<br>
-        通信には最新の<b>WebRTC（P2P）直接暗号化通信</b>を採用しており、中継サーバーを介さず2人のブラウザ同士が直接つながるため、操作のズレがない<b>超高速・リアルタイム同期</b>を完全無料で実現しています。
+        通信には最新の<b>WebRTC（P2P）直接暗号化通信</b>を採用しており、中継サーバーを介さず2人のブラウザ同士が直接つながるため、操作の遅延がない<b>超高速・リアルタイム同期</b>を完全無料で実現しています。
       </p>
 
       <!-- 実際のロビー画面全体スクリーンショット -->
       <figure class="screen-figure">
         <img src="img/actual_lobby_pc.png" alt="実際のPC版ロビー画面（オンライン対戦セットアップ）" class="screen-img">
-        <figcaption class="screen-caption">▲ 実際のロビー画面（あなたの名前・ルーム作成／入室・公式デッキコード即時インポート・プレイマット＆スリーブ選択・効果音＆読み上げ設定）</figcaption>
+        <figcaption class="screen-caption">▲ 実際のロビー画面（名前入力・ルーム作成／入室・公式デッキコード即時インポート・自作マット＆スリーブ登録・効果音＆読み上げ設定）</figcaption>
       </figure>
 
       <!-- ホスト側 vs ゲスト側 画面対比カード -->
@@ -145,7 +145,7 @@
         <h3 class="subsection-title">1. 【画面対比】ホスト側（部屋を作る） vs ゲスト側（部屋に入る）</h3>
         <p>
           オンライン対戦は、一方が<b>「ホスト（部屋を作る人）」</b>となり、もう一方が<b>「ゲスト（部屋に入る人）」</b>となって合流します。<br>
-          以下の手順どおりに進めるだけで、10秒で接続が完了します！
+          <span style="font-size:12.5px; color:#64748b;">※先攻・後攻は対戦画面に入った後の準備フェーズ（コイントス等）で決定します。ホスト＝先攻ではありません。</span>
         </p>
 
         <div class="connect-compare-grid">
@@ -153,33 +153,41 @@
           <div class="connect-card connect-card-host">
             <div class="connect-card-header">
               <span>👑 ホスト側（ルームを作る人）</span>
-              <span style="font-size:12px; background:#2563eb; color:#fff; padding:2px 8px; border-radius:4px;">先攻側</span>
+              <span style="font-size:12px; background:#2563eb; color:#fff; padding:2px 8px; border-radius:4px; font-weight:bold;">部屋作成</span>
             </div>
 
             <ol class="connect-step-list">
               <li>
-                <b>あなたの名前を入力</b><br>
-                対戦相手に表示されるニックネームを入力します。
+                <b>① あなたの名前を入力</b><br>
+                「1 あなたの名前」枠に対戦相手に表示されるニックネームを入力します。
               </li>
               <li>
-                <b>「ルームを作成」ボタンをクリック</b><br>
-                「ルーム」枠内の青い「ルームを作成」を押すと、ランダムな<b>4桁のルーム番号</b>が即座に発行されます。
+                <b>② 「ルームを作成」ボタンをクリック</b><br>
+                「2 ルーム」枠の青い「ルームを作成」を押すと、ランダムな<b>4桁のルーム番号</b>が即座に発行されます。
                 <div class="connect-ui-mock">
-                  <span class="connect-ui-mock-badge">発行画面プレビュー</span><br>
+                  <span class="connect-ui-mock-badge">ホスト側画面プレビュー</span><br>
                   ルーム番号 <b style="font-size:16px; color:#60a5fa; letter-spacing:1px;">7249</b> 
                   <button type="button" style="background:#3b82f6; color:#fff; border:none; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; margin-left:6px;">コピー</button>
                 </div>
               </li>
               <li>
-                <b>相手に4桁番号を伝える</b><br>
-                「コピー」ボタンを押して、LINEやDiscord、SNSのDMなどで対戦相手に4桁の番号を伝えます。
+                <b>③ 相手に4桁番号を伝える</b><br>
+                「コピー」ボタンを押して、LINEやDiscord、SNSなどで対戦相手に4桁の番号を伝えます。
               </li>
               <li>
-                <b>デッキ・マット・スリーブを選ぶ</b><br>
-                公式デッキコードの入力やサンプルデッキ選択、お気に入りのプレイマット・スリーブを選びます。
+                <b>④ あなたのデッキをセット</b><br>
+                ポケカ公式の18桁デッキコードを貼り付けて「読込」を押すか、環境人気サンプルデッキから好みのデッキを選択します。
               </li>
               <li>
-                <b>「対戦を開始する」を押して対戦スタート！</b><br>
+                <b>⑤ プレイマットを選ぶ（★自作オリジナル画像OK！）</b><br>
+                既定のマットを選ぶか、<b>「＋ 自作マット登録」ボタン</b>から好きなイラストや推しポケモンの写真をアップロードして自分専用のフィールド背景にできます！
+              </li>
+              <li>
+                <b>⑥ スリーブを選ぶ（★自作オリジナル画像OK！）</b><br>
+                既定のスリーブを選ぶか、<b>「＋ 自作スリーブ登録」ボタン</b>からオリジナル画像を登録できます。相手から見える手札裏面にもリアルタイムで反映されます！
+              </li>
+              <li>
+                <b>⑦ 「対戦を開始する」を押してスタート！</b><br>
                 ゲストが入室すると、画面下部の金色のボタンが「対戦を開始する」に点灯します。クリックすると即座に対戦盤面へ移動します！
               </li>
             </ol>
@@ -189,44 +197,63 @@
           <div class="connect-card connect-card-guest">
             <div class="connect-card-header">
               <span>🤝 ゲスト側（ルームに入る人）</span>
-              <span style="font-size:12px; background:#059669; color:#fff; padding:2px 8px; border-radius:4px;">後攻側</span>
+              <span style="font-size:12px; background:#059669; color:#fff; padding:2px 8px; border-radius:4px; font-weight:bold;">部屋参加</span>
             </div>
 
             <ol class="connect-step-list">
               <li>
-                <b>あなたの名前を入力</b><br>
-                対戦相手に表示されるニックネームを入力します。
+                <b>① あなたの名前を入力</b><br>
+                「1 あなたの名前」枠に対戦相手に表示されるニックネームを入力します。
               </li>
               <li>
-                <b>「ルームに入る」タブをクリック</b><br>
-                「ルーム」枠の上部にある「ルームに入る」タブを選びます。
+                <b>② 「ルームに入る」タブをクリック</b><br>
+                「2 ルーム」枠の上部にある「ルームに入る」タブを選びます。
                 <div class="connect-ui-mock">
-                  <span class="connect-ui-mock-badge" style="background:#059669;">入室画面プレビュー</span><br>
+                  <span class="connect-ui-mock-badge" style="background:#059669;">ゲスト側画面プレビュー</span><br>
                   <div style="display:flex; gap:6px; margin-top:4px;">
-                    <span style="background:#334155; padding:4px 8px; border-radius:4px; font-size:12px; color:#94a3b8;">7249 (4桁入力)</span>
+                    <span style="background:#334155; padding:4px 8px; border-radius:4px; font-size:12px; color:#cbd5e1;">7249 (4桁入力)</span>
                     <span style="background:#059669; color:#fff; padding:4px 10px; border-radius:4px; font-size:12px; font-weight:bold;">ルームに入る</span>
                   </div>
                 </div>
               </li>
               <li>
-                <b>ホストから教えてもらった4桁番号を入力</b><br>
+                <b>③ ホストから教えてもらった4桁番号を入力</b><br>
                 送られてきた4桁の番号（例: <code>7249</code>）を入力し、緑色の「ルームに入る」ボタンを押します。
               </li>
               <li>
-                <b>デッキ・マット・スリーブを選ぶ</b><br>
-                自分のデッキ・お気に入りのプレイマット・スリーブを選んで準備完了です。
+                <b>④ あなたのデッキをセット</b><br>
+                公式デッキコードを貼り付けて「読込」を押すか、サンプルデッキから使用するデッキを選択します。
               </li>
               <li>
-                <b>ホストが開始すると自動で対戦盤面へ！</b><br>
+                <b>⑤ プレイマットを選ぶ（★自作オリジナル画像OK！）</b><br>
+                お好みのマットを選ぶか、<b>「＋ 自作マット登録」ボタン</b>から好きなオリジナル画像（写真・イラスト等）をアップロードして自分専用の背景にできます！
+              </li>
+              <li>
+                <b>⑥ スリーブを選ぶ（★自作オリジナル画像OK！）</b><br>
+                お好みのスリーブを選ぶか、<b>「＋ 自作スリーブ登録」ボタン</b>から画像を登録します。相手の画面にもあなたの自作スリーブが表示されます！
+              </li>
+              <li>
+                <b>⑦ ホストが開始すると自動で対戦盤面へ！</b><br>
                 ホストが開始ボタンを押すと、2人の画面が同時にリアルタイム対戦盤面へ移行します！
               </li>
             </ol>
           </div>
         </div>
 
-        <div class="callout callout-tip" style="margin-top:14px;">
-          <b>💡 通信トラブル時のヒント</b><br>
-          万が一「相手の接続待ち...」から進まない場合は、お互いにブラウザをリロード（再読み込み）して新しいルーム番号を発行してみてください。企業内ネットワークや特殊なVPN環境下でP2Pが制限されている場合は、通常のモバイル回線やご自宅のWi-Fiからアクセスをお試しください。
+        <!-- ⚠️ Notice: つながらない場合の対処法（テザリング案内） -->
+        <div class="callout callout-important" style="margin-top:18px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span style="font-size:18px;">⚠️</span>
+            <b style="font-size:15px; color:#b91c1c;">Notice：万が一つながらない・接続待ちが進まない場合</b>
+          </div>
+          <p style="font-size:13px; line-height:1.75; margin:0 0 8px 0; color:#7f1d1d;">
+            学校・大学・オフィスの社内Wi-Fiや、セキュリティ機能（ファイアウォール）が厳しい一部の固定回線・集合住宅ルーターでは、P2P（WebRTC）通信に必要な通信ポートが制限され、「接続中...」や「相手の接続待ち...」のまま進まないケースがあります。
+          </p>
+          <div style="background:#ffffff; border:1.5px solid #f87171; border-radius:8px; padding:10px 14px; font-size:13px; color:#991b1b; line-height:1.7;">
+            <b>📱 スマートフォンの「テザリング」をお試しください！</b><br>
+            Wi-Fiからスマートフォンのテザリング（モバイルデータ通信：docomo / au / SoftBank / 楽天モバイルなど）に切り替えることで、回線側のポート制限を回避でき、<b>ほぼ100%正常に対戦接続が可能になります。</b><br>
+            ※相手と接続できない場合は、まずお互いにテザリング接続への切り替えをお試しください。
+          </div>
         </div>
       </div>
 
@@ -243,25 +270,33 @@
           </div>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div style="background:#ffffff; border:1px solid #e9d5ff; border-radius:8px; padding:14px;">
-              <h4 style="margin:0 0 8px 0; color:#7e22ce; font-size:14px; font-weight:800;">🖼️ 自作プレイマット（背景全面）</h4>
-              <p style="font-size:12.5px; line-height:1.7; color:#475569; margin:0;">
-                「4 あなたのプレイマット選択」にある<b>「＋ 自作マット登録」ボタン</b>をクリックし、お使いのスマホやPCから好きな画像（PNG/JPG/WEBP）を選ぶだけ！<br>
-                対戦画面の<b>自分側フィールド（画面下半分）全面</b>に、美しい高画質背景として敷かれます。
+            <div style="background:#ffffff; border:1px solid #e9d5ff; border-radius:8px; padding:16px;">
+              <h4 style="margin:0 0 8px 0; color:#7e22ce; font-size:15px; font-weight:800;">🖼️ 自作プレイマット（背景全面）</h4>
+              <p style="font-size:13px; line-height:1.75; color:#475569; margin:0 0 8px 0;">
+                「4 あなたのプレイマット選択」にある<b>「＋ 自作マット登録」ボタン</b>をクリックし、お使いのスマホやPCから好きな画像（PNG/JPG/WEBP）を選ぶだけ！
               </p>
+              <ul style="margin:0; padding-left:18px; font-size:12px; color:#64748b; line-height:1.6;">
+                <li>対戦画面の<b>自分側フィールド（画面下半分）全面</b>に、美しい高画質背景として敷かれます。</li>
+                <li>横長の比率（16:9 や 2:1 程度）の画像が綺麗にフィットします。</li>
+              </ul>
             </div>
 
-            <div style="background:#ffffff; border:1px solid #e9d5ff; border-radius:8px; padding:14px;">
-              <h4 style="margin:0 0 8px 0; color:#7e22ce; font-size:14px; font-weight:800;">🎴 自作スリーブ（カード裏面）</h4>
-              <p style="font-size:12.5px; line-height:1.7; color:#475569; margin:0;">
-                「5 あなたのスリーブ選択」にある<b>「＋ 自作スリーブ登録」ボタン</b>から画像を登録すると、自分の山札・サイドカードだけでなく、<b>相手から見える手札の裏面</b>としても対戦相手の画面にリアルタイム表示されます！自慢の推しスリーブを対戦相手に見せびらかせます。
+            <div style="background:#ffffff; border:1px solid #e9d5ff; border-radius:8px; padding:16px;">
+              <h4 style="margin:0 0 8px 0; color:#7e22ce; font-size:15px; font-weight:800;">🎴 自作スリーブ（カード裏面）</h4>
+              <p style="font-size:13px; line-height:1.75; color:#475569; margin:0 0 8px 0;">
+                「5 あなたのスリーブ選択」にある<b>「＋ 自作スリーブ登録」ボタン</b>から好きな画像をアップロードします。
               </p>
+              <ul style="margin:0; padding-left:18px; font-size:12px; color:#64748b; line-height:1.6;">
+                <li>自分の山札・サイドカードの裏面として美しく表示されます。</li>
+                <li>さらに、<b>相手から見える手札の裏面</b>としても対戦相手の画面にリアルタイム表示！自慢の推しスリーブを対戦相手に見せびらかせます。</li>
+                <li>縦長（カード比率 2.5:3.5 程度）の画像がぴったり収まります。</li>
+              </ul>
             </div>
           </div>
 
           <div class="callout callout-note" style="margin-top:14px; background:#ffffff;">
-            <b>💾 ブラウザ自動保存（再登録不要）</b><br>
-            登録したオリジナル画像はブラウザ内（LocalStorage）に自動保存されます。一度登録しておけば、次回以降も登録一覧に残り続けるため、選ぶだけですぐに対戦で使えます！
+            <b>💾 ブラウザ自動保存（再登録の手間なし）</b><br>
+            登録したオリジナル画像はお使いのブラウザ内（LocalStorage）に自動保存されます。一度登録しておけば、ページを閉じたり次回以降アクセスした際も登録一覧に残り続けるため、クリックして選ぶだけでいつでも使えます！
           </div>
         </div>
       </div>
