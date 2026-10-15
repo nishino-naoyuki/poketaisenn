@@ -81,7 +81,7 @@
             <span>③ カード使用・進化・エネ</span>
             <span class="flow-step-arrow">→</span>
           </div>
-          <p class="flow-step-desc">手札使用枠（5秒後自動トラッシュ）、ポケモン進化、どうぐ・エネ装着</p>
+          <p class="flow-step-desc">手札使用枠（5秒後自動トラッシュ）、ポケモン進化、どうぐ・エネ装着（D&D・メニュー両対応！）</p>
         </a>
 
         <a href="#sec-04" class="flow-step-card">
@@ -125,23 +125,20 @@
         プレイヤーの手番は以下の<b>4つの基本ステップ</b>で進行します。
       </p>
 
-      <!-- 動画①：ターンの流れ一連操作 -->
-      <div class="demo-video-box" data-demo-id="turn-flow">
+      <!-- 実画面操作動画①：ターンの流れ一連操作 -->
+      <div class="demo-video-box">
         <div class="demo-header">
           <div class="demo-title">
-            <span>🎬 操作動画①：ターンの流れ一連操作（自動ループ）</span>
+            <span>🎬 実画面操作動画①：ターンの流れ一連操作（自動ループ）</span>
           </div>
-          <div class="demo-step-indicator">
-            <span class="demo-dot active"></span>
-            <span class="demo-dot"></span>
-            <span class="demo-dot"></span>
-            <span class="demo-dot"></span>
-          </div>
+          <span style="font-size:11px; color:#38bdf8; font-weight:bold;">● 本ツールの実際の画面録画</span>
         </div>
-        <div class="demo-stage"></div>
+        <div class="actual-video-container">
+          <video class="actual-demo-video" src="video/demo1.webm" autoplay loop muted playsinline controls></video>
+        </div>
         <div class="demo-caption-bar">
-          <span class="demo-step-num">STEP 1</span>
-          <span class="demo-step-text">ターン開始！山札からカードが1枚自動でドローされます（山札クリック不要）</span>
+          <span class="demo-step-num">実画面操作</span>
+          <span class="demo-step-text">【STEP 1】自動1枚ドロー → 【STEP 2】カード使用 → 【STEP 3】バトル場横の技宣言ボタン＆カットイン → 【STEP 4】相手ポケモンへ手動ダメカン乗せ → 【STEP 5】ターン終了</span>
         </div>
       </div>
 
@@ -180,7 +177,7 @@
       <!-- 実際の対戦盤面全体スクリーンショット -->
       <figure class="screen-figure">
         <img src="img/actual_game_board_pc.png" alt="実際のPC版対戦盤面全体（本ツール）" class="screen-img">
-        <figcaption class="screen-caption">▲ 実際のPC版対戦盤面全体（バトル場横の技宣言ボタン、中央の使用カード枠、右上の通話・チャットボタン）</figcaption>
+        <figcaption class="screen-caption">▲ 実際のPC版対戦中盤面全体（対戦進行中：バトル場・ベンチにポケモン配置、エネルギー・ダメカン手動管理、バトル場右横に『⚔️ 技宣言』ボタン、中央の使用カード枠、右上の通話・チャット）</figcaption>
       </figure>
     </article>
 
@@ -196,21 +193,20 @@
         紙のカード対戦では「ボスの指令でそっちのリザードン呼んでください」と相手に頼むことが多いですが、本ツールでは<b>相手のカードや陣地もあなたの手で直接ドラッグ＆クリックして操作できます</b>。
       </div>
 
-      <!-- 動画②：相手カードの手動操作 -->
-      <div class="demo-video-box" data-demo-id="opp-control">
+      <!-- 実画面操作動画②：相手カードの手動操作 -->
+      <div class="demo-video-box">
         <div class="demo-header">
           <div class="demo-title">
-            <span>🎬 操作動画②：相手カードの手動操作（ボスの指令 ＆ ダメカン）</span>
+            <span>🎬 実画面操作動画②：相手カードの手動操作（ボスの指令 ＆ ダメカン）</span>
           </div>
-          <div class="demo-step-indicator">
-            <span class="demo-dot active"></span>
-            <span class="demo-dot"></span>
-          </div>
+          <span style="font-size:11px; color:#38bdf8; font-weight:bold;">● 本ツールの実際の画面録画</span>
         </div>
-        <div class="demo-stage"></div>
+        <div class="actual-video-container">
+          <video class="actual-demo-video" src="video/demo2.webm" autoplay loop muted playsinline controls></video>
+        </div>
         <div class="demo-caption-bar">
-          <span class="demo-step-num">STEP 1</span>
-          <span class="demo-step-text">ボスの指令を使った時：相手に依頼せず、自分で相手のベンチポケモンをバトル場へ直接ドラッグ！</span>
+          <span class="demo-step-num">実画面操作</span>
+          <span class="demo-step-text">【ボスの指令】相手に頼まず自分で相手ベンチを掴んでバトル場へドラッグ！／【ダメカン】相手ポケモンをクリックして手動で乗せる！</span>
         </div>
       </div>
 
@@ -248,50 +244,87 @@
         <h3 class="subsection-title">1. カードを使う（使用エリア同期 ＆ 5秒後自動トラッシュ）</h3>
         <p>
           手札から中央の<b>「カード使用枠」</b>へドラッグ＆ドロップすると、カードが大きく表示され、相手にも「〇〇が［カード名］を使用」とリアルタイムで通知されます。<br>
-          ロビーで「5秒後自動トラッシュ」がONの場合、カウントダウンバーが表示された後、自動的にトラッシュへ飛行移動します。
+          ロビーで「5秒後自動トラッシュ」がONの場合、カウントダウンバーが表示された後、自動的にトラッシュへ飛行移動します（右クリックメニューから「使用する」を選ぶことでも同様に使用可能です）。
         </p>
-        <!-- 動画③：カードを使う -->
-        <div class="demo-video-box" data-demo-id="play-card">
+        <!-- 実画面操作動画③：カードを使う -->
+        <div class="demo-video-box">
           <div class="demo-header">
-            <div class="demo-title"><span>🎬 操作動画③：カードを使う（使用枠への配置）</span></div>
-            <div class="demo-step-indicator"><span class="demo-dot active"></span><span class="demo-dot"></span></div>
+            <div class="demo-title"><span>🎬 実画面操作動画③：カードを使う（使用枠への配置 ＆ 自動トラッシュ）</span></div>
+            <span style="font-size:11px; color:#38bdf8; font-weight:bold;">● 本ツールの実際の画面録画</span>
           </div>
-          <div class="demo-stage"></div>
-          <div class="demo-caption-bar"><span class="demo-step-num">STEP 1</span><span class="demo-step-text">手札から使用枠へドロップ</span></div>
+          <div class="actual-video-container">
+            <video class="actual-demo-video" src="video/demo3.webm" autoplay loop muted playsinline controls></video>
+          </div>
+          <div class="demo-caption-bar"><span class="demo-step-num">実画面操作</span><span class="demo-step-text">手札から使用枠へドラッグ（相手に同期通知）→ 5秒後に自動でトラッシュへ</span></div>
         </div>
       </div>
 
       <div class="subsection">
-        <h3 class="subsection-title">2. ポケモンを進化させる</h3>
+        <h3 class="subsection-title">2. ポケモンを進化させる（ドラッグ＆ドロップ または メニュー操作）</h3>
         <p>
-          手札にある進化ポケモン（1進化・2進化）を、場にいる進化元のポケモンに<b>直接重ねてドラッグ＆ドロップ</b>します。<br>
-          進化前のカードは下敷きとして保持されるため、退化した際にも元のカードが安全に復元されます。
+          ポケカラボアリーナでは、お好みの操作感に合わせて<b>2つの進化方法</b>から自由に選べます。どちらの方法でも進化前のカードは下敷きとして安全に保持されます。
         </p>
-        <!-- 動画④：ポケモンを進化させる -->
-        <div class="demo-video-box" data-demo-id="evolve">
-          <div class="demo-header">
-            <div class="demo-title"><span>🎬 操作動画④：ポケモンを進化させる</span></div>
-            <div class="demo-step-indicator"><span class="demo-dot active"></span><span class="demo-dot"></span></div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin:14px 0;">
+          <div style="background:var(--bg-card-sub); border:1.5px solid var(--border-card); border-radius:var(--radius-sm); padding:14px;">
+            <div style="font-weight:bold; color:var(--primary-blue); font-size:14px; margin-bottom:6px;">🖱️ 方法①：ドラッグ＆ドロップ（直感操作）</div>
+            <p style="font-size:13px; line-height:1.6; margin:0;">
+              手札の進化ポケモンをマウスや指で掴み、場にいる進化元ポケモンの上に<b>直接重ねてドロップ</b>します。紙のポケカと全く同じ直感操作です。
+            </p>
           </div>
-          <div class="demo-stage"></div>
-          <div class="demo-caption-bar"><span class="demo-step-num">STEP 1</span><span class="demo-step-text">進化カードを重ねてドロップ</span></div>
+          <div style="background:var(--bg-card-sub); border:1.5px solid #38bdf8; border-radius:var(--radius-sm); padding:14px;">
+            <div style="font-weight:bold; color:#0284c7; font-size:14px; margin-bottom:6px;">📋 方法②：右クリック／長押しメニュー操作（確実・スマホ推奨）</div>
+            <p style="font-size:13px; line-height:1.6; margin:0;">
+              手札の進化カードを<b>PCなら右クリック</b>、<b>スマホなら長押し（またはタップ）</b>するとアクションメニューが開きます。<br>
+              メニュー内の<b>「✨ バトル場: リザードンex」</b>や<b>「✨ ベンチ1: ヒトカゲ」</b>などの進化先ボタンをクリックするだけで、1発で確実に進化できます！誤ドロップを防ぎたい時に便利です。
+            </p>
+          </div>
+        </div>
+
+        <!-- 実画面操作動画④：ポケモンを進化させる -->
+        <div class="demo-video-box">
+          <div class="demo-header">
+            <div class="demo-title"><span>🎬 実画面操作動画④：ポケモンを進化させる（D&D ＆ メニュー操作両対応）</span></div>
+            <span style="font-size:11px; color:#38bdf8; font-weight:bold;">● 本ツールの実際の画面録画</span>
+          </div>
+          <div class="actual-video-container">
+            <video class="actual-demo-video" src="video/demo4.webm" autoplay loop muted playsinline controls></video>
+          </div>
+          <div class="demo-caption-bar"><span class="demo-step-num">実画面操作</span><span class="demo-step-text">【D&D】重ねてドロップ ＆ 【メニュー】右クリックから進化先ボタンをワンクリック！</span></div>
         </div>
       </div>
 
       <div class="subsection">
-        <h3 class="subsection-title">3. エネルギー ＆ ポケモンのどうぐをつける</h3>
+        <h3 class="subsection-title">3. エネルギー ＆ ポケモンのどうぐをつける（ドラッグ＆ドロップ または メニュー操作）</h3>
         <p>
-          手札からエネルギーやポケモンのどうぐを、つけたいポケモンへドラッグ＆ドロップします。<br>
-          ポケモンカードの下部にエネルギーバッジ（⚡×2 等）やどうぐ名が表示されます。
+          エネルギーやどうぐも、進化と同様に<b>D&D操作とメニュー選択操作の両方に対応</b>しています。
         </p>
-        <!-- 動画⑤：エネルギー・どうぐをつける -->
-        <div class="demo-video-box" data-demo-id="attach">
-          <div class="demo-header">
-            <div class="demo-title"><span>🎬 操作動画⑤：エネルギー・どうぐをつける</span></div>
-            <div class="demo-step-indicator"><span class="demo-dot active"></span><span class="demo-dot"></span></div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin:14px 0;">
+          <div style="background:var(--bg-card-sub); border:1.5px solid var(--border-card); border-radius:var(--radius-sm); padding:14px;">
+            <div style="font-weight:bold; color:var(--primary-blue); font-size:14px; margin-bottom:6px;">🖱️ 方法①：ドラッグ＆ドロップ</div>
+            <p style="font-size:13px; line-height:1.6; margin:0;">
+              手札からエネルギーやどうぐを掴み、つけたいポケモンの上へドラッグ＆ドロップします。カード下部にエネルギーバッジ（⚡×2 等）が即座に反映されます。
+            </p>
           </div>
-          <div class="demo-stage"></div>
-          <div class="demo-caption-bar"><span class="demo-step-num">STEP 1</span><span class="demo-step-text">ポケモンへドラッグ＆ドロップ</span></div>
+          <div style="background:var(--bg-card-sub); border:1.5px solid #38bdf8; border-radius:var(--radius-sm); padding:14px;">
+            <div style="font-weight:bold; color:#0284c7; font-size:14px; margin-bottom:6px;">📋 方法②：右クリック／長押しメニュー操作（確実・スマホ推奨）</div>
+            <p style="font-size:13px; line-height:1.6; margin:0;">
+              手札のエネルギーカードを<b>右クリック（スマホは長押し）</b>すると、メニュー内に<b>「⚡/🎒 バトル場: ○○」</b>や<b>「⚡/🎒 ベンチ○: ○○」</b>という付与先ボタンが一覧表示されます。つけたい対象を押すだけで瞬時に装着完了します！
+            </p>
+          </div>
+        </div>
+
+        <!-- 実画面操作動画⑤：エネルギー・どうぐをつける -->
+        <div class="demo-video-box">
+          <div class="demo-header">
+            <div class="demo-title"><span>🎬 実画面操作動画⑤：エネルギー・どうぐをつける（D&D ＆ メニュー操作両対応）</span></div>
+            <span style="font-size:11px; color:#38bdf8; font-weight:bold;">● 本ツールの実際の画面録画</span>
+          </div>
+          <div class="actual-video-container">
+            <video class="actual-demo-video" src="video/demo5.webm" autoplay loop muted playsinline controls></video>
+          </div>
+          <div class="demo-caption-bar"><span class="demo-step-num">実画面操作</span><span class="demo-step-text">【D&D】ポケモンへドラッグ＆ドロップ ＆ 【メニュー】右クリックで付与先ボタンをワンタップ！</span></div>
         </div>
       </div>
 
@@ -301,14 +334,16 @@
           手札を個別にクリックして選択してから「手札を山に戻す」「トラッシュする」を押すと、選択したカードのみ移動します。<br>
           <b>【安心設計】もしカードを1枚も選択せずに押した場合は、「全戻し／全トラッシュしますか？」と確認ダイアログが表示されるため、誤操作を防げます。</b>
         </p>
-        <!-- 動画⑥：手札の山札戻し＆トラッシュ -->
-        <div class="demo-video-box" data-demo-id="hand-confirm">
+        <!-- 実画面操作動画⑥：手札操作 -->
+        <div class="demo-video-box">
           <div class="demo-header">
-            <div class="demo-title"><span>🎬 操作動画⑥：手札操作（未選択時全戻し確認）</span></div>
-            <div class="demo-step-indicator"><span class="demo-dot active"></span><span class="demo-dot"></span></div>
+            <div class="demo-title"><span>🎬 実画面操作動画⑥：手札操作（選択時 vs 未選択時全戻し確認）</span></div>
+            <span style="font-size:11px; color:#38bdf8; font-weight:bold;">● 本ツールの実際の画面録画</span>
           </div>
-          <div class="demo-stage"></div>
-          <div class="demo-caption-bar"><span class="demo-step-num">STEP 1</span><span class="demo-step-text">未選択時全戻し確認ダイアログ</span></div>
+          <div class="actual-video-container">
+            <video class="actual-demo-video" src="video/demo6.webm" autoplay loop muted playsinline controls></video>
+          </div>
+          <div class="demo-caption-bar"><span class="demo-step-num">実画面操作</span><span class="demo-step-text">【選択時】選択カードのみ山札戻し／【未選択時】誤操作防止の全戻し確認ダイアログ</span></div>
         </div>
       </div>
     </article>
@@ -324,21 +359,20 @@
         ダメージが蓄積してHPが0になったポケモンは、自動消滅せず手動で気絶処理を行います。
       </p>
 
-      <!-- 動画⑦：相手ポケモンを気絶させる -->
-      <div class="demo-video-box" data-demo-id="faint">
+      <!-- 実画面操作動画⑦：相手ポケモンを気絶させる -->
+      <div class="demo-video-box">
         <div class="demo-header">
           <div class="demo-title">
-            <span>🎬 操作動画⑦：相手ポケモンを気絶させる（サイド取得モーダル）</span>
+            <span>🎬 実画面操作動画⑦：相手ポケモンを気絶させる（サイド取得演出）</span>
           </div>
-          <div class="demo-step-indicator">
-            <span class="demo-dot active"></span>
-            <span class="demo-dot"></span>
-          </div>
+          <span style="font-size:11px; color:#38bdf8; font-weight:bold;">● 本ツールの実際の画面録画</span>
         </div>
-        <div class="demo-stage"></div>
+        <div class="actual-video-container">
+          <video class="actual-demo-video" src="video/demo7.webm" autoplay loop muted playsinline controls></video>
+        </div>
         <div class="demo-caption-bar">
-          <span class="demo-step-num">STEP 1</span>
-          <span class="demo-step-text">HPが0になったポケモンをクリックし、メニューから『気絶させる』を選択！</span>
+          <span class="demo-step-num">実画面操作</span>
+          <span class="demo-step-text">HPが0になったポケモンをクリックして気絶処理 → サイドカードをクリックしてめくり手札へ加える</span>
         </div>
       </div>
 
@@ -385,14 +419,16 @@
           「すごいつりざお」や「夜のタンカ」「ダークパッチ」を使う場合、トラッシュ枠をクリックして一覧を開きます。<br>
           回収したいカードにチェックを入れ、下部のアクションバーから<b>「手札に戻す」「山札に戻す」「場のポケモンにつける」</b>を押すだけで直感的にカードを復帰できます。
         </p>
-        <!-- 動画⑧：トラッシュからの回収・装着 -->
-        <div class="demo-video-box" data-demo-id="trash-recovery">
+        <!-- 実画面操作動画⑧：トラッシュからの回収・装着 -->
+        <div class="demo-video-box">
           <div class="demo-header">
-            <div class="demo-title"><span>🎬 操作動画⑧：トラッシュからの回収・装着</span></div>
-            <div class="demo-step-indicator"><span class="demo-dot active"></span><span class="demo-dot"></span></div>
+            <div class="demo-title"><span>🎬 実画面操作動画⑧：トラッシュからの回収・装着</span></div>
+            <span style="font-size:11px; color:#38bdf8; font-weight:bold;">● 本ツールの実際の画面録画</span>
           </div>
-          <div class="demo-stage"></div>
-          <div class="demo-caption-bar"><span class="demo-step-num">STEP 1</span><span class="demo-step-text">トラッシュ一覧から選択して回収</span></div>
+          <div class="actual-video-container">
+            <video class="actual-demo-video" src="video/demo8.webm" autoplay loop muted playsinline controls></video>
+          </div>
+          <div class="demo-caption-bar"><span class="demo-step-num">実画面操作</span><span class="demo-step-text">トラッシュ枠をクリックして一覧を開き、カードを選択して手札やベンチへ回収！</span></div>
         </div>
       </div>
 
@@ -421,21 +457,20 @@
         スマートフォン（iPhone / Android）の小さな画面でも、片手で快適に対戦できるよう最適化されています。
       </p>
 
-      <!-- 動画⑨：スマホでの操作 -->
-      <div class="demo-video-box" data-demo-id="sp-touch">
+      <!-- 実画面操作動画⑨：スマホでの操作 -->
+      <div class="demo-video-box" style="max-width:540px; margin:20px auto;">
         <div class="demo-header">
           <div class="demo-title">
-            <span>🎬 操作動画⑨：スマホでの片手操作（長押しメニュー ＆ 下部シート）</span>
+            <span>🎬 実画面操作動画⑨：スマホでの片手操作（長押しメニュー ＆ 下部シート）</span>
           </div>
-          <div class="demo-step-indicator">
-            <span class="demo-dot active"></span>
-            <span class="demo-dot"></span>
-          </div>
+          <span style="font-size:11px; color:#38bdf8; font-weight:bold;">● スマホ実画面録画</span>
         </div>
-        <div class="demo-stage"></div>
+        <div class="actual-video-container">
+          <video class="actual-demo-video mobile-aspect" src="video/demo9.webm" autoplay loop muted playsinline controls></video>
+        </div>
         <div class="demo-caption-bar">
-          <span class="demo-step-num">STEP 1</span>
-          <span class="demo-step-text">手札のカードを450ms長押しするとブルッと振動して操作メニューが開きます</span>
+          <span class="demo-step-num">スマホ操作</span>
+          <span class="demo-step-text">450ms長押しでアクションメニュー起動 → ワンタップで進化や配置が可能！</span>
         </div>
       </div>
 
@@ -558,6 +593,12 @@
       </div>
 
       <div class="callout callout-note">
+        <b>Q. ドラッグ＆ドロップ以外の方法で進化やエネルギーをつけることはできますか？</b><br>
+        A. はい！手札のカードを<b>PCなら右クリック</b>、<b>スマートフォンなら長押し（またはタップ）</b>するとアクションメニューが開きます。<br>
+        メニュー内に表示される<b>「✨ バトル場に進化したね」「✨ ベンチ○に進化したね」</b>や<b>「⚡ バトル場につける」「⚡ ベンチ○につける」</b>を押すだけで、ドラッグせずにワンクリックで確実に進化やエネルギー・どうぐの装着が可能です。誤操作防止やスマートフォンでの片手プレイにも非常に便利です。
+      </div>
+
+      <div class="callout callout-note">
         <b>Q. 相手のポケモンに技のダメージが自動で入りません。</b><br>
         A. 本ツールは紙のカードと同様の「手動操作型」シミュレーターです。技宣言を行った後、<b>相手のポケモンをクリックして手動でダメカンを乗せてください</b>。
       </div>
@@ -597,6 +638,21 @@
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <td><span class="version-badge">v17.4</span></td>
+              <td class="version-date">2026-10-15</td>
+              <td><b>🎬 実画面録画操作動画（全9種・WebM）の全面埋め込み</b>（本ツールのインゲーム画面を実際に操作・録画した高画質動画）、<b>🃏 進化・エネルギー装着のメニュー操作対応の明確化</b>（D&Dだけでなく右クリック／長押しメニューからのワンタップ操作を完全図解）、<b>📸 対戦中インゲーム実画面キャプチャへの完全統一</b>（準備中フェーズの誤画像を排除し、対戦進行中の正確な画面に刷新）、<b>⚔️ 技宣言ボタン位置の最適化</b>（自分バトル場右横への配置）。</td>
+            </tr>
+            <tr>
+              <td><span class="version-badge">v17.3</span></td>
+              <td class="version-date">2026-10-15</td>
+              <td>技宣言ボタンが左端メニューボタン群と被っていた問題を修正し、自分バトル場のすぐ右横へ配置を最適化。</td>
+            </tr>
+            <tr>
+              <td><span class="version-badge">v17.2</span></td>
+              <td class="version-date">2026-10-15</td>
+              <td>公式操作マニュアルのゼロベース完全再構築（明るいライトテーマ、本ツールの正確な実画面写真、更新履歴の掲載）およびロビー枠外最上部への超スリムバナーロゴ配置。</td>
+            </tr>
             <tr>
               <td><span class="version-badge">v17.1</span></td>
               <td class="version-date">2026-10-15</td>
@@ -693,9 +749,5 @@
 
   <!-- トップへ戻るボタン -->
   <a href="#top" class="back-to-top-btn" title="ページ最上部へ戻る">▲</a>
-
-  <!-- 操作デモアニメーションプレイヤー用スクリプト -->
-  <script src="js/demo-videos.js"></script>
-
 </body>
 </html>

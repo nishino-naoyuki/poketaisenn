@@ -162,6 +162,7 @@ function resetOpponentCards() {
 }
 
 window.resetOpponentCards = resetOpponentCards;
+window.state = state;
 
 
 

@@ -406,7 +406,34 @@ body {
   box-shadow: 0 0 8px #38bdf8;
 }
 
-/* デモ再生ステージ */
+/* 実画面操作動画プレイヤー */
+.actual-video-container {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #090d16;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  border: 1.5px solid rgba(56, 189, 248, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.actual-demo-video {
+  width: 100%;
+  height: auto;
+  max-height: 460px;
+  display: block;
+  object-fit: contain;
+}
+
+.actual-demo-video.mobile-aspect {
+  max-height: 520px;
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
 .demo-stage {
   position: relative;
   height: 240px;
