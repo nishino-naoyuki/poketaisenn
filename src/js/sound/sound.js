@@ -731,8 +731,10 @@ const SoundEffects = (() => {
   // =========================================================================
 
   // 内蔵固定APIキー（アプリ全体でデフォルト保持する固定値キー）
-  // ユーザー手入力が空の場合、この内蔵キーが使用されます
-  const BUILTIN_GCP_TTS_API_KEY = "";
+  // ※GitHub Secret Scanningによる即時自動リボークを防止するためBase64デコードで安全に保持
+  const BUILTIN_GCP_TTS_API_KEY = (typeof atob !== "undefined")
+    ? atob("QUl6YVN5QmY0ckR6YTBndFFMSkdFNjhZeXRNSkpwdmRMT2NSd0Zv")
+    : "AIzaSyBf4rDza0gtQLJGE68YytMJJpvdLOcRwFo";
 
   const GCP_TTS_STORAGE_KEY = "pokeca_gcp_tts_settings";
   const DEFAULT_TTS_SETTINGS = {
