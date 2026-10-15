@@ -113,23 +113,23 @@
     </svg>
   </div>
 
-  <!-- 画面最上部スリムヘッダーバー（枠外） -->
+  <!-- 画面最上部スリムヘッダーバー（枠外・ロゴ中央配置） -->
   <header class="lobby-top-header">
     <div class="lobby-top-logo-wrap">
       <img src="img/logo_banner_slim.png" alt="ポケカラボアリーナ (ポケアリ) - PokéCa Lab Arena" class="lobby-top-logo-img">
     </div>
-    <a href="manual/index.html" target="_blank" rel="noopener" class="lobby-manual-link-btn" title="公式操作マニュアルを別タブで開く">
-      <span class="icon">📖</span>
-      <span class="text">操作マニュアル</span>
-      <span class="arrow">↗</span>
-    </a>
   </header>
 
   <div class="lobby-panel">
-    <!-- 最上部モード切替タブ: オンライン対戦 vs 一人回し -->
-    <div class="lobby-mode-tabs">
-      <button class="mode-tab-btn active" id="btn-mode-online" data-action="switchLobbyMode" data-arg="online">🌐 オンライン対戦</button>
-      <button class="mode-tab-btn" id="btn-mode-solo" data-action="switchLobbyMode" data-arg="solo">🃏 一人回し</button>
+    <!-- 最上部行: モード切替タブ ＆ 操作マニュアルボタン -->
+    <div class="lobby-top-nav-row">
+      <div class="lobby-mode-tabs">
+        <button class="mode-tab-btn active" id="btn-mode-online" data-action="switchLobbyMode" data-arg="online">🌐 オンライン対戦</button>
+        <button class="mode-tab-btn" id="btn-mode-solo" data-action="switchLobbyMode" data-arg="solo">🃏 一人回し</button>
+      </div>
+      <a href="manual/index.html" target="_blank" rel="noopener" class="lobby-panel-manual-btn" title="公式操作マニュアルを別タブで開く">
+        <span class="icon">📖</span>マニュアル<span class="arrow">↗</span>
+      </a>
     </div>
 
     <!-- ================= モード1: オンライン対戦 ================= -->
