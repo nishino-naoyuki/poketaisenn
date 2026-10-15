@@ -724,9 +724,13 @@ const SoundEffects = (() => {
   // Google Cloud Text-to-Speech 連携 ＆ 技名読み上げ設定
   // =========================================================================
 
+  // 内蔵固定APIキー（アプリ全体でデフォルト保持する固定値キー）
+  // ユーザー手入力が空の場合、この内蔵キーが使用されます
+  const BUILTIN_GCP_TTS_API_KEY = "";
+
   const GCP_TTS_STORAGE_KEY = "pokeca_gcp_tts_settings";
   const DEFAULT_TTS_SETTINGS = {
-    apiKey: "",
+    apiKey: BUILTIN_GCP_TTS_API_KEY,
     voiceName: "ja-JP-Neural2-B",
     speakingRate: 1.15,
     pitch: 2.0,
@@ -735,13 +739,18 @@ const SoundEffects = (() => {
 
   /** 設定の取得 */
   function getTtsSettings() {
+    let settings = { ...DEFAULT_TTS_SETTINGS };
     try {
       const saved = localStorage.getItem(GCP_TTS_STORAGE_KEY);
       if (saved) {
-        return { ...DEFAULT_TTS_SETTINGS, ...JSON.parse(saved) };
+        settings = { ...DEFAULT_TTS_SETTINGS, ...JSON.parse(saved) };
       }
     } catch (e) {}
-    return { ...DEFAULT_TTS_SETTINGS };
+    // キーが未設定の場合は内蔵固定キーを補填
+    if (!settings.apiKey && BUILTIN_GCP_TTS_API_KEY) {
+      settings.apiKey = BUILTIN_GCP_TTS_API_KEY;
+    }
+    return settings;
   }
 
   /** 設定の保存 */
@@ -974,11 +983,13 @@ const SoundEffects = (() => {
     const icon = getVolumeIcon();
     const volText = isMuted ? "消音" : `${volumePercent}%`;
 
-    // 1. ロビー画面の音量ボタン
-    const lobbySoundIcon = document.getElementById("lobby-sound-icon");
-    const lobbySoundText = document.getElementById("lobby-sound-text");
-    if (lobbySoundIcon) lobbySoundIcon.textContent = icon;
-    if (lobbySoundText) lobbySoundText.textContent = isMuted ? "消音中" : `音量: ${volumePercent}%`;
+    // 1. ロビー画面の音量ボタン（複数箇所対応）
+    document.querySelectorAll(".lobby-sound-icon, #lobby-sound-icon").forEach(el => {
+      el.textContent = icon;
+    });
+    document.querySelectorAll(".lobby-sound-text, #lobby-sound-text").forEach(el => {
+      el.textContent = isMuted ? "消音中" : `効果音: ${volumePercent}%`;
+    });
 
     // 2. 対戦画面上部バーの音量ボタン
     const topSoundIcon = document.getElementById("top-sound-icon");

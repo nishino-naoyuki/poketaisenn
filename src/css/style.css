@@ -406,6 +406,17 @@ html, body {
   font-size: 13px;
 }
 
+/* ロビー下部設定ボタンスタイル */
+.lobby-setting-btn {
+  transition: all 0.15s ease;
+}
+.lobby-setting-btn:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
 /* ロビーパネル内の読み上げ設定ボタン */
 .lobby-panel-tts-btn {
   display: inline-flex;

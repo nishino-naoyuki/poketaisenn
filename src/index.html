@@ -128,12 +128,6 @@
         <button class="mode-tab-btn" id="btn-mode-solo" data-action="switchLobbyMode" data-arg="solo">🃏 一人回し</button>
       </div>
       <div class="lobby-nav-actions">
-        <button type="button" class="lobby-panel-sound-btn" onclick="openSoundSettingsModal()" title="効果音の音量・サウンド設定を開く">
-          <span class="icon" id="lobby-sound-icon">🔊</span><span id="lobby-sound-text">音量: 80%</span>
-        </button>
-        <button type="button" class="lobby-panel-tts-btn" onclick="openTtsSettingsModal()" title="技名読み上げ・音声合成（Google Cloud TTS）設定を開く">
-          <span class="icon">🎙️</span>読み上げ設定
-        </button>
         <a href="manual/index.html" target="_blank" rel="noopener" class="lobby-panel-manual-btn" title="公式操作マニュアルを別タブで開く">
           <span class="icon">📖</span>マニュアル<span class="arrow">↗</span>
         </a>
@@ -232,6 +226,14 @@
         <p style="font-size:11px; color:#64748b; margin:4px 0 0 26px;">
           ONの場合、手札から「使用」エリアに出したカードが5秒後にアニメーション付きで自動的にトラッシュへ送られます。
         </p>
+        <div style="display:flex; gap:8px; margin-top:10px; border-top:1px dashed #cbd5e1; padding-top:10px;">
+          <button type="button" class="btn lobby-setting-btn" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; font-weight:bold; background:#ffffff; color:#1e293b; border:1px solid #cbd5e1; padding:7px 10px; border-radius:6px; cursor:pointer;" onclick="openSoundSettingsModal()" title="効果音の音量・サウンド設定を開く">
+            <span class="lobby-sound-icon">🔊</span><span class="lobby-sound-text">効果音: 80%</span>
+          </button>
+          <button type="button" class="btn lobby-setting-btn" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; font-weight:bold; background:#ffffff; color:#1e293b; border:1px solid #cbd5e1; padding:7px 10px; border-radius:6px; cursor:pointer;" onclick="openTtsSettingsModal()" title="技名読み上げ・ボイス設定を開く">
+            <span>🎙️</span><span>読み上げ設定</span>
+          </button>
+        </div>
       </div>
 
       <div class="step">
@@ -335,6 +337,14 @@
         <p style="font-size:11px; color:#64748b; margin:4px 0 0 26px;">
           ONの場合、手札から「使用」エリアに出したカードが5秒後にアニメーション付きで自動的にトラッシュへ送られます。
         </p>
+        <div style="display:flex; gap:8px; margin-top:10px; border-top:1px dashed #cbd5e1; padding-top:10px;">
+          <button type="button" class="btn lobby-setting-btn" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; font-weight:bold; background:#ffffff; color:#1e293b; border:1px solid #cbd5e1; padding:7px 10px; border-radius:6px; cursor:pointer;" onclick="openSoundSettingsModal()" title="効果音の音量・サウンド設定を開く">
+            <span class="lobby-sound-icon">🔊</span><span class="lobby-sound-text">効果音: 80%</span>
+          </button>
+          <button type="button" class="btn lobby-setting-btn" style="flex:1; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; font-weight:bold; background:#ffffff; color:#1e293b; border:1px solid #cbd5e1; padding:7px 10px; border-radius:6px; cursor:pointer;" onclick="openTtsSettingsModal()" title="技名読み上げ・ボイス設定を開く">
+            <span>🎙️</span><span>読み上げ設定</span>
+          </button>
+        </div>
       </div>
 
       <div class="step">
@@ -669,38 +679,17 @@
   </div>
 </div>
 
-<!-- 技名読み上げ設定ポップアップ（Google Cloud TTS） -->
+<!-- 技名読み上げ・ボイス設定ポップアップ -->
 <div id="tts-settings-modal" class="modal hidden" onclick="closeTtsSettingsModal(event)">
   <div class="modal-panel tts-settings-panel" onclick="event.stopPropagation()">
     <div class="modal-head">
       <div style="display:flex; align-items:center; gap:8px;">
         <span style="font-size:18px;">🎙️</span>
-        <span style="font-weight:bold; font-size:15px; color:#f8fafc;">技名読み上げ設定（Google Cloud TTS）</span>
+        <span style="font-weight:bold; font-size:15px; color:#f8fafc;">技名読み上げ・ボイス設定</span>
       </div>
       <button class="btn" style="padding:2px 8px; font-size:12px;" onclick="closeTtsSettingsModal()">✕</button>
     </div>
     <div class="modal-body tts-settings-body">
-      <div class="tts-setting-desc">
-        技宣言時に入力された技名に「！！」を付加して自動読み上げます。<br>
-        Google Cloud Text-to-Speech APIキーを設定すると、Neural2等の高音質AIボイスで迫真の読み上げが可能です。
-      </div>
-
-      <!-- APIキー入力 -->
-      <div class="tts-form-group">
-        <label for="tts-api-key" class="tts-label">
-          <span>🔑 Google Cloud TTS API キー</span>
-          <span class="tts-badge-optional">任意</span>
-        </label>
-        <div class="tts-input-password-wrap">
-          <input type="password" id="tts-api-key" placeholder="AIzaSy... (未入力時は端末標準音声)" autocomplete="off">
-          <button type="button" class="btn" id="btn-toggle-key-visibility" onclick="toggleTtsKeyVisibility()" title="キーの表示切替">👁️</button>
-        </div>
-        <small class="tts-help-text">
-          ※APIキーはお使いのブラウザ内（LocalStorage）にのみ安全に保存されます。<br>
-          ※未設定の場合は、ブラウザ標準の音声合成（Web Speech API）で読み上げます。
-        </small>
-      </div>
-
       <!-- 声質（ボイス）選択 -->
       <div class="tts-form-group">
         <label for="tts-voice-select" class="tts-label">🗣️ 声質（ボイスモデル）</label>
