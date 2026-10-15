@@ -15,7 +15,9 @@
       ? SoundEffects.getTtsSettings()
       : {
           apiKey: "",
-          voiceName: "ja-JP-Chirp3-HD-Fenrir",
+          modelName: "gemini-3.1-flash-tts-preview",
+          voiceName: "Gacrux",
+          prompt: "male voice hard voice",
           speakingRate: 1.0,
           pitch: 0.0,
           volumeGainDb: 2.0
@@ -23,13 +25,17 @@
 
     // フォームに値を流し込み
     const inputKey = document.getElementById("tts-api-key");
+    const selectModel = document.getElementById("tts-model-select");
     const selectVoice = document.getElementById("tts-voice-select");
+    const inputPrompt = document.getElementById("tts-prompt");
     const sliderRate = document.getElementById("slider-tts-rate");
     const sliderPitch = document.getElementById("slider-tts-pitch");
     const sliderVol = document.getElementById("slider-tts-vol");
 
     if (inputKey) inputKey.value = settings.apiKey || "";
-    if (selectVoice) selectVoice.value = settings.voiceName || "ja-JP-Chirp3-HD-Fenrir";
+    if (selectModel) selectModel.value = settings.modelName || "gemini-3.1-flash-tts-preview";
+    if (selectVoice) selectVoice.value = settings.voiceName || "Gacrux";
+    if (inputPrompt) inputPrompt.value = settings.prompt || "male voice hard voice";
     if (sliderRate) sliderRate.value = settings.speakingRate || 1.0;
     if (sliderPitch) sliderPitch.value = settings.pitch !== undefined ? settings.pitch : 0.0;
     if (sliderVol) sliderVol.value = settings.volumeGainDb || 2.0;
@@ -102,7 +108,9 @@
    */
   function getCurrentModalSettings() {
     const inputKey = document.getElementById("tts-api-key");
+    const selectModel = document.getElementById("tts-model-select");
     const selectVoice = document.getElementById("tts-voice-select");
+    const inputPrompt = document.getElementById("tts-prompt");
     const sliderRate = document.getElementById("slider-tts-rate");
     const sliderPitch = document.getElementById("slider-tts-pitch");
     const sliderVol = document.getElementById("slider-tts-vol");
@@ -113,9 +121,11 @@
 
     return {
       apiKey: inputKey ? inputKey.value.trim() : (saved.apiKey || ""),
-      voiceName: selectVoice ? selectVoice.value : "ja-JP-Neural2-B",
-      speakingRate: sliderRate ? parseFloat(sliderRate.value) : 1.15,
-      pitch: sliderPitch ? parseFloat(sliderPitch.value) : 2.0,
+      modelName: selectModel ? selectModel.value : (saved.modelName || "gemini-3.1-flash-tts-preview"),
+      voiceName: selectVoice ? selectVoice.value : (saved.voiceName || "Gacrux"),
+      prompt: inputPrompt ? inputPrompt.value.trim() : (saved.prompt || "male voice hard voice"),
+      speakingRate: sliderRate ? parseFloat(sliderRate.value) : 1.0,
+      pitch: sliderPitch ? parseFloat(sliderPitch.value) : 0.0,
       volumeGainDb: sliderVol ? parseFloat(sliderVol.value) : 2.0
     };
   }
