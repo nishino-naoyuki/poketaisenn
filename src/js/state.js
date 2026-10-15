@@ -119,7 +119,14 @@ let state = {
   myLoadedDeck: SAMPLE_DECK,
   oppLoadedDeck: null,
   oppExited: false,
-  logs: []
+  logs: [],
+
+  // 技宣言機能
+  lastDeclaredAttackName: "",
+
+  // 対戦チャット機能
+  chatMessages: [],
+  chatUnreadCount: 0
 };
 
 /** 通信対戦開始時: ダミーBOTデータ（フシギバナex等）を完全に破棄して初期化 */

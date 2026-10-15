@@ -407,6 +407,14 @@ const actions = {
   },
   closeMenu: () => closeMenu(),
 
+  // 技宣言 ＆ チャット
+  declareAttack: () => {
+    if (typeof openAttackModal === "function") openAttackModal();
+  },
+  openChat: () => {
+    if (typeof openChatModal === "function") openChatModal();
+  },
+
   // 山札アクション
   draw: () => {
     if (state.mustPromoteToActive) {

@@ -352,6 +352,7 @@
       <div class="top-menu">
         <span class="room">ROOM <b id="g-room"></b></span>
         <span id="g-conn-badge" class="conn-badge offline">⚪ オフライン</span>
+        <button class="btn blue btn-chat-trigger" onclick="openChatModal()" title="対戦チャットを開く" style="position:relative;">💬 チャット <span id="chat-badge" class="badge-unread hidden">0</span></button>
         <button class="btn" id="btn-undo" data-action="undo" title="直前の操作を1手順巻き戻します">↩️ 1手順巻き戻す</button>
         <button class="btn red" data-action="exit">退室</button>
       </div>
@@ -384,6 +385,7 @@
       </div>
 
       <div class="log-btn">
+        <button class="btn blue" onclick="openChatModal()" title="対戦チャットを開く" style="position:relative;">💬 チャット <span id="chat-badge-log" class="badge-unread hidden">0</span></button>
         <button class="btn" data-action="showLog">ログ</button>
         <button class="btn gold" data-action="coin">コイン</button>
         <button class="btn gold" data-action="declareVictory" title="勝利を宣言する">🏆 勝利宣言</button>
@@ -395,6 +397,7 @@
 
       <div class="active-spot opp-active" id="opp-active"></div>
       <div class="active-spot my-active" id="my-active"></div>
+      <button class="btn red btn-declare-attack" id="btn-declare-attack" onclick="openAttackModal()" title="バトル場のポケモンの技を宣言">⚔️ 技宣言</button>
 
       <div class="stadium" id="stadium"></div>
 
@@ -528,6 +531,12 @@
       </div>
     </div>
 
+    <!-- スマホ・画面右上用：チャットボタン -->
+    <button class="sp-floating-chat-btn" onclick="openChatModal()" title="チャットを開く" aria-label="対戦チャット">
+      <span>💬</span>
+      <span id="float-chat-badge" class="badge-unread hidden">0</span>
+    </button>
+
     <!-- スマホ用：ハンバーガーボタン -->
     <button class="sp-menu-btn" data-action="openMenu" aria-label="操作メニュー">
       <span></span><span></span><span></span>
@@ -555,7 +564,9 @@
   <div class="sheet-subgroup-title" style="margin-top:12px;">⚡ クイック操作</div>
   <div class="grid">
     <button class="btn green" data-action="draw" data-close="1">🎴 1枚引く</button>
-    <button class="btn gold" data-action="endTurn" data-close="1">⚔️ ターン終了</button>
+    <button class="btn red" onclick="closeMenu(); openAttackModal();">⚔️ 技宣言</button>
+    <button class="btn gold" data-action="endTurn" data-close="1">ターン終了</button>
+    <button class="btn blue" onclick="closeMenu(); openChatModal();" style="position:relative;">💬 チャット <span id="sp-chat-badge" class="badge-unread hidden">0</span></button>
     <button class="btn" data-action="coin" data-close="1">🪙 コイン</button>
     <button class="btn" id="btn-sp-undo" data-action="undo" data-close="1">↩️ 1手順戻す</button>
   </div>

@@ -4438,3 +4438,397 @@ window.pickPrizeCard = pickPrizeCard;
 window.finishPrizePicking = finishPrizePicking;
 window.showPrizeWaitOverlay = showPrizeWaitOverlay;
 window.hidePrizeWaitOverlay = hidePrizeWaitOverlay;
+
+// =============================================================================
+// ⚔️ 技宣言機能 (Attack Declaration)
+// =============================================================================
+
+function openAttackModal() {
+  const isOppActiveTurn = (state.isSoloMode && state.turn === "opp");
+  const targetSpot = isOppActiveTurn ? state.oppActive : state.myActive;
+  const pokemonName = (targetSpot && targetSpot.card) ? targetSpot.card.name : "バトル場のポケモン";
+  const actorName = isOppActiveTurn ? (state.oppName || "プレイヤーB") : state.myName;
+  const lastAttack = state.lastDeclaredAttackName || "";
+
+  const bodyHtml = `
+    <div style="text-align:center; padding:6px 0;">
+      <div style="font-size:13px; color:#64748b; margin-bottom:4px;">宣言するポケモン:</div>
+      <div style="font-size:18px; font-weight:bold; color:#1e293b; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <span style="font-size:20px;">⚔️</span>
+        <span>【${escapeHtml(pokemonName)}】</span>
+      </div>
+
+      <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:8px 12px; margin-bottom:14px; font-size:12px; color:#b91c1c; font-weight:bold; line-height:1.5;">
+        ※ 技名の入力は任意です（空欄のままでも技を宣言できます）。<br>
+        <span style="font-size:11px; font-weight:normal; color:#475569;">※ 技宣言を行ってもターンは自動終了しません（ダメカン等は手動で操作してください）。</span>
+      </div>
+
+      <div style="text-align:left; margin-bottom:6px;">
+        <label for="in-attack-name" style="font-size:12px; font-weight:bold; color:#334155;">技名（省略可）:</label>
+      </div>
+      <input type="text" id="in-attack-name" maxlength="30" placeholder="例: バーニングダーク" value="${escapeHtml(lastAttack)}"
+        style="width:100%; font-size:15px; font-weight:bold; padding:10px 14px; border:2px solid #f87171; border-radius:8px; box-sizing:border-box; outline:none; background:#fff;"
+        onkeydown="if(event.key==='Enter'){ event.preventDefault(); submitAttackDeclaration('${escapeHtml(pokemonName)}', '${escapeHtml(actorName)}'); }"
+      >
+      <div style="font-size:11px; color:#94a3b8; text-align:left; margin-top:4px;">
+        前回入力した技名が残っています。同じ技ならそのままOKを押してください。
+      </div>
+    </div>
+  `;
+
+  const footHtml = `
+    <button class="btn red big" style="font-size:14px; padding:10px 22px; font-weight:bold;" onclick="submitAttackDeclaration('${escapeHtml(pokemonName)}', '${escapeHtml(actorName)}')">⚔️ 技を使う（決定）</button>
+    <button class="btn" style="font-size:13px; padding:10px 16px;" onclick="closeModal()">キャンセル</button>
+  `;
+
+  showModal("⚔️ ワザの宣言", bodyHtml, footHtml);
+
+  // フォーカスを当ててテキストを選択状態に（そのままEnterでも、キー入力ですぐ上書きも可能）
+  setTimeout(() => {
+    const input = document.getElementById("in-attack-name");
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  }, 100);
+}
+
+function submitAttackDeclaration(pokemonName, actorName) {
+  const input = document.getElementById("in-attack-name");
+  const rawAttack = input ? input.value.trim() : "";
+  state.lastDeclaredAttackName = rawAttack; // 次回のために記憶
+
+  closeModal();
+
+  // 宣言の実行
+  executeAttackDeclaration(actorName, pokemonName, rawAttack);
+}
+
+function executeAttackDeclaration(playerName, pokemonName, attackName) {
+  const isAttackSpecified = !!(attackName && attackName.length > 0);
+  const logText = isAttackSpecified
+    ? `⚔️ ${playerName} の【${pokemonName}】が『${attackName}』を宣言！`
+    : `⚔️ ${playerName} の【${pokemonName}】が技を宣言！`;
+
+  addLog(playerName, "attack", logText);
+
+  // カットイン演出を画面に表示
+  showAttackCutin(playerName, pokemonName, attackName);
+
+  // P2P通信で相手画面にも技宣言を同期
+  if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+    P2P.send({
+      t: "declare_attack",
+      playerName: playerName,
+      pokemonName: pokemonName,
+      attackName: attackName
+    });
+  }
+}
+
+/** 画面中央に大迫力カットインバナーを表示（3.5秒で自動消滅） */
+function showAttackCutin(playerName, pokemonName, attackName) {
+  let cutin = document.getElementById("attack-cutin-overlay");
+  if (!cutin) {
+    cutin = document.createElement("div");
+    cutin.id = "attack-cutin-overlay";
+    cutin.className = "attack-cutin-overlay hidden";
+    document.body.appendChild(cutin);
+  }
+
+  const isSpecified = !!(attackName && attackName.length > 0);
+
+  cutin.innerHTML = `
+    <div class="attack-cutin-box ${isSpecified ? '' : 'no-name'}">
+      <div class="attack-cutin-flame">🔥 ⚔️ ⚡</div>
+      <div class="attack-cutin-user">${escapeHtml(playerName)} の【${escapeHtml(pokemonName)}】</div>
+      <div class="attack-cutin-title">
+        ${isSpecified ? `ワザ宣言！` : `ワザを使った！`}
+      </div>
+      ${isSpecified ? `<div class="attack-cutin-name">『${escapeHtml(attackName)}』</div>` : ''}
+      <div class="attack-cutin-tip">（タップでスキップ）</div>
+    </div>
+  `;
+
+  cutin.classList.remove("hidden");
+  cutin.classList.add("show");
+
+  // 効果音・バイブレーション
+  if (navigator.vibrate) {
+    try { navigator.vibrate([60, 40, 60]); } catch (e) {}
+  }
+
+  const hideCutin = () => {
+    cutin.classList.remove("show");
+    cutin.classList.add("hidden");
+    cutin.onclick = null;
+  };
+
+  cutin.onclick = hideCutin;
+
+  if (window._attackCutinTimer) clearTimeout(window._attackCutinTimer);
+  window._attackCutinTimer = setTimeout(hideCutin, 3500);
+}
+
+// =============================================================================
+// 💬 思いっきりかわいい対戦チャット機能 (Cute Pokeca Chat)
+// =============================================================================
+
+function openChatModal() {
+  state.chatUnreadCount = 0;
+  updateChatUnreadBadge();
+
+  let modal = document.getElementById("cute-chat-modal");
+  if (!modal) {
+    createCuteChatModalElement();
+    modal = document.getElementById("cute-chat-modal");
+  }
+
+  modal.classList.remove("hidden");
+  renderChatMessages();
+
+  setTimeout(() => {
+    const input = document.getElementById("cute-chat-input");
+    if (input) input.focus();
+  }, 150);
+}
+
+function closeChatModal() {
+  const modal = document.getElementById("cute-chat-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function createCuteChatModalElement() {
+  const modal = document.createElement("div");
+  modal.id = "cute-chat-modal";
+  modal.className = "cute-chat-modal hidden";
+
+  modal.innerHTML = `
+    <div class="cute-chat-backdrop" onclick="closeChatModal()"></div>
+    <div class="cute-chat-container">
+      <!-- ヘッダー -->
+      <div class="cute-chat-header">
+        <div class="cute-chat-title">
+          <span class="cute-chat-icon">💬</span>
+          <span>ポケチャット♪</span>
+        </div>
+        <button class="cute-chat-close-btn" onclick="closeChatModal()" title="閉じる">✕</button>
+      </div>
+
+      <!-- かわいい定型文クイックチップ -->
+      <div class="cute-chat-chips">
+        <button class="cute-chip" onclick="sendQuickChatMessage('🌟 よろしくお願いします！')">🌟 よろしく！</button>
+        <button class="cute-chip" onclick="sendQuickChatMessage('⚔️ ワザを使います！')">⚔️ ワザ使います！</button>
+        <button class="cute-chip" onclick="sendQuickChatMessage('⏳ ターン終了です')">⏳ ターン終了</button>
+        <button class="cute-chip" onclick="sendQuickChatMessage('💭 少し考え中...お待ちください')">💭 考え中...</button>
+        <button class="cute-chip" onclick="sendQuickChatMessage('✨ ナイスプレイ！')">✨ ナイス！</button>
+        <button class="cute-chip" onclick="sendQuickChatMessage('💖 ありがとうございました！')">💖 ありがとう！</button>
+      </div>
+
+      <!-- メッセージタイムライン -->
+      <div class="cute-chat-messages" id="cute-chat-messages">
+        <!-- JSで動的生成 -->
+      </div>
+
+      <!-- 入力バー -->
+      <div class="cute-chat-input-bar">
+        <input type="text" id="cute-chat-input" maxlength="80" placeholder="メッセージを入力... (Enterで送信)" autocomplete="off"
+          onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendChatMessageFromInput(); }">
+        <button class="cute-chat-send-btn" onclick="sendChatMessageFromInput()" title="送信">
+          <span>送信</span>
+          <span style="font-size:14px;">💌</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+function sendChatMessageFromInput() {
+  const input = document.getElementById("cute-chat-input");
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  sendChatMessage(text);
+  input.value = "";
+}
+
+function sendQuickChatMessage(text) {
+  sendChatMessage(text);
+}
+
+function sendChatMessage(text) {
+  if (!text) return;
+
+  const now = new Date();
+  const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const msgObj = {
+    id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    sender: state.myName || "プレイヤーA",
+    text: text,
+    time: timeStr,
+    isMe: true
+  };
+
+  state.chatMessages.push(msgObj);
+  renderChatMessages();
+
+  // 対戦ログにも軽く記録
+  addLog(state.myName, "chat", `💬 [チャット] ${state.myName}: ${text}`);
+
+  // P2P送信
+  if (typeof P2P !== "undefined" && P2P.connected && !state.isSoloMode) {
+    P2P.send({
+      t: "chat_message",
+      id: msgObj.id,
+      sender: msgObj.sender,
+      text: msgObj.text,
+      time: msgObj.time
+    });
+  }
+}
+
+function handleIncomingChatMessage(msg) {
+  const msgObj = {
+    id: msg.id,
+    sender: msg.sender || "対戦相手",
+    text: msg.text || "",
+    time: msg.time || "",
+    isMe: false
+  };
+
+  state.chatMessages.push(msgObj);
+
+  const modal = document.getElementById("cute-chat-modal");
+  const isModalOpen = modal && !modal.classList.contains("hidden");
+
+  if (isModalOpen) {
+    renderChatMessages();
+  } else {
+    // 未読件数増加
+    state.chatUnreadCount = (state.chatUnreadCount || 0) + 1;
+    updateChatUnreadBadge();
+
+    // かわいいフキダシ風トースト通知を画面上端に表示
+    showChatBubbleToast(msgObj.sender, msgObj.text);
+  }
+
+  // ログにも追加
+  addLog(msgObj.sender, "chat", `💬 [チャット] ${msgObj.sender}: ${msgObj.text}`);
+
+  // 軽い通知バイブ
+  if (navigator.vibrate) {
+    try { navigator.vibrate(30); } catch (e) {}
+  }
+}
+
+function renderChatMessages() {
+  const container = document.getElementById("cute-chat-messages");
+  if (!container) return;
+
+  if (state.chatMessages.length === 0) {
+    container.innerHTML = `
+      <div class="cute-chat-empty">
+        <div style="font-size:32px; margin-bottom:6px;">🐣 💭</div>
+        <div>まだメッセージはありません</div>
+        <div style="font-size:11px; opacity:0.8; margin-top:2px;">上の定型文ボタンから気軽に挨拶してみよう！</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = state.chatMessages.map(m => {
+    const isMe = m.isMe;
+    return `
+      <div class="cute-msg-row ${isMe ? 'me' : 'opp'}">
+        <div class="cute-msg-avatar">${isMe ? '⚡' : '🎀'}</div>
+        <div class="cute-msg-content">
+          <div class="cute-msg-name">${escapeHtml(m.sender)} <span class="cute-msg-time">${m.time}</span></div>
+          <div class="cute-msg-bubble">${escapeHtml(m.text)}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // 最下部へスクロール
+  container.scrollTop = container.scrollHeight;
+}
+
+function updateChatUnreadBadge() {
+  const count = state.chatUnreadCount || 0;
+  const badges = [
+    document.getElementById("chat-badge"),
+    document.getElementById("chat-badge-log"),
+    document.getElementById("sp-chat-badge"),
+    document.getElementById("float-chat-badge")
+  ];
+
+  badges.forEach(badge => {
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count > 9 ? "9+" : count;
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+  });
+}
+
+/** 画面上端にふわっと現れるかわいいフキダシ通知（3.5秒で自動消滅） */
+function showChatBubbleToast(sender, text) {
+  let toast = document.getElementById("cute-chat-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "cute-chat-toast";
+    toast.className = "cute-chat-toast hidden";
+    toast.onclick = () => {
+      openChatModal();
+      hideChatBubbleToast();
+    };
+    document.body.appendChild(toast);
+  }
+
+  toast.innerHTML = `
+    <div class="cute-toast-icon">💌</div>
+    <div class="cute-toast-body">
+      <div class="cute-toast-sender">${escapeHtml(sender)}:</div>
+      <div class="cute-toast-text">${escapeHtml(text)}</div>
+    </div>
+    <div class="cute-toast-arrow">▶</div>
+  `;
+
+  toast.classList.remove("hidden");
+  toast.classList.add("show");
+
+  const hide = () => {
+    toast.classList.remove("show");
+    toast.classList.add("hidden");
+  };
+
+  if (window._chatToastTimer) clearTimeout(window._chatToastTimer);
+  window._chatToastTimer = setTimeout(hide, 3800);
+}
+
+function hideChatBubbleToast() {
+  const toast = document.getElementById("cute-chat-toast");
+  if (toast) {
+    toast.classList.remove("show");
+    toast.classList.add("hidden");
+  }
+}
+
+window.openAttackModal = openAttackModal;
+window.submitAttackDeclaration = submitAttackDeclaration;
+window.executeAttackDeclaration = executeAttackDeclaration;
+window.showAttackCutin = showAttackCutin;
+
+window.openChatModal = openChatModal;
+window.closeChatModal = closeChatModal;
+window.sendChatMessage = sendChatMessage;
+window.sendChatMessageFromInput = sendChatMessageFromInput;
+window.sendQuickChatMessage = sendQuickChatMessage;
+window.handleIncomingChatMessage = handleIncomingChatMessage;
+window.updateChatUnreadBadge = updateChatUnreadBadge;
+window.showChatBubbleToast = showChatBubbleToast;
+

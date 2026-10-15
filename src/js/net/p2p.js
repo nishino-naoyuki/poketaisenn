@@ -788,6 +788,21 @@ const P2P = {
       return;
     }
 
+    if (msg.t === "declare_attack") {
+      const pName = msg.playerName || state.oppName || "相手プレイヤー";
+      if (typeof showAttackCutin === "function") {
+        showAttackCutin(pName, msg.pokemonName, msg.attackName);
+      }
+      return;
+    }
+
+    if (msg.t === "chat_message") {
+      if (typeof handleIncomingChatMessage === "function") {
+        handleIncomingChatMessage(msg);
+      }
+      return;
+    }
+
     if (msg.t === "conn_check") {
       if (msg.phase === "syn") {
         this.send({

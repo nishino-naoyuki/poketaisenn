@@ -5269,3 +5269,530 @@ body.menu-open .sp-sheet {
   color: #94a3b8;
   margin: 0;
 }
+
+/* =============================================================================
+   技宣言ボタン ＆ カットイン演出
+   ============================================================================= */
+.btn-declare-attack {
+  position: absolute;
+  top: calc(50% + var(--u) * 0.8 + var(--active-h) * 0.28);
+  left: calc(50% + var(--active-w) * 0.5 + 10px);
+  z-index: 18;
+  white-space: nowrap;
+  font-weight: 800;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+  color: #ffffff;
+  border: 2px solid #fecaca;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45), 0 0 10px rgba(239, 68, 68, 0.35);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  user-select: none;
+}
+.btn-declare-attack:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.6), 0 0 16px rgba(239, 68, 68, 0.5);
+  filter: brightness(1.1);
+}
+.btn-declare-attack:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+@media (max-width: 768px) {
+  .btn-declare-attack {
+    left: auto;
+    right: 8px;
+    top: calc(50% + 20px);
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+/* 技宣言カットイン演出 */
+.attack-cutin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.25) 0%, rgba(15, 23, 42, 0.75) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.attack-cutin-overlay.show {
+  opacity: 1;
+}
+.attack-cutin-box {
+  background: linear-gradient(135deg, rgba(30, 10, 15, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+  border: 3px solid #f59e0b;
+  box-shadow: 0 0 35px rgba(245, 158, 11, 0.6), inset 0 0 25px rgba(239, 68, 68, 0.4), 0 20px 40px rgba(0,0,0,0.8);
+  border-radius: 20px;
+  padding: 24px 44px;
+  text-align: center;
+  transform: scale(0.6) rotate(-3deg);
+  animation: attackCutinPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  max-width: 90vw;
+}
+@keyframes attackCutinPop {
+  0% { transform: scale(0.5) rotate(-6deg); opacity: 0; }
+  70% { transform: scale(1.08) rotate(1deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.attack-cutin-flame {
+  font-size: 28px;
+  margin-bottom: 6px;
+  animation: attackFlamePulse 1.2s infinite alternate ease-in-out;
+}
+@keyframes attackFlamePulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 5px #ef4444); }
+  100% { transform: scale(1.2); filter: drop-shadow(0 0 15px #f59e0b); }
+}
+.attack-cutin-user, .attack-cutin-player {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fed7aa;
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+.attack-cutin-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 8px;
+  text-shadow: 0 0 12px rgba(239, 68, 68, 0.8), 0 3px 6px rgba(0,0,0,0.9);
+}
+.attack-cutin-name {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 20px rgba(251, 191, 36, 0.8), 0 4px 8px rgba(0,0,0,0.95);
+  background: linear-gradient(90deg, #fef08a, #f59e0b, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.attack-cutin-tip {
+  font-size: 11px;
+  color: #94a3b8;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+.attack-cutin-box.no-name .attack-cutin-title {
+  font-size: 28px;
+  margin-bottom: 0;
+}
+
+/* =============================================================================
+   未読件数バッジ (赤丸・ぷるぷるアニメーション)
+   ============================================================================= */
+.badge-unread {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: linear-gradient(135deg, #ff4d6d 0%, #e63946 100%);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 3px 6px;
+  min-width: 18px;
+  border-radius: 9999px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(230, 57, 70, 0.6);
+  text-align: center;
+  box-sizing: border-box;
+  animation: badgePulse 2s infinite ease-in-out;
+  pointer-events: none;
+}
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* スマホ用ヘッダー内チャットボタン */
+.sp-floating-chat-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  font-size: 17px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(236, 72, 153, 0.4);
+  margin-right: 6px;
+  transition: transform 0.15s ease;
+}
+.sp-floating-chat-btn:active {
+  transform: scale(0.92);
+}
+@media (max-width: 768px) {
+  .sp-floating-chat-btn {
+    display: flex;
+  }
+}
+
+/* =============================================================================
+   思いっきりかわいいポケチャット UI
+   ============================================================================= */
+.cute-chat-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cute-chat-modal.hidden {
+  display: none !important;
+}
+
+.cute-chat-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+.cute-chat-container {
+  position: relative;
+  width: 92%;
+  max-width: 440px;
+  height: 580px;
+  max-height: 85vh;
+  background: linear-gradient(180deg, #fff5f7 0%, #ffffff 40%, #fef8f9 100%);
+  border: 3px solid #fbcfe8;
+  border-radius: 28px;
+  box-shadow: 0 15px 45px rgba(244, 114, 182, 0.35), 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cutePopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1;
+}
+@keyframes cutePopIn {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ヘッダー */
+.cute-chat-header {
+  background: linear-gradient(135deg, #f472b6 0%, #fb7185 50%, #fda4af 100%);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #fecdd3;
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(244, 114, 182, 0.25);
+}
+.cute-chat-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.cute-chat-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+  animation: cuteBounce 2s infinite ease-in-out;
+}
+@keyframes cuteBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.cute-chat-close-btn {
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.cute-chat-close-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: rotate(90deg);
+}
+
+/* クイック定型文チップ */
+.cute-chat-chips {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #fff1f2;
+  border-bottom: 1px dashed #fecdd3;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.cute-chat-chips::-webkit-scrollbar {
+  display: none;
+}
+.cute-chip {
+  background: #ffffff;
+  color: #db2777;
+  border: 1.5px solid #fbcfe8;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(244, 114, 182, 0.15);
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  flex-shrink: 0;
+  user-select: none;
+}
+.cute-chip:hover {
+  background: #fdf2f8;
+  border-color: #f472b6;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 8px rgba(244, 114, 182, 0.25);
+}
+.cute-chip:active {
+  transform: translateY(1px) scale(0.96);
+}
+
+/* メッセージエリア */
+.cute-chat-messages {
+  flex: 1;
+  padding: 14px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: radial-gradient(#fff1f2 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.cute-chat-empty {
+  margin: auto;
+  text-align: center;
+  color: #9d174d;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 20px;
+}
+
+/* メッセージ行 */
+.cute-msg-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 86%;
+  animation: cuteMsgSlide 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes cuteMsgSlide {
+  0% { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.cute-msg-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.cute-msg-content {
+  display: flex;
+  flex-direction: column;
+}
+.cute-msg-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ca3af;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cute-msg-time {
+  font-size: 10px;
+  font-weight: normal;
+  color: #cbd5e1;
+}
+
+/* 吹き出し共通 */
+.cute-msg-bubble {
+  padding: 10px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  word-break: break-word;
+  position: relative;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 自分の発言（右寄せ・ピンクグラデ・白文字） */
+.cute-msg-row.me {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+.cute-msg-row.me .cute-msg-avatar {
+  background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%);
+  border: 2px solid #ffffff;
+}
+.cute-msg-row.me .cute-msg-name {
+  text-align: right;
+  flex-direction: row-reverse;
+}
+.cute-msg-row.me .cute-msg-bubble {
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+
+/* 相手の発言（左寄せ・爽やかブルー・濃い色文字） */
+.cute-msg-row.opp {
+  align-self: flex-start;
+}
+.cute-msg-row.opp .cute-msg-avatar {
+  background: linear-gradient(135deg, #fda4af 0%, #fb7185 100%);
+  border: 2px solid #ffffff;
+}
+.cute-msg-row.opp .cute-msg-bubble {
+  background: #ffffff;
+  color: #1e293b;
+  border: 1.5px solid #e2e8f0;
+  border-bottom-left-radius: 4px;
+}
+
+/* 入力バー */
+.cute-chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border-top: 1.5px solid #fce7f3;
+}
+.cute-chat-input-bar input {
+  flex: 1;
+  background: #fdf2f8;
+  border: 1.5px solid #fbcfe8;
+  border-radius: 9999px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #374151;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.cute-chat-input-bar input:focus {
+  background: #ffffff;
+  border-color: #f472b6;
+  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.25);
+}
+.cute-chat-input-bar input::placeholder {
+  color: #f472b6;
+  opacity: 0.6;
+}
+.cute-chat-send-btn {
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 3px 10px rgba(244, 114, 182, 0.35);
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.cute-chat-send-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 5px 14px rgba(244, 114, 182, 0.5);
+}
+.cute-chat-send-btn:active {
+  transform: translateY(1px) scale(0.96);
+}
+
+/* =============================================================================
+   画面上端のかわいいフキダシ通知トースト
+   ============================================================================= */
+.cute-chat-toast {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-30px);
+  z-index: 99995;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f7 100%);
+  border: 2.5px solid #f472b6;
+  border-radius: 9999px;
+  box-shadow: 0 10px 30px rgba(244, 114, 182, 0.35), 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 90vw;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.cute-chat-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.cute-toast-icon {
+  font-size: 20px;
+  animation: cuteBounce 1.5s infinite ease-in-out;
+}
+.cute-toast-body {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.cute-toast-sender {
+  font-size: 12px;
+  font-weight: 800;
+  color: #db2777;
+}
+.cute-toast-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.cute-toast-arrow {
+  font-size: 11px;
+  color: #f472b6;
+  font-weight: bold;
+}
