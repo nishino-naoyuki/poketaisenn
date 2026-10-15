@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポケカラボアリーナ (ポケアリ) 公式操作マニュアル</title>
+  <link rel="stylesheet" href="css/manual.css">
+</head>
+<body>
+
+  <!-- ナビゲーションバー -->
+  <header class="manual-navbar">
+    <a href="#top" class="manual-nav-brand">
+      <img src="assets/logo_complete.jpg" alt="ポケアリ ロゴ" class="manual-nav-logo">
+      <span class="manual-nav-title">ポケカラボアリーナ 公式マニュアル</span>
+    </a>
+    <div class="manual-nav-links">
+      <a href="#flow" class="nav-btn nav-btn-outline">対戦フロー</a>
+      <a href="../index.html" class="nav-btn nav-btn-primary">🎮 対戦ロビーへ戻る</a>
+    </div>
+  </header>
+
+  <div class="manual-container" id="top">
+
+    <!-- ヒーローセクション -->
+    <section class="manual-hero">
+      <img src="assets/logo_complete.jpg" alt="ポケカラボアリーナ (ポケアリ) - PokéCa Lab Arena" class="manual-hero-logo">
+      <p class="manual-hero-lead">
+        Webブラウザで動く、手動操作型ポケモンカード対戦シミュレーター。<br>
+        オンライン対戦から一人回し研究まで、快適にプレイするための完全ガイドです。
+      </p>
+    </section>
+
+    <!-- ⚠️ 最重要注意事項バナー -->
+    <div class="important-notice-banner">
+      <div class="important-notice-title">
+        <span>⚠️ 【最重要】はじめにお読みください</span>
+      </div>
+      <div class="important-notice-core">
+        「このツールのカード操作は自動ではありません。<br>
+        現実のカードを操作をするイメージで自分でカードを操作してください」
+      </div>
+      <p class="important-notice-desc">
+        本ツールは、ゲームアプリのような複雑な自動ルール判定や自動効果処理を行いません。<br>
+        実際の紙のポケカ対戦と同様に、<b>「山札を引く」「手札からカードを出す」「技や特性を宣言する」「ダメカンを乗せる」「きぜつしてサイドを取る」</b>といった一連の動作を、プレイヤー自身が直感的に動かしながら対戦を進めます。
+      </p>
+    </div>
+
+    <!-- 🗺️ 対戦の流れフローチャート -->
+    <section class="flowchart-section" id="flow">
+      <div class="section-head">
+        <h2 class="section-title">🔄 対戦の流れフローチャート</h2>
+        <span style="font-size:12px; color:var(--text-muted);">※ 各ステップをクリックすると詳細な解説へジャンプします</span>
+      </div>
+
+      <div class="flowchart-grid">
+        <a href="#sec-01" class="flow-step-card">
+          <span class="flow-step-badge">STEP 1</span>
+          <div class="flow-step-title">
+            <span>① ロビーで準備</span>
+            <span class="flow-step-arrow">→</span>
+          </div>
+          <p class="flow-step-desc">名前入力、ルーム作成/参加、デッキ読込、マット・スリーブ選択</p>
+        </a>
+
+        <a href="#sec-02" class="flow-step-card">
+          <span class="flow-step-badge">STEP 2</span>
+          <div class="flow-step-title">
+            <span>② 対戦準備フェーズ</span>
+            <span class="flow-step-arrow">→</span>
+          </div>
+          <p class="flow-step-desc">コイントス、手札7枚、たねポケモン配置、マリガン、サイド6枚セット</p>
+        </a>
+
+        <a href="#sec-04-deck" class="flow-step-card">
+          <span class="flow-step-badge loop">TURN START</span>
+          <div class="flow-step-title">
+            <span>③ ターン開始（ドロー）</span>
+            <span class="flow-step-arrow">→</span>
+          </div>
+          <p class="flow-step-desc">手番プレイヤーが山札の上からカードを1枚引いて手札へ加える</p>
+        </a>
+
+        <a href="#sec-04-hand" class="flow-step-card">
+          <span class="flow-step-badge loop">MAIN PHASE</span>
+          <div class="flow-step-title">
+            <span>④ メインフェーズ</span>
+            <span class="flow-step-arrow">→</span>
+          </div>
+          <p class="flow-step-desc">手札を使う（グッズ・サポート）、ポケモンの進化、エネ・どうぐ装着、特性宣言</p>
+        </a>
+
+        <a href="#sec-04-battle" class="flow-step-card">
+          <span class="flow-step-badge loop">BATTLE PHASE</span>
+          <div class="flow-step-title">
+            <span>⑤ バトルフェーズ</span>
+            <span class="flow-step-arrow">→</span>
+          </div>
+          <p class="flow-step-desc">ワザ宣言、ダメカンを乗せる、特殊状態、きぜつ判定、サイド取得</p>
+        </a>
+
+        <a href="#sec-03-turn" class="flow-step-card">
+          <span class="flow-step-badge loop">TURN END</span>
+          <div class="flow-step-title">
+            <span>⑥ ターン終了</span>
+            <span class="flow-step-arrow">→</span>
+          </div>
+          <p class="flow-step-desc">「ターン終了」ボタンを押して相手へ手番を渡す（一人回しは視点が自動反転）</p>
+        </a>
+
+        <a href="#sec-06-replay" class="flow-step-card" style="grid-column: 1 / -1;">
+          <span class="flow-step-badge win">GAME SET</span>
+          <div class="flow-step-title">
+            <span>🏆 ⑦ 決着 ＆ 試合ログ保存（CSV完全再現）</span>
+            <span class="flow-step-arrow">→</span>
+          </div>
+          <p class="flow-step-desc">サイド6枚取り切りで大迫力勝利演出！対戦ログをCSV出力して後から試合を1手ずつ完全再生可能</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         第1章：ロビーでの準備 ＆ 対戦開始
+         ===================================================== -->
+    <article class="manual-chapter" id="sec-01">
+      <div class="chapter-number">CHAPTER 01</div>
+      <h2 class="chapter-title">🏠 ロビーでの準備 ＆ 対戦開始</h2>
+
+      <div class="subsection">
+        <h3 class="subsection-title">1. 対戦モードの選択</h3>
+        <p>ロビー上部のタブで、2つのモードを切り替えられます。</p>
+        <ul style="margin: 8px 0 16px 20px; color:#cbd5e1;">
+          <li><b>🌐 オンライン対戦</b>: 友達と6桁のルーム番号を共有し、WebRTC（P2P）直接通信で離れたプレイヤーとリアルタイム対戦。</li>
+          <li><b>🃏 一人回し</b>: 1台の端末で2つのデッキを登録。ターン終了ごとに画面の上下（視点）が自動で入れ替わり、両方の手札や盤面をじっくり一人で研究・練習可能。</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">2. デッキの読み込み方法</h3>
+        <p>以下の3通りの方法で、実戦デッキを瞬時に読み込めます：</p>
+        <ol style="margin: 8px 0 16px 20px; color:#cbd5e1;">
+          <li><b>公式デッキコード入力</b>: 公式サイトで作成したデッキコード（例: <code>DEMO-CHARIZARD-2026</code> や公式英数字コード）を入力して「読み込む」。全60枚の公式画像が自動展開されます。</li>
+          <li><b>テキスト貼り付け</b>: 「📋 テキスト貼付」ボタンを押し、公式デッキ構築画面でコピーしたテキスト（または「リザードンex 3」などの行形式）をそのまま貼り付け。</li>
+          <li><b>サンプルデッキ選択</b>: プルダウンから、環境トップ（悪リザードンex、ドラパルトex、ミライドンexなど）のサンプルデッキをワンクリック選択。</li>
+        </ol>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">3. プレイマット ＆ スリーブ（カード裏面）のカスタマイズ</h3>
+        <p>自分好みの対戦環境にカスタマイズできます（オンライン対戦相手にもリアルタイムに共有されます）：</p>
+        <div class="diagram-box">
+          <div style="display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap; gap:16px;">
+            <div style="text-align:center;">
+              <span style="font-size:12px; color:var(--accent-blue); font-weight:bold;">🖼️ プレイマット選択</span>
+              <p style="font-size:11px; color:#94a3b8; margin-top:4px;">10種のプリセット ＋ 自作画像アップロード（画面下半分に反映）</p>
+            </div>
+            <div style="text-align:center;">
+              <span style="font-size:12px; color:var(--accent-gold); font-weight:bold;">🎴 スリーブ選択（裏面）</span>
+              <p style="font-size:11px; color:#94a3b8; margin-top:4px;">公式風・モンスターボール等 ＋ 自作画像（サイドや山札、相手手札裏面に反映）</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">4. 自動トラッシュ設定</h3>
+        <p>
+          「⚡ 使用したカードを自動でトラッシュする（5秒後）」にチェックを入れておくと、手札から使用エリアに出したグッズやサポートが5秒後にアニメーション付きで自動的にトラッシュへ送られます（デフォルトON）。
+        </p>
+      </div>
+    </article>
+
+    <!-- =====================================================
+         第2章：対戦準備フェーズの進め方
+         ===================================================== -->
+    <article class="manual-chapter" id="sec-02">
+      <div class="chapter-number">CHAPTER 02</div>
+      <h2 class="chapter-title">⚔️ 対戦準備フェーズの進め方</h2>
+
+      <p>対戦開始ボタンを押すと、公式ポケカの対戦準備フェーズが開始されます。上部の案内バナーに従って進行してください。</p>
+
+      <div class="subsection">
+        <h3 class="subsection-title">対戦準備の5ステップ</h3>
+        <ol style="margin: 8px 0 16px 20px; color:#cbd5e1; line-height:1.8;">
+          <li><b>コイントス</b>: 「コイントス」ボタンを押し、表（先攻）または裏（後攻）を決定。</li>
+          <li><b>初期手札7枚の確認</b>: 山札から自動で7枚が手札に引かれます。</li>
+          <li><b>たねポケモンのセット</b>: 手札から「たねポケモン」を1枚バトル場にドラッグ（またはタップ）して裏向きでセット。さらに出したいポケモンがいればベンチにも裏向きで配置します。</li>
+          <li><b>マリガン（たねポケモンがいない場合）</b>: 手札にたねポケモンが1枚もない場合は「マリガン」ボタンを押します。相手に手札が公開され、7枚を引き直します（相手に差分ドロー権利が付与されます）。</li>
+          <li><b>サイドカード6枚のセット ＆ 準備完了</b>: 山札の上から6枚をサイドにセットし、「対戦準備完了」ボタンを押します。双方が完了すると「せーの！オープン！」で一斉にポケモンが表を向いて対戦が始まります！</li>
+        </ol>
+
+        <div class="callout callout-tip">
+          💡 <b>一人回しでの対戦準備:</b><br>
+          一人回しモードでは、上部のバナーの「🔄 相手側の配置へ切り替え」を押すことで、先攻側・後攻側の両方のたね配置やマリガンを自分の手でじっくり確認・セットできます。
+        </div>
+      </div>
+    </article>
+
+    <!-- =====================================================
+         第3章：基本操作ガイド（PCマウス vs スマホタッチ）
+         ===================================================== -->
+    <article class="manual-chapter" id="sec-03">
+      <div class="chapter-number">CHAPTER 03</div>
+      <h2 class="chapter-title">🎮 基本操作ガイド（PCマウス vs スマホタッチ）</h2>
+
+      <p>PCとスマートフォン、どちらのデバイスでも快適に操作できるよう設計されています。</p>
+
+      <div class="controls-table-wrapper">
+        <table class="controls-table">
+          <thead>
+            <tr>
+              <th>操作内容</th>
+              <th>PC（マウス操作）</th>
+              <th>スマートフォン（タッチ操作）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>カードの選択 / 解除</b></td>
+              <td>左クリック</td>
+              <td>タップ</td>
+            </tr>
+            <tr>
+              <td><b>カード専用メニューを開く</b></td>
+              <td><span class="kbd">右クリック</span></td>
+              <td><span class="kbd">長押し（450ms）</span> または 下部メニュー</td>
+            </tr>
+            <tr>
+              <td><b>カードの拡大確認</b></td>
+              <td><span class="kbd">ダブルクリック</span></td>
+              <td>タップして拡大ボタン</td>
+            </tr>
+            <tr>
+              <td><b>カードの移動</b></td>
+              <td>ドラッグ ＆ ドロップ</td>
+              <td>指で触れてそのままスワイプ移動</td>
+            </tr>
+            <tr>
+              <td><b>複数カードの同時選択</b></td>
+              <td>マウスドラッグで四角く囲む（範囲選択）</td>
+              <td>手札カードを連続タップ</td>
+            </tr>
+            <tr>
+              <td><b>全体操作メニュー</b></td>
+              <td>右側コントロールパネル</td>
+              <td>右下 <span class="kbd">📱 操作メニュー</span>（アコーディオン式）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 操作デモアニメーション 2種 -->
+      <div class="demo-widget-container">
+        <!-- デモ: スマホ長押しメニュー -->
+        <div class="demo-widget">
+          <div class="demo-widget-title">📱 スマホ: 手札長押しメニュー</div>
+          <div class="demo-stage">
+            <div class="demo-hand-card-sample"></div>
+            <div class="demo-finger-press"></div>
+            <div class="demo-ctx-popup">
+              <div>▶ 使用する</div>
+              <div>▶ バトル場に出す</div>
+              <div>▶ ベンチに出す</div>
+              <div>▶ トラッシュ</div>
+            </div>
+          </div>
+          <div class="diagram-caption">指で450ms長押しすると、微振動（バイブ）とともに専用メニューが出現！</div>
+        </div>
+
+        <!-- デモ: 3Dサイドめくり -->
+        <div class="demo-widget">
+          <div class="demo-widget-title">🏆 サイドカードの3Dめくり演出</div>
+          <div class="demo-stage">
+            <div class="demo-prize-card-wrapper">
+              <div class="demo-prize-card-inner">
+                <div class="demo-prize-side demo-prize-back">裏面</div>
+                <div class="demo-prize-side demo-prize-front">✔ 取得</div>
+              </div>
+            </div>
+          </div>
+          <div class="diagram-caption">きぜつ時に開くサイド取得画面で、タップすると3D回転して表向きになり獲得！</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- =====================================================
+         第4章：盤面・各エリア操作ガイド
+         ===================================================== -->
+    <article class="manual-chapter" id="sec-04">
+      <div class="chapter-number">CHAPTER 04</div>
+      <h2 class="chapter-title">🏟️ 盤面・各エリア操作ガイド</h2>
+
+      <div class="subsection">
+        <h3 class="subsection-title">盤面レイアウト図解</h3>
+        <p>公式プレイマットに準拠した整然としたエリア配置です。</p>
+
+        <div class="diagram-box">
+          <div class="board-map-grid">
+            <!-- 相手側 -->
+            <div class="board-map-cell">相手サイド</div>
+            <div class="board-map-cell bench-spot">相手ベンチ (最大8枠)</div>
+            <div class="board-map-cell">相手山札<br>相手トラッシュ</div>
+
+            <div class="board-map-cell">相手ロスト</div>
+            <div class="board-map-cell active-spot">相手バトル場</div>
+            <div class="board-map-cell">スタジアム</div>
+
+            <!-- 自分側 -->
+            <div class="board-map-cell">ロスト</div>
+            <div class="board-map-cell active-spot">自分のバトル場</div>
+            <div class="board-map-cell play-spot">使用エリア</div>
+
+            <div class="board-map-cell">自分サイド</div>
+            <div class="board-map-cell bench-spot">自分のベンチ (最大8枠)</div>
+            <div class="board-map-cell">自分山札<br>自分トラッシュ</div>
+          </div>
+          <div class="diagram-caption">画面上が対戦相手、画面下が自分側のプレイエリアです</div>
+        </div>
+      </div>
+
+      <!-- 手札・使用エリア -->
+      <div class="subsection" id="sec-04-hand">
+        <h3 class="subsection-title">1. 手札 ＆ 「使用エリア」の操作</h3>
+        <ul style="margin: 8px 0 16px 20px; color:#cbd5e1; line-height:1.8;">
+          <li><b>ポケモンを場に出す</b>: 手札からバトル場やベンチへドラッグ＆ドロップ、または右クリック/長押しから「バトル場に出す」「ベンチに出す」。</li>
+          <li><b>進化</b>: 進化ポケモンを進化元のポケモンカードの上に重ねてドロップ。</li>
+          <li><b>グッズ・サポートを使う</b>: カードを「使用エリア」にドロップ、または右クリック/長押しで「使用する」。</li>
+          <li><b>手札をトラッシュ / 山札へ戻す</b>: カードを選択した状態で下部メニューから実行。<b>カード未選択の状態で押すと、確認ダイアログ付きで手札全カードを一括トラッシュ / 山札シャッフル</b>できます（手札リフレッシュに便利）。</li>
+        </ul>
+
+        <!-- 5秒自動トラッシュデモ -->
+        <div class="demo-widget" style="max-width:500px; margin:16px auto;">
+          <div class="demo-widget-title">⚡ 5秒後自動トラッシュアニメーション</div>
+          <div class="demo-stage">
+            <div class="demo-auto-trash-card">
+              <span>グッズ</span>
+              <div class="demo-auto-trash-bar"><div class="demo-auto-trash-fill"></div></div>
+            </div>
+            <div class="demo-trash-target">🗑️ トラッシュ</div>
+          </div>
+          <div class="diagram-caption">使用エリアに置かれたカードは、5秒プログレスバー完了後に放物線を描いてトラッシュへ自動飛行！</div>
+        </div>
+      </div>
+
+      <!-- バトル場・ベンチ -->
+      <div class="subsection" id="sec-04-battle">
+        <h3 class="subsection-title">2. バトル場・ベンチのポケモン操作</h3>
+        <p>場のポケモンを右クリック（スマホは長押し）すると、充実した専用メニューが開きます：</p>
+        <ul style="margin: 8px 0 16px 20px; color:#cbd5e1; line-height:1.8;">
+          <li><b>ダメカンの乗せ降ろし</b>: 10 / 50 / 100刻みで連打可能。完了ボタンを押すまでメニューを保持。</li>
+          <li><b>特殊状態の付与</b>: どく、やけど、まひ、ねむり、こんらん（アニメーションエフェクト付き）。</li>
+          <li><b>特性「済」マーク</b>: ターン中に特性を使った印として「済」バッジを付与（ターン終了時に自動クリア）。</li>
+          <li><b>ポケモンの山札戻し</b>: 「山札に戻してシャッフル」または「山札の下へ送る」。ついているエネルギーやどうぐも一緒に山札へ戻ります。</li>
+          <li><b>にげる・交代</b>: バトル場のポケモンをベンチへドラッグして入れ替え。</li>
+          <li><b>きぜつさせる</b>: HPが0になったら実行。ポケモンがトラッシュへ送られ、相手画面でサイド取得モーダルが開きます。</li>
+        </ul>
+      </div>
+
+      <!-- 山札 -->
+      <div class="subsection" id="sec-04-deck">
+        <h3 class="subsection-title">3. 山札（デッキ）の操作</h3>
+        <ul style="margin: 8px 0 16px 20px; color:#cbd5e1; line-height:1.8;">
+          <li><b>1枚引く（ドロー）</b>: 山札をクリックするか、右側/下部メニューの「1枚引く」を押す。</li>
+          <li><b>山札の中を見る（サーチ）</b>: ネストボールやハイパーボール使用時、「山札を見る」で一覧モーダルを展開。欲しいカードをタップして手札へ直接加えられます。</li>
+          <li><b>シャッフル</b>: 「シャッフル」ボタンで3D空中シャッフル演出とともに山札をランダム化。</li>
+          <li><b>山札の上をトラッシュ</b>: デッキトップのカードを直接トラッシュへ送る。</li>
+        </ul>
+      </div>
+
+      <!-- トラッシュ -->
+      <div class="subsection" id="sec-04-trash">
+        <h3 class="subsection-title">4. トラッシュの操作（複数選択 ＆ 一括アクション）</h3>
+        <p>
+          トラッシュをクリックすると、トラッシュ内のカード一覧モーダルが開きます。カードごとに個別のボタンを押すのではなく、<b>カードをタップして青色発光（選択）させ、下部のアクションバーからまとめて操作</b>できます：
+        </p>
+        <div class="diagram-box">
+          <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+            <div style="padding:10px 16px; background:#1e293b; border:2px solid #38bdf8; border-radius:6px; color:#38bdf8; font-weight:bold; box-shadow:0 0 12px rgba(56,189,248,0.5);">
+              ✔ 選択カード (青く発光)
+            </div>
+          </div>
+          <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+            <button class="nav-btn nav-btn-outline" style="pointer-events:none;">🖐️ 手札に戻す</button>
+            <button class="nav-btn nav-btn-outline" style="pointer-events:none;">🔀 山札に戻す</button>
+            <button class="nav-btn nav-btn-primary" style="pointer-events:none;">⚡/🎒 ポケモンにつける</button>
+          </div>
+          <div class="diagram-caption">「ポケモンにつける」を押すと、バトル場やベンチから対象を指定して一括装着できます</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- =====================================================
+         第5章：一人回しモード活用ガイド
+         ===================================================== -->
+    <article class="manual-chapter" id="sec-05">
+      <div class="chapter-number">CHAPTER 05</div>
+      <h2 class="chapter-title">🃏 一人回しモード活用ガイド</h2>
+
+      <p>大会に向けたデッキの初動確率検証やプレイングの練習に最適な機能が満載です。</p>
+
+      <div class="subsection">
+        <h3 class="subsection-title">1. ターンの自動視点反転</h3>
+        <p>
+          「ターン終了」ボタンを押すと、画面の上下（自分側と相手側）が自動で入れ替わります。プレイヤーは座る位置を変えることなく、先攻・後攻の双方の手札と盤面を自然に操作できます。
+        </p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">2. 相手手札干渉メニュー（ナンジャモ・ツツジ等）</h3>
+        <p>
+          画面上部の「相手の手札を見る」ボタンから、相手の手札枚数の確認、手札を山札の下に戻してシャッフル、指定枚数ドローといった手札干渉ワザ・サポートを忠実に再現できます。
+        </p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">3. セッション自動セーブ ＆ 中断再開</h3>
+        <p>
+          一人回し中の盤面データはブラウザに常時オートセーブされています。誤ってタブを閉じたりリロードしてしまっても、ロビー画面上部に表示される<b>「⚠️ 中断された前回の対戦データがあります [▶ 続きから再開]」</b>から直前の状態へ瞬時に復元できます。
+        </p>
+      </div>
+    </article>
+
+    <!-- =====================================================
+         第6章：便利機能 ＆ よくある質問（FAQ）
+         ===================================================== -->
+    <article class="manual-chapter" id="sec-06">
+      <div class="chapter-number">CHAPTER 06</div>
+      <h2 class="chapter-title">💡 便利機能 ＆ よくある質問（FAQ）</h2>
+
+      <div class="subsection" id="sec-06-replay">
+        <h3 class="subsection-title">1. 試合ログCSV出力 ＆ 試合完全再現（リプレイ）</h3>
+        <p>
+          対戦中のすべての操作（ドロー、配置、ダメカン、トラッシュ等）は棋譜として内部記録されています。<br>
+          「CSV出力」を押すと対戦データ（CSV）がダウンロードでき、ロビー画面の「📂 試合ログ(CSV)を読み込んで試合を再現」から読み込むことで、<b>最初から最後まで1手ずつ盤面を完全再生</b>して振り返り・検討を行えます。
+        </p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">2. 1手戻す（Undo機能）</h3>
+        <p>
+          操作を誤ってカードを引いてしまった、間違ったポケモンを出してしまった場合、上部またはメニューの「↩️ 1手戻す」を押すことで、直前の状態に巻き戻せます。
+        </p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">3. よくある質問（FAQ）</h3>
+        
+        <div class="callout callout-note">
+          <b>Q. P2P通信で相手と接続できません。</b><br>
+          A. 双方のルーム番号（6桁）が一致しているかご確認ください。また、学校や企業の強固なセキュリティWi-Fi環境下ではWebRTC直接通信が制限される場合があります。一般的な家庭用Wi-Fiやスマートフォンのテザリング環境をお試しください。
+        </div>
+
+        <div class="callout callout-note">
+          <b>Q. 相手の画面に自分のカードの動きが反映されません。</b><br>
+          A. 一時的な通信切断の可能性があります。右上の「経路確認」ボタンを押してPing疎通テストメッセージを送信するか、ルームの再接続をお試しください。
+        </div>
+
+        <div class="callout callout-note">
+          <b>Q. 新しい機能が画面に反映されていないようです。</b><br>
+          A. ブラウザのキャッシュが残っている可能性があります。PCの場合は <span class="kbd">Ctrl + F5</span>（Macは <span class="kbd">Cmd + Shift + R</span>）、スマートフォンの場合はブラウザの「再読み込み」を行ってください。
+        </div>
+      </div>
+    </article>
+
+    <!-- フッター -->
+    <footer class="manual-footer">
+      <div style="margin-bottom:12px;">
+        <img src="assets/logo_complete.jpg" alt="ポケカラボアリーナ (ポケアリ)" style="max-height:48px; border-radius:6px;">
+      </div>
+      <p>ポケカラボアリーナ (PokéCa Lab Arena) - ポケアリ 公式マニュアル</p>
+      <p style="margin-top:6px; font-size:12px;">&copy; 2026 PokéCa Lab Project. All rights reserved.</p>
+      <div style="margin-top:16px;">
+        <a href="../index.html" class="nav-btn nav-btn-primary">🎮 対戦ロビーへ移動する</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- トップへ戻るボタン -->
+  <a href="#top" class="back-to-top-btn" title="ページ最上部へ戻る">▲</a>
+
+</body>
+</html>
