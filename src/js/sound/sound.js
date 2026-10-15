@@ -739,9 +739,7 @@ const SoundEffects = (() => {
   const GCP_TTS_STORAGE_KEY = "pokeca_gcp_tts_settings";
   const DEFAULT_TTS_SETTINGS = {
     apiKey: BUILTIN_GCP_TTS_API_KEY,
-    modelName: "gemini-3.1-flash-tts-preview", // ★Gemini 3.1 Flash TTS (preview)
-    voiceName: "Gacrux",                       // ★Gacrux
-    prompt: "male voice hard voice",           // ★スタイル指示プロンプト
+    voiceName: "ja-JP-Chirp3-HD-Fenrir", // Google Cloud 最新AIモデル (Chirp 3 HD: 男性熱血バトル声)
     speakingRate: 1.0,
     pitch: 0.0,
     volumeGainDb: 2.0
@@ -754,11 +752,13 @@ const SoundEffects = (() => {
       const saved = localStorage.getItem(GCP_TTS_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // 旧世代設定の場合はGemini 3.1 Flash TTSへ自動更新
-        if (!parsed.modelName) {
-          parsed.modelName = "gemini-3.1-flash-tts-preview";
-          parsed.voiceName = "Gacrux";
-          parsed.prompt = "male voice hard voice";
+        // 旧設定や403の原因となるGacruxの場合は最高品質のChirp 3 HD(Fenrir)へ自動更新
+        if (!parsed.voiceName || parsed.voiceName === "Gacrux" || parsed.voiceName.startsWith("ja-JP-Neural2")) {
+          parsed.voiceName = "ja-JP-Chirp3-HD-Fenrir";
+          parsed.speakingRate = 1.0;
+          parsed.pitch = 0.0;
+          delete parsed.modelName;
+          delete parsed.prompt;
         }
         settings = { ...DEFAULT_TTS_SETTINGS, ...parsed };
       }
@@ -792,100 +792,71 @@ const SoundEffects = (() => {
 
   /**
    * Google Cloud Text-to-Speech API を呼び出して MP3 Base64 を取得
-   * ※Gemini 3.1 Flash TTS (v1beta1) を最優先で使用
+   * （無料枠対象の公式 v1 エンドポイント Chirp 3 HD を標準使用）
    */
   async function synthesizeGoogleTTS(text, settings) {
     const apiKey = (settings.apiKey || BUILTIN_GCP_TTS_API_KEY || "").trim();
     if (!apiKey) throw new Error("APIキーが設定されていません");
 
-    const isGemini = (!settings.modelName || settings.modelName === "gemini-3.1-flash-tts-preview");
-    const voiceName = settings.voiceName || (isGemini ? "Gacrux" : "ja-JP-Chirp3-HD-Fenrir");
-    const prompt = (settings.prompt || "male voice hard voice").trim();
-    const volumeGainDb = parseFloat(settings.volumeGainDb) || 2.0;
+    let voiceName = settings.voiceName || "ja-JP-Chirp3-HD-Fenrir";
+    // もし古いモデル名だった場合はChirp3にフォールバック
+    if (!voiceName.startsWith("ja-JP-")) {
+      voiceName = "ja-JP-Chirp3-HD-Fenrir";
+    }
 
-    const cacheKey = `${text}__${isGemini ? 'gemini_' + voiceName + '_' + prompt : voiceName}__${volumeGainDb}`;
+    const volumeGainDb = parseFloat(settings.volumeGainDb) || 2.0;
+    const isChirpModel = voiceName.includes("Chirp");
+    const speakingRate = parseFloat(settings.speakingRate) || 1.0;
+    const pitch = parseFloat(settings.pitch) || 0.0;
+
+    const cacheKey = `${text}__${voiceName}__${isChirpModel ? 'chirp' : speakingRate + '_' + pitch}__${volumeGainDb}`;
     if (ttsAudioCache.has(cacheKey)) {
       console.info(`🎙️ [Google Cloud TTS] キャッシュから即時取得: 「${text}」 (${voiceName})`);
       return ttsAudioCache.get(cacheKey);
     }
 
-    if (isGemini) {
-      // ユーザー試聴画面と全く同一の v1beta1 Gemini 3.1 Flash TTS リクエスト
-      console.info(`🎙️ [Gemini 3.1 Flash TTS] 音声合成リクエスト送信: 「${text}」 [Voice: ${voiceName}, Prompt: "${prompt}"]`);
-      const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${encodeURIComponent(apiKey)}`;
-      const payload = {
-        audioConfig: {
+    console.info(`🎙️ [Google Cloud TTS] 音声合成リクエスト送信: 「${text}」 [Voice: ${voiceName}]`);
+    const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`;
+
+    // Chirp 3 HD は生成AI音声のため余計なピッチ変調を入れず自然な24kHzで出力
+    const audioConfig = isChirpModel
+      ? {
           audioEncoding: "MP3",
-          pitch: 0,
-          speakingRate: 1
-        },
-        input: {
-          prompt: prompt,
-          text: text
-        },
-        voice: {
-          languageCode: "ja-jp",
-          modelName: "gemini-3.1-flash-tts-preview",
-          name: voiceName
+          volumeGainDb: volumeGainDb
         }
-      };
+      : {
+          audioEncoding: "MP3",
+          speakingRate: speakingRate,
+          pitch: pitch,
+          volumeGainDb: volumeGainDb
+        };
 
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.audioContent) {
-            const dataUrl = "data:audio/mp3;base64," + data.audioContent;
-            ttsAudioCache.set(cacheKey, dataUrl);
-            console.info(`✅ [Gemini 3.1 Flash TTS] 合成完了 (Base64取得成功: 約${Math.round(dataUrl.length / 1024)}KB)`);
-            return dataUrl;
-          }
-        } else {
-          const errJson = await res.json().catch(() => ({}));
-          console.warn(`⚠️ [Gemini 3.1 Flash TTS] v1beta1呼び出しエラー (HTTP ${res.status}):`, errJson.error?.message || res.statusText);
-          // もしVertex AIが無効化されている場合は、Chirp3/v1へ安全にフォールバック
-          console.info(`🔄 [TTS] v1 (Chirp3-HD / Neural2) へフォールバックします...`);
-        }
-      } catch (geminiErr) {
-        console.warn(`⚠️ [Gemini 3.1 Flash TTS] 通信例外:`, geminiErr);
-      }
-    }
-
-    // フォールバック: v1 エンドポイント (Chirp 3 HD / Neural2)
-    const fallbackVoice = voiceName.startsWith("ja-JP-") ? voiceName : "ja-JP-Chirp3-HD-Fenrir";
-    console.info(`🎙️ [Google Cloud TTS v1] リクエスト送信: 「${text}」 [Voice: ${fallbackVoice}]`);
-    const v1Url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`;
-    const v1Payload = {
+    const payload = {
       input: { text: text },
-      voice: { languageCode: "ja-JP", name: fallbackVoice },
-      audioConfig: { audioEncoding: "MP3", volumeGainDb: volumeGainDb }
+      voice: { languageCode: "ja-JP", name: voiceName },
+      audioConfig: audioConfig
     };
 
-    const res2 = await fetch(v1Url, {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(v1Payload)
+      body: JSON.stringify(payload)
     });
 
-    if (!res2.ok) {
-      const errJson = await res2.json().catch(() => ({}));
-      const errMsg = errJson.error?.message || `HTTP ${res2.status}`;
-      console.error(`❌ [Google Cloud TTS v1] APIエラー:`, errMsg);
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      const errMsg = errJson.error?.message || `HTTP ${res.status}`;
+      console.error(`❌ [Google Cloud TTS] APIエラー:`, errMsg);
       throw new Error(errMsg);
     }
 
-    const data2 = await res2.json();
-    if (!data2.audioContent) throw new Error("音声データが返されませんでした");
+    const data = await res.json();
+    if (!data.audioContent) throw new Error("音声データが返されませんでした");
 
-    const dataUrl2 = "data:audio/mp3;base64," + data2.audioContent;
-    ttsAudioCache.set(cacheKey, dataUrl2);
-    console.info(`✅ [Google Cloud TTS v1] 合成完了 (約${Math.round(dataUrl2.length / 1024)}KB)`);
-    return dataUrl2;
+    const dataUrl = "data:audio/mp3;base64," + data.audioContent;
+    ttsAudioCache.set(cacheKey, dataUrl);
+    console.info(`✅ [Google Cloud TTS] 合成完了 (約${Math.round(dataUrl.length / 1024)}KB)`);
+    return dataUrl;
   }
 
   /**

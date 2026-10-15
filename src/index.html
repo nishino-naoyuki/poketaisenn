@@ -690,36 +690,24 @@
       <button class="btn" style="padding:2px 8px; font-size:12px;" onclick="closeTtsSettingsModal()">✕</button>
     </div>
     <div class="modal-body tts-settings-body">
-      <!-- モデル選択（Gemini 3.1 Flash TTS） -->
-      <div class="tts-form-group">
-        <label for="tts-model-select" class="tts-label">🤖 モデル (Model)</label>
-        <select id="tts-model-select" class="tts-select">
-          <option value="gemini-3.1-flash-tts-preview" selected>Gemini 3.1 Flash TTS (preview) 【超自然・プロンプト指示対応】</option>
-          <option value="chirp3-hd">Chirp 3 HD (標準最新AI)</option>
-        </select>
-      </div>
-
       <!-- 声質（ボイス）選択 -->
       <div class="tts-form-group">
-        <label for="tts-voice-select" class="tts-label">🗣️ 声質（Voice）</label>
+        <label for="tts-voice-select" class="tts-label">🗣️ 声質（Google Cloud AI ボイス）</label>
         <select id="tts-voice-select" class="tts-select">
-          <option value="Gacrux" selected>Gacrux (おすすめ・男性バトル声)</option>
-          <option value="Fenrir">Fenrir (熱血・力強い声)</option>
-          <option value="Puck">Puck (快活・少年主人公声)</option>
-          <option value="Charon">Charon (クール・知性声)</option>
-          <option value="Aoede">Aoede (ヒロイン・元気声)</option>
-          <option value="Zephyr">Zephyr (感情豊か・自然声)</option>
+          <optgroup label="✨ Google Cloud 最新AIモデル (Chirp 3 HD) - 完全無料枠対象">
+            <option value="ja-JP-Chirp3-HD-Fenrir" selected>Fenrir (男性・熱血バトル声) 【おすすめ・初期値】</option>
+            <option value="ja-JP-Chirp3-HD-Puck">Puck (男性・快活な主人公・少年声)</option>
+            <option value="ja-JP-Chirp3-HD-Charon">Charon (男性・クールで知的な声)</option>
+            <option value="ja-JP-Chirp3-HD-Aoede">Aoede (女性・ハキハキ元気なヒロイン声)</option>
+            <option value="ja-JP-Chirp3-HD-Zephyr">Zephyr (女性・感情豊かな自然声)</option>
+          </optgroup>
+          <optgroup label="🎙️ 従来型ニューラル音声 (Neural2 / WaveNet)">
+            <option value="ja-JP-Neural2-C">Neural2-C (男性・標準アナウンサー声)</option>
+            <option value="ja-JP-Neural2-D">Neural2-D (男性・落ち着いた重厚声)</option>
+            <option value="ja-JP-Neural2-B">Neural2-B (女性・高音少女声)</option>
+            <option value="ja-JP-Wavenet-D">Wavenet-D (男性・WaveNet自然声)</option>
+          </optgroup>
         </select>
-      </div>
-
-      <!-- スタイル指示プロンプト（Style instructions） -->
-      <div class="tts-form-group">
-        <label for="tts-prompt" class="tts-label">🎭 スタイル指示 (Style instructions)</label>
-        <input type="text" id="tts-prompt" value="male voice hard voice" placeholder="例: male voice hard voice"
-          style="width:100%; box-sizing:border-box; padding:8px 12px; background:#1e293b; border:1px solid #475569; border-radius:6px; color:#f8fafc; font-size:13px;">
-        <div style="font-size:11px; color:#94a3b8; margin-top:3px;">
-          ※「male voice hard voice」（迫力ある男性声）など、Gemini AIに演技スタイルを英語で自由に指示できます。
-        </div>
       </div>
 
       <!-- スライダー群（話速・ピッチ・音量） -->
@@ -932,19 +920,19 @@
 <script src="js/util.js"></script>
 <script src="js/data/playmats-default.js"></script>
 <script src="js/data/sleeves-default.js"></script>
-<script src="js/sound/sound.js?v=20261015_05"></script>
+<script src="js/sound/sound.js?v=20261015_06"></script>
 <script src="js/state.js"></script>
 <script src="js/game/hand-actions.js"></script>
-<script src="js/game/actions.js?v=20261015_05"></script>
+<script src="js/game/actions.js?v=20261015_06"></script>
 <script src="js/game/setup.js"></script>
 <script src="js/game/replay.js"></script>
 <script src="js/ui/marquee.js"></script>
 <script src="js/ui/touch-dnd.js"></script>
 <script src="js/ui/render.js"></script>
 <script src="js/ui/modals.js"></script>
-<script src="js/ui/tts-settings.js?v=20261015_05"></script>
-<script src="js/ui/sound-settings.js?v=20261015_05"></script>
-<script src="js/ui/lobby.js?v=20261015_05"></script>
+<script src="js/ui/tts-settings.js?v=20261015_06"></script>
+<script src="js/ui/sound-settings.js?v=20261015_06"></script>
+<script src="js/ui/lobby.js?v=20261015_06"></script>
 <script src="js/ui/playmat.js"></script>
 <script src="js/ui/sleeve.js"></script>
 <script src="js/net/p2p.js"></script>
